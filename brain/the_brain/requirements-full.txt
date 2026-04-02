@@ -1,0 +1,27 @@
+# ============================================================================
+# Tahlamus Brain System - Full Dependencies
+# ============================================================================
+# Complete installation including all ML frameworks and optional features
+# Install with: pip install -r requirements-full.txt
+# ============================================================================
+
+# First install standard requirements
+-r requirements.txt
+
+# Deep Learning Frameworks
+torch>=1.10.0
+torchvision>=0.11.0
+
+# JAX (for JAX integration)
+jax>=0.3.0
+jaxlib>=0.3.0
+
+# Optional: CUDA support (requires NVIDIA GPU and CUDA toolkit)
+# Uncomment for GPU acceleration:
+# torch==1.10.0+cu113
+# torchvision==0.11.0+cu113
+# --extra-index-url https://download.pytorch.org/whl/cu113
+
+# Mamba SSM (experimental - requires compilation)
+# See setup/install_mamba_*.bat for installation instructions
+# mamba-ssm>=1.0.0

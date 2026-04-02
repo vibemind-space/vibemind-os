@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Brain + Swarm - Live Execution</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-size: 1.2em;
+            color: #4CAF50;
+        }
+
+        .task-input {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .task-input input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .task-input button {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .task-input button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .task-input button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .panel h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+
+        .brain-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .brain-feature {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #666;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .brain-feature.active {
+            background: rgba(76, 175, 80, 0.3);
+            border-left-color: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .execution-log {
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-entry.user { border-left-color: #9C27B0; background: rgba(156, 39, 176, 0.1); }
+        .log-entry.brain { border-left-color: #FF9800; background: rgba(255, 152, 0, 0.1); }
+        .log-entry.agent { border-left-color: #4CAF50; background: rgba(76, 175, 80, 0.1); }
+        .log-entry.handoff { border-left-color: #F44336; background: rgba(244, 67, 54, 0.1); }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .log-time {
+            opacity: 0.7;
+            font-size: 0.85em;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .agent-card {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-size: 0.85em;
+        }
+
+        .agent-card.active {
+            background: rgba(33, 150, 243, 0.3);
+            border-color: #2196F3;
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.6);
+        }
+
+        .agent-icon {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #4CAF50;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Autonomous Brain + Swarm</h1>
+        <div class="subtitle">The brain makes all decisions - fully autonomous!</div>
+
+        <div class="task-input">
+            <input type="text" id="taskInput" placeholder="Enter task (e.g., Deploy Docker with Redis)"
+                   value="Deploy Docker container with Redis and health monitoring">
+            <button onclick="executeTask()" id="executeBtn">Execute Task</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalPredictions">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="successRate">0%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgConfidence">0.00</div>
+                <div class="stat-label">Avg Confidence</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Brain Features -->
+            <div class="panel">
+                <h2>🧠 Brain (Autonomous)</h2>
+                <div class="brain-grid" id="brainGrid"></div>
+            </div>
+
+            <!-- Execution Log -->
+            <div class="panel">
+                <h2>💬 Execution Log</h2>
+                <div class="execution-log" id="executionLog"></div>
+            </div>
+
+            <!-- Agents -->
+            <div class="panel">
+                <h2>🤖 Swarm Agents</h2>
+                <div class="agents-grid" id="agentsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const brainFeatures = [
+            'memory', 'predictive', 'attention', 'meta', 'neuro', 'temporal',
+            'active_inference', 'compositional', 'tool', 'consciousness',
+            'infinite', 'semantic', 'ctm'
+        ];
+
+        const brainFeatureNames = {
+            'memory': '🧩 Memory',
+            'predictive': '🔮 Predictive',
+            'attention': '👁️ Attention',
+            'meta': '🎯 Meta-Learning',
+            'neuro': '⚡ Neuromodulation',
+            'temporal': '⏰ Temporal',
+            'active_inference': '❓ Active Inference',
+            'compositional': '🧱 Compositional',
+            'tool': '🔧 Tool Creation',
+            'consciousness': '🌟 Consciousness',
+            'infinite': '♾️ Infinite Chat',
+            'semantic': '🔍 Semantic',
+            'ctm': '🧠 CTM Async'
+        };
+
+        const agents = [
+            { id: 'coordinator', name: 'Coordinator', icon: '🎯' },
+            { id: 'docker_execution_agent', name: 'Docker', icon: '🐳' },
+            { id: 'database_execution_agent', name: 'Database', icon: '🗄️' },
+            { id: 'api_execution_agent', name: 'API', icon: '🌐' },
+            { id: 'debugging_agent', name: 'Debug', icon: '🐛' },
+            { id: 'monitoring_agent', name: 'Monitor', icon: '📊' },
+            { id: 'deployment_agent', name: 'Deploy', icon: '🚀' },
+            { id: 'testing_agent', name: 'Test', icon: '✅' },
+            { id: 'refactoring_agent', name: 'Refactor', icon: '♻️' },
+            { id: 'documentation_agent', name: 'Docs', icon: '📝' },
+            { id: 'security_agent', name: 'Security', icon: '🔒' },
+            { id: 'active_inference_agent', name: 'Inference', icon: '❓' },
+            { id: 'ctm_reasoning_agent', name: 'CTM', icon: '🧠' },
+            { id: 'memory_agent', name: 'Memory', icon: '💾' },
+            { id: 'general_execution_agent', name: 'General', icon: '⚙️' }
+        ];
+
+        function initUI() {
+            // Initialize brain features
+            const brainGrid = document.getElementById('brainGrid');
+            brainGrid.innerHTML = brainFeatures.map(id =>
+                `<div class="brain-feature" id="brain-${id}">${brainFeatureNames[id]}</div>`
+            ).join('');
+
+            // Initialize agents
+            const agentsGrid = document.getElementById('agentsGrid');
+            agentsGrid.innerHTML = agents.map(agent =>
+                `<div class="agent-card" id="agent-${agent.id}">
+                    <div class="agent-icon">${agent.icon}</div>
+                    <div>${agent.name}</div>
+                </div>`
+            ).join('');
+
+            // Load stats
+            loadStats();
+        }
+
+        async function executeTask() {
+            const task = document.getElementById('taskInput').value;
+            if (!task) return;
+
+            const btn = document.getElementById('executeBtn');
+            btn.disabled = true;
+            btn.textContent = 'Executing...';
+
+            // Clear logs
+            document.getElementById('executionLog').innerHTML = '<div class="loading">Brain analyzing task autonomously<span class="spinner"></span></div>';
+
+            // Reset activations
+            brainFeatures.forEach(id => {
+                document.getElementById(`brain-${id}`).classList.remove('active');
+            });
+            agents.forEach(agent => {
+                document.getElementById(`agent-${agent.id}`).classList.remove('active');
+            });
+
+            try {
+                const response = await fetch('/api/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.result);
+                    loadStats();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Execute Task';
+            }
+        }
+
+        function displayResults(result) {
+            // Display execution log
+            const logContainer = document.getElementById('executionLog');
+            logContainer.innerHTML = result.execution_log.map(entry => `
+                <div class="log-entry ${entry.type}">
+                    <div class="log-header">
+                        <span>${entry.sender}</span>
+                        <span class="log-time">${new Date(entry.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <div>${entry.content.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
+
+            // Activate brain features
+            if (result.brain_state_log.length > 0) {
+                const brainState = result.brain_state_log[0];
+                brainState.active_features.forEach(feature => {
+                    const element = document.getElementById(`brain-${feature}`);
+                    if (element) element.classList.add('active');
+                });
+            }
+
+            // Activate agents
+            if (result.agent_state_log.length > 0) {
+                const agentState = result.agent_state_log[0];
+                agentState.active_agents.forEach(agentId => {
+                    const element = document.getElementById(`agent-${agentId}`);
+                    if (element) element.classList.add('active');
+                });
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+
+                document.getElementById('totalPredictions').textContent = stats.total_predictions || 0;
+                document.getElementById('successRate').textContent =
+                    ((stats.success_rate || 0) * 100).toFixed(0) + '%';
+                document.getElementById('avgConfidence').textContent =
+                    (stats.average_confidence || 0).toFixed(2);
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Allow Enter key to execute
+        document.getElementById('taskInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') executeTask();
+        });
+
+        // Initialize
+        initUI();
+    </script>
+</body>
+</html>

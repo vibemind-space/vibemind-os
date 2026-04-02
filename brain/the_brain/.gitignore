@@ -1,0 +1,115 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+nul
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+test_results.xml
+
+# Environment
+.env
+.venv/
+venv/
+
+# Notebooks
+notebooks/
+
+# Generated images & CSVs
+*.png
+*.csv
+!production/trained_matrices/*.csv
+
+# Backups
+.cleanup_backup/
+
+# ── Binary model files (never commit) ──
+*.pth
+*.pt
+*.npy
+*.pkl
+*.onnx
+
+# ── Data directories (runtime / training artifacts) ──
+data/ctm_checkpoints/
+data/hybrid_ctm_checkpoints/
+data/layer4_checkpoints/
+data/temporal_checkpoints/
+data/training_datasets/
+data/training_results/
+data/moltbook/
+data/logs/
+data/test_*/
+data/archives/
+data/demo/
+data/exp*/
+data/mnist/
+data/episodic_memory/
+data/ctm_math/
+data/ctm_spatial/
+data/*.csv
+data/*.log
+data/*.png
+data/*.jpg
+!data/.gitkeep
+
+# ── Production runtime ──
+production/trained_matrices/
+production/feedback/
+production/logs/
+
+# ── Klotski solver outputs ──
+demos/klotski_solution_*.txt
+demos/klotski_bfs_*.log
+
+# ── Build artifacts ──
+*.pth~
+*.json~
+
+# ── Local config ──
+.claude/settings.local.json
+
+# ── Scratch test helpers (prefixed with _) ──
+tests/_*.py
+
+# ── Playwright screenshots ──
+.playwright-mcp/
+brain_chat_working.png

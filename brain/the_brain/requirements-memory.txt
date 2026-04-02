@@ -1,0 +1,13 @@
+# Supermemory Integration Dependencies
+# Install with: pip install -r requirements-memory.txt
+
+# HTTP requests for Supermemory API
+requests>=2.31.0
+
+# Supabase client for visual memory data
+supabase>=2.3.0
+
+# Already in main requirements.txt, but listed here for reference:
+# numpy>=1.24.0
+# jax>=0.4.0
+# torch>=2.0.0

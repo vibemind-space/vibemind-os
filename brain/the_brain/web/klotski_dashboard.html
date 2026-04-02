@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroSymbolic Klotski Evolution - Live Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e0e6ed;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #1e2746 0%, #2a3f5f 100%);
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border-bottom: 3px solid #4a90e2;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4a90e2;
+            text-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
+        }
+
+        .header .subtitle {
+            font-size: 14px;
+            color: #8b95a5;
+            margin-top: 5px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            max-width: 2000px;
+            margin: 0 auto;
+        }
+
+        .agent-card {
+            background: linear-gradient(135deg, #1a1f3a 0%, #252b45 100%);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 2px solid #3a4565;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4a90e2, #50c878, #e74c3c);
+        }
+
+        .agent-card.beginning::before {
+            background: linear-gradient(90deg, #4a90e2, #5dade2);
+        }
+
+        .agent-card.mid::before {
+            background: linear-gradient(90deg, #50c878, #58d68d);
+        }
+
+        .agent-card.end::before {
+            background: linear-gradient(90deg, #e74c3c, #ec7063);
+        }
+
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(74, 144, 226, 0.3);
+        }
+
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3a4565;
+        }
+
+        .agent-name {
+            font-size: 22px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .agent-name.beginning {
+            color: #4a90e2;
+        }
+
+        .agent-name.mid {
+            color: #50c878;
+        }
+
+        .agent-name.end {
+            color: #e74c3c;
+        }
+
+        .agent-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-solving {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: #fff;
+            animation: pulse 2s infinite;
+        }
+
+        .status-solved {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: #fff;
+            animation: celebration 1s ease-out;
+        }
+
+        .status-failed {
+            background: linear-gradient(135deg, #c0392b, #e74c3c);
+            color: #fff;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        @keyframes celebration {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-10deg); }
+            50% { transform: scale(1.1) rotate(10deg); }
+            75% { transform: scale(1.15) rotate(-5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* Klotski Puzzle Grid */
+        .puzzle-container {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 70px);
+            grid-template-rows: repeat(5, 70px);
+            gap: 3px;
+            background: #0a0e27;
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .puzzle-cell {
+            background: #1a1f3a;
+            border: 1px solid #2a3f5f;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .puzzle-block {
+            position: absolute;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .puzzle-block:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Brain Module Block Colors */
+        .block-G { background: linear-gradient(135deg, #27ae60, #2ecc71); } /* DMN - Green */
+        .block-V { background: linear-gradient(135deg, #3498db, #5dade2); } /* VIS - Blue */
+        .block-A { background: linear-gradient(135deg, #9b59b6, #bb8fce); } /* AUD - Purple */
+        .block-S { background: linear-gradient(135deg, #e67e22, #f39c12); } /* SOM - Orange */
+        .block-L { background: linear-gradient(135deg, #e74c3c, #ec7063); } /* LAN - Red */
+        .block-D { background: linear-gradient(135deg, #1abc9c, #48c9b0); } /* DLPFC - Cyan */
+        .block-C { background: linear-gradient(135deg, #f1c40f, #f4d03f); } /* ACC - Yellow */
+        .block-I { background: linear-gradient(135deg, #34495e, #5d6d7e); } /* INS - Gray */
+        .block-M { background: linear-gradient(135deg, #16a085, #1abc9c); } /* MTL - Teal */
+        .block-O { background: linear-gradient(135deg, #d35400, #e67e22); } /* OFC - Dark Orange */
+
+        /* Block sizes (width x height in cells) */
+        .size-1x1 { width: 70px; height: 70px; }
+        .size-2x1 { width: 143px; height: 70px; }
+        .size-1x2 { width: 70px; height: 143px; }
+        .size-2x2 { width: 143px; height: 143px; }
+
+        /* Module Activation Heatmap */
+        .module-activations {
+            margin-top: 20px;
+        }
+
+        .module-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8b95a5;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .module-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .module-label {
+            width: 60px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        .module-bar-container {
+            flex: 1;
+            height: 20px;
+            background: #1a1f3a;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #2a3f5f;
+        }
+
+        .module-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4a90e2, #5dade2);
+            border-radius: 10px;
+            transition: width 0.5s ease, background 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .module-value {
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 45px;
+        }
+
+        /* Heart/Brain Dual System */
+        .dual-system {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #3a4565;
+        }
+
+        .system-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .system-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .system-label {
+            width: 80px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .heart-label { color: #e74c3c; }
+        .brain-label { color: #4a90e2; }
+
+        .confidence-bar {
+            flex: 1;
+            height: 18px;
+            background: #1a1f3a;
+            border-radius: 9px;
+            overflow: hidden;
+            border: 1px solid #2a3f5f;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .heart-fill {
+            background: linear-gradient(90deg, #c0392b, #e74c3c);
+        }
+
+        .brain-fill {
+            background: linear-gradient(90deg, #2980b9, #4a90e2);
+        }
+
+        .confidence-value {
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 45px;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: #1a1f3a;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #2a3f5f;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #8b95a5;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4a90e2;
+        }
+
+        /* Generation Info Panel */
+        .generation-panel {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 2px solid #3a4565;
+            margin-bottom: 20px;
+        }
+
+        .generation-header {
+            font-size: 28px;
+            font-weight: 700;
+            color: #50c878;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(80, 200, 120, 0.5);
+        }
+
+        .generation-timeline {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .timeline-item {
+            text-align: center;
+        }
+
+        .timeline-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .timeline-label {
+            font-size: 12px;
+            color: #8b95a5;
+            text-transform: uppercase;
+        }
+
+        .timeline-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4a90e2;
+        }
+
+        /* Connection Status */
+        .connection-status {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(26, 188, 156, 0.4);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .connection-status.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .connection-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .connection-message {
+            font-size: 16px;
+            color: #ecf0f1;
+        }
+
+        /* Reproduction Animation */
+        .reproduction-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .reproduction-overlay.active {
+            display: flex;
+        }
+
+        .reproduction-content {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            padding: 60px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(231, 76, 60, 0.6);
+            animation: celebration 1s ease-out;
+        }
+
+        .reproduction-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: heartbeat 1s infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.15); }
+        }
+
+        .reproduction-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        .reproduction-message {
+            font-size: 20px;
+            color: #ecf0f1;
+            margin-bottom: 30px;
+        }
+
+        .reproduction-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+
+        .reproduction-stat {
+            text-align: center;
+        }
+
+        .reproduction-stat-label {
+            font-size: 14px;
+            color: #ecf0f1;
+            margin-bottom: 5px;
+        }
+
+        .reproduction-stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8b95a5;
+            font-size: 16px;
+        }
+
+        .spinner {
+            border: 4px solid #1a1f3a;
+            border-top: 4px solid #4a90e2;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a1f3a;
+            padding: 20px;
+            text-align: center;
+            color: #8b95a5;
+            font-size: 12px;
+            border-top: 2px solid #2a3f5f;
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NeuroSymbolic Klotski Evolution</h1>
+        <div class="subtitle">3-Agent Romantic Puzzle Solving | Heart (70%) + Brain (30%) | Real-Time Neural Activation</div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Loading evolutionary training system...</div>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+        <!-- Generation Panel -->
+        <div class="container">
+            <div class="generation-panel">
+                <div class="generation-header">Generation <span id="current-generation">0</span></div>
+                <div class="generation-timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-icon">📊</div>
+                        <div class="timeline-label">Total Episodes</div>
+                        <div class="timeline-value" id="total-episodes">0</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-icon">🎯</div>
+                        <div class="timeline-label">Success Rate</div>
+                        <div class="timeline-value" id="success-rate">0%</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-icon">💚</div>
+                        <div class="timeline-label">Connections</div>
+                        <div class="timeline-value" id="total-connections">0</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-icon">💀</div>
+                        <div class="timeline-label">Extinctions</div>
+                        <div class="timeline-value" id="total-extinctions">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Status (shown when all 3 solve) -->
+            <div class="connection-status" id="connection-status">
+                <div class="connection-title">💗 CONNECTION ACHIEVED! 💗</div>
+                <div class="connection-message">
+                    All 3 agents solved their puzzles! Reproduction initiated...
+                </div>
+            </div>
+
+            <!-- Agent Cards (3 columns) -->
+            <div class="agent-card beginning" id="agent-beginning">
+                <div class="agent-header">
+                    <div class="agent-name beginning">Beginning</div>
+                    <div class="agent-status status-solving">Solving...</div>
+                </div>
+
+                <!-- Klotski Puzzle Grid -->
+                <div class="puzzle-container">
+                    <div class="puzzle-grid" id="puzzle-beginning">
+                        <!-- 4x5 grid cells -->
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+
+                        <!-- Blocks will be dynamically positioned -->
+                    </div>
+                </div>
+
+                <!-- Module Activations -->
+                <div class="module-activations">
+                    <div class="module-title">Neural Module Activations</div>
+                    <div class="module-row">
+                        <div class="module-label">VIS</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-VIS" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-VIS-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">AUD</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-AUD" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-AUD-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">SOM</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-SOM" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-SOM-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">LAN</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-LAN" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-LAN-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">DLPFC</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-DLPFC" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-DLPFC-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">OFC</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-OFC" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-OFC-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">ACC</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-ACC" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-ACC-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">INS</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-INS" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-INS-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">MTL</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-MTL" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-MTL-val">0.00</div>
+                    </div>
+                    <div class="module-row">
+                        <div class="module-label">DMN</div>
+                        <div class="module-bar-container"><div class="module-bar" id="beginning-DMN" style="width: 0%;"></div></div>
+                        <div class="module-value" id="beginning-DMN-val">0.00</div>
+                    </div>
+                </div>
+
+                <!-- Heart/Brain Dual System -->
+                <div class="dual-system">
+                    <div class="system-row">
+                        <div class="system-icon">❤️</div>
+                        <div class="system-label heart-label">Heart</div>
+                        <div class="confidence-bar"><div class="confidence-fill heart-fill" id="beginning-heart" style="width: 70%;"></div></div>
+                        <div class="confidence-value" id="beginning-heart-val">70%</div>
+                    </div>
+                    <div class="system-row">
+                        <div class="system-icon">🧠</div>
+                        <div class="system-label brain-label">Brain</div>
+                        <div class="confidence-bar"><div class="confidence-fill brain-fill" id="beginning-brain" style="width: 30%;"></div></div>
+                        <div class="confidence-value" id="beginning-brain-val">30%</div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-panel">
+                    <div class="stat-box">
+                        <div class="stat-label">Steps</div>
+                        <div class="stat-value" id="beginning-steps">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Moves</div>
+                        <div class="stat-value" id="beginning-moves">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Distance</div>
+                        <div class="stat-value" id="beginning-distance">∞</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Conv. Cost</div>
+                        <div class="stat-value" id="beginning-conv-cost">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mid Agent (identical structure) -->
+            <div class="agent-card mid" id="agent-mid">
+                <div class="agent-header">
+                    <div class="agent-name mid">Mid</div>
+                    <div class="agent-status status-solving">Solving...</div>
+                </div>
+                <div class="puzzle-container">
+                    <div class="puzzle-grid" id="puzzle-mid">
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                    </div>
+                </div>
+                <div class="module-activations">
+                    <div class="module-title">Neural Module Activations</div>
+                    <div class="module-row"><div class="module-label">VIS</div><div class="module-bar-container"><div class="module-bar" id="mid-VIS" style="width: 0%;"></div></div><div class="module-value" id="mid-VIS-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">AUD</div><div class="module-bar-container"><div class="module-bar" id="mid-AUD" style="width: 0%;"></div></div><div class="module-value" id="mid-AUD-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">SOM</div><div class="module-bar-container"><div class="module-bar" id="mid-SOM" style="width: 0%;"></div></div><div class="module-value" id="mid-SOM-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">LAN</div><div class="module-bar-container"><div class="module-bar" id="mid-LAN" style="width: 0%;"></div></div><div class="module-value" id="mid-LAN-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">DLPFC</div><div class="module-bar-container"><div class="module-bar" id="mid-DLPFC" style="width: 0%;"></div></div><div class="module-value" id="mid-DLPFC-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">OFC</div><div class="module-bar-container"><div class="module-bar" id="mid-OFC" style="width: 0%;"></div></div><div class="module-value" id="mid-OFC-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">ACC</div><div class="module-bar-container"><div class="module-bar" id="mid-ACC" style="width: 0%;"></div></div><div class="module-value" id="mid-ACC-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">INS</div><div class="module-bar-container"><div class="module-bar" id="mid-INS" style="width: 0%;"></div></div><div class="module-value" id="mid-INS-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">MTL</div><div class="module-bar-container"><div class="module-bar" id="mid-MTL" style="width: 0%;"></div></div><div class="module-value" id="mid-MTL-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">DMN</div><div class="module-bar-container"><div class="module-bar" id="mid-DMN" style="width: 0%;"></div></div><div class="module-value" id="mid-DMN-val">0.00</div></div>
+                </div>
+                <div class="dual-system">
+                    <div class="system-row"><div class="system-icon">❤️</div><div class="system-label heart-label">Heart</div><div class="confidence-bar"><div class="confidence-fill heart-fill" id="mid-heart" style="width: 70%;"></div></div><div class="confidence-value" id="mid-heart-val">70%</div></div>
+                    <div class="system-row"><div class="system-icon">🧠</div><div class="system-label brain-label">Brain</div><div class="confidence-bar"><div class="confidence-fill brain-fill" id="mid-brain" style="width: 30%;"></div></div><div class="confidence-value" id="mid-brain-val">30%</div></div>
+                </div>
+                <div class="stats-panel">
+                    <div class="stat-box"><div class="stat-label">Steps</div><div class="stat-value" id="mid-steps">0</div></div>
+                    <div class="stat-box"><div class="stat-label">Moves</div><div class="stat-value" id="mid-moves">0</div></div>
+                    <div class="stat-box"><div class="stat-label">Distance</div><div class="stat-value" id="mid-distance">∞</div></div>
+                    <div class="stat-box"><div class="stat-label">Conv. Cost</div><div class="stat-value" id="mid-conv-cost">0</div></div>
+                </div>
+            </div>
+
+            <!-- End Agent (identical structure) -->
+            <div class="agent-card end" id="agent-end">
+                <div class="agent-header">
+                    <div class="agent-name end">End</div>
+                    <div class="agent-status status-solving">Solving...</div>
+                </div>
+                <div class="puzzle-container">
+                    <div class="puzzle-grid" id="puzzle-end">
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                        <div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div><div class="puzzle-cell"></div>
+                    </div>
+                </div>
+                <div class="module-activations">
+                    <div class="module-title">Neural Module Activations</div>
+                    <div class="module-row"><div class="module-label">VIS</div><div class="module-bar-container"><div class="module-bar" id="end-VIS" style="width: 0%;"></div></div><div class="module-value" id="end-VIS-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">AUD</div><div class="module-bar-container"><div class="module-bar" id="end-AUD" style="width: 0%;"></div></div><div class="module-value" id="end-AUD-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">SOM</div><div class="module-bar-container"><div class="module-bar" id="end-SOM" style="width: 0%;"></div></div><div class="module-value" id="end-SOM-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">LAN</div><div class="module-bar-container"><div class="module-bar" id="end-LAN" style="width: 0%;"></div></div><div class="module-value" id="end-LAN-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">DLPFC</div><div class="module-bar-container"><div class="module-bar" id="end-DLPFC" style="width: 0%;"></div></div><div class="module-value" id="end-DLPFC-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">OFC</div><div class="module-bar-container"><div class="module-bar" id="end-OFC" style="width: 0%;"></div></div><div class="module-value" id="end-OFC-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">ACC</div><div class="module-bar-container"><div class="module-bar" id="end-ACC" style="width: 0%;"></div></div><div class="module-value" id="end-ACC-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">INS</div><div class="module-bar-container"><div class="module-bar" id="end-INS" style="width: 0%;"></div></div><div class="module-value" id="end-INS-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">MTL</div><div class="module-bar-container"><div class="module-bar" id="end-MTL" style="width: 0%;"></div></div><div class="module-value" id="end-MTL-val">0.00</div></div>
+                    <div class="module-row"><div class="module-label">DMN</div><div class="module-bar-container"><div class="module-bar" id="end-DMN" style="width: 0%;"></div></div><div class="module-value" id="end-DMN-val">0.00</div></div>
+                </div>
+                <div class="dual-system">
+                    <div class="system-row"><div class="system-icon">❤️</div><div class="system-label heart-label">Heart</div><div class="confidence-bar"><div class="confidence-fill heart-fill" id="end-heart" style="width: 70%;"></div></div><div class="confidence-value" id="end-heart-val">70%</div></div>
+                    <div class="system-row"><div class="system-icon">🧠</div><div class="system-label brain-label">Brain</div><div class="confidence-bar"><div class="confidence-fill brain-fill" id="end-brain" style="width: 30%;"></div></div><div class="confidence-value" id="end-brain-val">30%</div></div>
+                </div>
+                <div class="stats-panel">
+                    <div class="stat-box"><div class="stat-label">Steps</div><div class="stat-value" id="end-steps">0</div></div>
+                    <div class="stat-box"><div class="stat-label">Moves</div><div class="stat-value" id="end-moves">0</div></div>
+                    <div class="stat-box"><div class="stat-label">Distance</div><div class="stat-value" id="end-distance">∞</div></div>
+                    <div class="stat-box"><div class="stat-label">Conv. Cost</div><div class="stat-value" id="end-conv-cost">0</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reproduction Overlay -->
+    <div class="reproduction-overlay" id="reproduction-overlay">
+        <div class="reproduction-content">
+            <div class="reproduction-icon">💗</div>
+            <div class="reproduction-title">REPRODUCTION!</div>
+            <div class="reproduction-message">All 3 agents achieved connection! New generation spawning...</div>
+            <div class="reproduction-stats">
+                <div class="reproduction-stat">
+                    <div class="reproduction-stat-label">Quality</div>
+                    <div class="reproduction-stat-value" id="reproduction-quality">0.95</div>
+                </div>
+                <div class="reproduction-stat">
+                    <div class="reproduction-stat-label">Reward</div>
+                    <div class="reproduction-stat-value" id="reproduction-reward">9025</div>
+                </div>
+                <div class="reproduction-stat">
+                    <div class="reproduction-stat-label">Next Gen</div>
+                    <div class="reproduction-stat-value" id="reproduction-next-gen">2</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div>NeuroSymbolic Klotski Evolution Dashboard | 3.7M Parameters | 10 Brain Modules | Bimodal Perturbation Evolution</div>
+        <div style="margin-top: 5px;">Heart (70% Frozen) + Brain (30% Evolving) | Real-Time WebSocket Updates</div>
+    </div>
+
+    <script>
+        // State management
+        let state = {
+            generation: 0,
+            episodes: 0,
+            success_rate: 0,
+            connections: 0,
+            extinctions: 0,
+            agents: {
+                beginning: { status: 'solving', steps: 0, moves: 0, distance: Infinity, conv_cost: 0, blocks: [], modules: {}, heart: 0.7, brain: 0.3 },
+                mid: { status: 'solving', steps: 0, moves: 0, distance: Infinity, conv_cost: 0, blocks: [], modules: {}, heart: 0.7, brain: 0.3 },
+                end: { status: 'solving', steps: 0, moves: 0, distance: Infinity, conv_cost: 0, blocks: [], modules: {}, heart: 0.7, brain: 0.3 }
+            }
+        };
+
+        // API endpoint
+        const API_URL = 'http://localhost:5004/api/training_status';
+
+        // Initialize dashboard
+        async function init() {
+            console.log('[Dashboard] Initializing...');
+
+            // Hide loading, show dashboard
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                console.log('[Dashboard] Loaded');
+            }, 1000);
+
+            // Start polling
+            setInterval(updateDashboard, 500);  // 500ms updates
+        }
+
+        // Fetch state from server
+        async function updateDashboard() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Failed to fetch');
+
+                const data = await response.json();
+                state = data;
+
+                // Update UI
+                updateGenerationPanel();
+                updateAgents();
+                checkConnection();
+            } catch (error) {
+                console.error('[Dashboard] Update error:', error);
+            }
+        }
+
+        // Update generation panel
+        function updateGenerationPanel() {
+            document.getElementById('current-generation').textContent = state.generation;
+            document.getElementById('total-episodes').textContent = state.episodes;
+            document.getElementById('success-rate').textContent = (state.success_rate * 100).toFixed(1) + '%';
+            document.getElementById('total-connections').textContent = state.connections;
+            document.getElementById('total-extinctions').textContent = state.extinctions;
+        }
+
+        // Update agents
+        function updateAgents() {
+            ['beginning', 'mid', 'end'].forEach(agent => {
+                const data = state.agents[agent];
+
+                // Update status badge
+                const statusBadge = document.querySelector(`#agent-${agent} .agent-status`);
+                statusBadge.className = 'agent-status status-' + data.status;
+                statusBadge.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+
+                // Update stats
+                document.getElementById(`${agent}-steps`).textContent = data.steps;
+                document.getElementById(`${agent}-moves`).textContent = data.moves;
+                document.getElementById(`${agent}-distance`).textContent = isFinite(data.distance) ? data.distance : '∞';
+                document.getElementById(`${agent}-conv-cost`).textContent = Math.abs(data.conv_cost);
+
+                // Update modules
+                const modules = ['VIS', 'AUD', 'SOM', 'LAN', 'DLPFC', 'OFC', 'ACC', 'INS', 'MTL', 'DMN'];
+                modules.forEach(module => {
+                    const level = data.modules[module] || Math.random(); // Fallback to random for demo
+                    document.getElementById(`${agent}-${module}`).style.width = (level * 100) + '%';
+                    document.getElementById(`${agent}-${module}-val`).textContent = level.toFixed(2);
+                });
+
+                // Update heart/brain
+                const heartPct = (data.heart * 100).toFixed(0);
+                const brainPct = (data.brain * 100).toFixed(0);
+                document.getElementById(`${agent}-heart`).style.width = heartPct + '%';
+                document.getElementById(`${agent}-heart-val`).textContent = heartPct + '%';
+                document.getElementById(`${agent}-brain`).style.width = brainPct + '%';
+                document.getElementById(`${agent}-brain-val`).textContent = brainPct + '%';
+
+                // Update blocks (if provided)
+                if (data.blocks && data.blocks.length > 0) {
+                    renderBlocks(agent, data.blocks);
+                }
+            });
+        }
+
+        // Render puzzle blocks
+        function renderBlocks(agent, blocks) {
+            const grid = document.getElementById(`puzzle-${agent}`);
+
+            // Clear existing blocks
+            const existingBlocks = grid.querySelectorAll('.puzzle-block');
+            existingBlocks.forEach(block => block.remove());
+
+            // Render new blocks
+            blocks.forEach(block => {
+                const blockEl = document.createElement('div');
+                blockEl.className = `puzzle-block block-${block.id} size-${block.w}x${block.h}`;
+                blockEl.textContent = block.id;
+                blockEl.style.left = (block.x * 73) + 10 + 'px'; // 70px cell + 3px gap
+                blockEl.style.top = (block.y * 73) + 10 + 'px';
+                grid.appendChild(blockEl);
+            });
+        }
+
+        // Check for connection
+        function checkConnection() {
+            const allSolved = ['beginning', 'mid', 'end'].every(agent => state.agents[agent].status === 'solved');
+
+            if (allSolved && !state.connection_shown) {
+                // Show connection banner
+                document.getElementById('connection-status').classList.add('active');
+
+                // Show reproduction overlay after 2 seconds
+                setTimeout(() => {
+                    document.getElementById('reproduction-quality').textContent = (Math.random() * 0.2 + 0.8).toFixed(2);
+                    document.getElementById('reproduction-reward').textContent = Math.floor(Math.random() * 5000 + 5000);
+                    document.getElementById('reproduction-next-gen').textContent = state.generation + 1;
+                    document.getElementById('reproduction-overlay').classList.add('active');
+
+                    // Hide overlay after 5 seconds
+                    setTimeout(() => {
+                        document.getElementById('reproduction-overlay').classList.remove('active');
+                        document.getElementById('connection-status').classList.remove('active');
+                    }, 5000);
+                }, 2000);
+
+                state.connection_shown = true;
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

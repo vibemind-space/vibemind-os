@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cognitive Loop Visualization - Tahlamus Brain</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a1a; color: #e0e0ff; font-family: 'Segoe UI', monospace; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; color: #7af; margin-bottom: 20px; font-size: 1.6em; }
+
+        .loop-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+            position: relative;
+        }
+
+        .loop-ring {
+            position: relative;
+            width: 460px;
+            height: 460px;
+        }
+
+        .phase-node {
+            position: absolute;
+            width: 110px;
+            height: 50px;
+            border: 2px solid #334;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #111128;
+            z-index: 2;
+        }
+
+        .phase-node:hover { transform: scale(1.1); z-index: 3; }
+        .phase-node.active { border-color: #0f0; box-shadow: 0 0 20px rgba(0,255,0,0.4); background: #0a2a0a; }
+        .phase-node.completed { border-color: #7af; background: #0a1a3a; }
+
+        /* Phase positions (clock-like arrangement) */
+        .phase-perceive    { top: 0;    left: 175px; }
+        .phase-emotion     { top: 60px; left: 340px; }
+        .phase-remember    { top: 170px; left: 370px; }
+        .phase-attend      { top: 290px; left: 340px; }
+        .phase-modulate    { top: 380px; left: 210px; }
+        .phase-reason      { top: 380px; left: 70px; }
+        .phase-reflect     { top: 290px; left: -10px; }
+        .phase-learn       { top: 170px; left: -20px; }
+        .phase-consolidate { top: 60px; left: 40px; }
+
+        .center-status {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1;
+        }
+
+        .iteration-count {
+            font-size: 3em;
+            color: #7af;
+            font-weight: bold;
+        }
+
+        .iteration-label { font-size: 0.8em; color: #668; }
+
+        .arrow-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 460px;
+            height: 460px;
+            z-index: 0;
+        }
+
+        /* Side panels */
+        .panels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 24px; }
+
+        .panel {
+            background: #111128;
+            border: 1px solid #223;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .panel h3 { color: #7af; margin-bottom: 10px; font-size: 0.95em; }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #1a1a3a;
+            font-size: 0.85em;
+        }
+
+        .stat-label { color: #889; }
+        .stat-value { color: #afa; font-weight: bold; }
+        .stat-value.warn { color: #fa5; }
+        .stat-value.danger { color: #f55; }
+
+        .bar-chart {
+            height: 16px;
+            background: #1a1a3a;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 6px 0;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.5s;
+        }
+
+        .refresh-info {
+            text-align: center;
+            color: #445;
+            font-size: 0.75em;
+            margin-top: 12px;
+        }
+
+        /* Phase 6 module indicators */
+        .module-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+        }
+        .module-dot {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75em;
+            padding: 2px 0;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot.on { background: #0f0; }
+        .dot.off { background: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Cognitive Loop Visualization</h1>
+
+        <div class="loop-container">
+            <div class="loop-ring">
+                <!-- SVG arrows connecting phases -->
+                <svg class="arrow-svg" viewBox="0 0 460 460">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#334" />
+                        </marker>
+                    </defs>
+                    <!-- Circular connection path -->
+                    <circle cx="230" cy="230" r="180" fill="none" stroke="#1a1a3a" stroke-width="2" stroke-dasharray="8,4" />
+                </svg>
+
+                <!-- Phase nodes -->
+                <div class="phase-node phase-perceive" id="phase-perceive" data-phase="PERCEIVE">
+                    👁 Perceive
+                </div>
+                <div class="phase-node phase-emotion" id="phase-emotion" data-phase="APPRAISE_EMOTION">
+                    ❤️ Emotion
+                </div>
+                <div class="phase-node phase-remember" id="phase-remember" data-phase="REMEMBER">
+                    🧩 Remember
+                </div>
+                <div class="phase-node phase-attend" id="phase-attend" data-phase="ATTEND">
+                    🎯 Attend
+                </div>
+                <div class="phase-node phase-modulate" id="phase-modulate" data-phase="MODULATE">
+                    ⚡ Modulate
+                </div>
+                <div class="phase-node phase-reason" id="phase-reason" data-phase="REASON">
+                    🤔 Reason
+                </div>
+                <div class="phase-node phase-reflect" id="phase-reflect" data-phase="REFLECT">
+                    🪞 Reflect
+                </div>
+                <div class="phase-node phase-learn" id="phase-learn" data-phase="LEARN">
+                    📚 Learn
+                </div>
+                <div class="phase-node phase-consolidate" id="phase-consolidate" data-phase="CONSOLIDATE">
+                    💾 Consolidate
+                </div>
+
+                <!-- Center status -->
+                <div class="center-status">
+                    <div class="iteration-count" id="iteration-count">0</div>
+                    <div class="iteration-label">iterations</div>
+                    <div id="loop-status" style="margin-top:8px;font-size:0.9em;color:#889;">IDLE</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panels">
+            <!-- Gating Panel -->
+            <div class="panel">
+                <h3>🎚 Brain Gates</h3>
+                <div id="gates-panel">
+                    <div class="stat-row"><span class="stat-label">Loading...</span></div>
+                </div>
+            </div>
+
+            <!-- Neuromodulation Panel -->
+            <div class="panel">
+                <h3>⚗️ Neuromodulation</h3>
+                <div id="neuromod-panel">
+                    <div class="stat-row">
+                        <span class="stat-label">Dopamine</span>
+                        <span class="stat-value" id="nm-dopamine">0.50</span>
+                    </div>
+                    <div class="bar-chart"><div class="bar-fill" id="nm-dopamine-bar" style="width:50%;background:#f90;"></div></div>
+                    <div class="stat-row">
+                        <span class="stat-label">Serotonin</span>
+                        <span class="stat-value" id="nm-serotonin">0.50</span>
+                    </div>
+                    <div class="bar-chart"><div class="bar-fill" id="nm-serotonin-bar" style="width:50%;background:#09f;"></div></div>
+                    <div class="stat-row">
+                        <span class="stat-label">Norepinephrine</span>
+                        <span class="stat-value" id="nm-norepinephrine">0.50</span>
+                    </div>
+                    <div class="bar-chart"><div class="bar-fill" id="nm-norepinephrine-bar" style="width:50%;background:#f09;"></div></div>
+                    <div class="stat-row">
+                        <span class="stat-label">Temperature</span>
+                        <span class="stat-value" id="gating-temp">1.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 6 Modules Panel -->
+            <div class="panel">
+                <h3>🧬 Phase 6 Modules</h3>
+                <div class="module-grid" id="modules-panel">
+                    <div class="module-dot"><span class="dot off"></span>Theory of Mind</div>
+                    <div class="module-dot"><span class="dot off"></span>Causal</div>
+                    <div class="module-dot"><span class="dot off"></span>Curiosity</div>
+                    <div class="module-dot"><span class="dot off"></span>Safety</div>
+                    <div class="module-dot"><span class="dot off"></span>Explanation</div>
+                    <div class="module-dot"><span class="dot off"></span>Goals</div>
+                    <div class="module-dot"><span class="dot off"></span>Multimodal</div>
+                    <div class="module-dot"><span class="dot off"></span>Verifier</div>
+                    <div class="module-dot"><span class="dot off"></span>Decoder</div>
+                    <div class="module-dot"><span class="dot off"></span>Sensorimotor</div>
+                </div>
+            </div>
+
+            <!-- Emotional State Panel -->
+            <div class="panel">
+                <h3>❤️ Emotional State</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Valence</span>
+                    <span class="stat-value" id="emo-valence">0.00</span>
+                </div>
+                <div class="bar-chart"><div class="bar-fill" id="emo-valence-bar" style="width:50%;background:#5f5;"></div></div>
+                <div class="stat-row">
+                    <span class="stat-label">Arousal</span>
+                    <span class="stat-value" id="emo-arousal">0.00</span>
+                </div>
+                <div class="bar-chart"><div class="bar-fill" id="emo-arousal-bar" style="width:50%;background:#f55;"></div></div>
+            </div>
+
+            <!-- Memory Panel -->
+            <div class="panel">
+                <h3>🧩 Memory</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Memory Bias Active</span>
+                    <span class="stat-value" id="mem-bias">No</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">CTM Domain Hint</span>
+                    <span class="stat-value" id="ctm-hint">—</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Reconsider Triggered</span>
+                    <span class="stat-value" id="reconsider">No</span>
+                </div>
+            </div>
+
+            <!-- Timing Panel -->
+            <div class="panel">
+                <h3>⏱ Phase Timings (ms)</h3>
+                <div id="timing-panel">
+                    <div class="stat-row"><span class="stat-label">Loading...</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="refresh-info">Auto-refreshing every 2 seconds | <span id="last-update">—</span></div>
+    </div>
+
+    <script>
+        const BRAIN_API = '/api/brain';
+        const PHASES = ['perceive', 'emotion', 'remember', 'attend', 'modulate', 'reason', 'reflect', 'learn', 'consolidate'];
+        const PHASE_MAP = {
+            'PERCEIVE': 'perceive', 'APPRAISE_EMOTION': 'emotion', 'REMEMBER': 'remember',
+            'ATTEND': 'attend', 'MODULATE': 'modulate', 'REASON': 'reason',
+            'REFLECT': 'reflect', 'LEARN': 'learn', 'CONSOLIDATE': 'consolidate', 'IDLE': null
+        };
+
+        async function fetchState() {
+            try {
+                const resp = await fetch(`${BRAIN_API}/cognitive_loop`);
+                if (!resp.ok) return null;
+                return await resp.json();
+            } catch (e) {
+                console.warn('Fetch error:', e);
+                return null;
+            }
+        }
+
+        function updateViz(data) {
+            if (!data) return;
+
+            const state = data.state || data;
+
+            // Update phase nodes
+            const currentPhase = PHASE_MAP[state.current_phase] || null;
+            PHASES.forEach(p => {
+                const el = document.getElementById(`phase-${p}`);
+                el.classList.remove('active', 'completed');
+                if (p === currentPhase) el.classList.add('active');
+            });
+
+            // Iteration count
+            const el_iter = document.getElementById('iteration-count');
+            el_iter.textContent = state.loop_iterations || 0;
+
+            // Status
+            document.getElementById('loop-status').textContent = state.current_phase || 'IDLE';
+
+            // Gating temperature
+            const gt = state.gating_temperature;
+            if (gt !== undefined) document.getElementById('gating-temp').textContent = gt.toFixed(2);
+
+            // Memory bias
+            document.getElementById('mem-bias').textContent = state.memory_bias_active ? 'Yes' : 'No';
+            document.getElementById('ctm-hint').textContent = state.ctm_domain_hint || '—';
+            document.getElementById('reconsider').textContent = state.should_reconsider ? 'Yes' : 'No';
+
+            // Phase timings
+            if (state.phase_timings) {
+                const tp = document.getElementById('timing-panel');
+                tp.innerHTML = '';
+                Object.entries(state.phase_timings).forEach(([phase, ms]) => {
+                    tp.innerHTML += `<div class="stat-row"><span class="stat-label">${phase}</span><span class="stat-value">${(ms*1000).toFixed(1)}</span></div>`;
+                });
+            }
+
+            // Emotional state
+            if (state.emotional) {
+                const v = state.emotional.valence || 0;
+                const a = state.emotional.arousal || 0;
+                document.getElementById('emo-valence').textContent = v.toFixed(2);
+                document.getElementById('emo-arousal').textContent = a.toFixed(2);
+                document.getElementById('emo-valence-bar').style.width = `${((v+1)/2)*100}%`;
+                document.getElementById('emo-arousal-bar').style.width = `${a*100}%`;
+            }
+
+            // Neuromodulation
+            if (state.neuromodulation) {
+                const nm = state.neuromodulation;
+                ['dopamine', 'serotonin', 'norepinephrine'].forEach(nt => {
+                    const val = nm[nt];
+                    if (val !== undefined) {
+                        document.getElementById(`nm-${nt}`).textContent = val.toFixed(2);
+                        document.getElementById(`nm-${nt}-bar`).style.width = `${val*100}%`;
+                    }
+                });
+            }
+
+            // Phase 6 modules
+            if (state.phase6_modules) {
+                const mp = document.getElementById('modules-panel');
+                const modules = state.phase6_modules;
+                const names = ['theory_of_mind', 'causal_reasoning', 'intrinsic_curiosity', 'safety_layer',
+                               'explanation_gen', 'autonomous_goals', 'multimodal_fusion', 'formal_verifier',
+                               'thought_decoder', 'sensorimotor'];
+                const labels = ['Theory of Mind', 'Causal', 'Curiosity', 'Safety',
+                                'Explanation', 'Goals', 'Multimodal', 'Verifier', 'Decoder', 'Sensorimotor'];
+                mp.innerHTML = '';
+                names.forEach((n, i) => {
+                    const on = modules[n] === true;
+                    mp.innerHTML += `<div class="module-dot"><span class="dot ${on ? 'on' : 'off'}"></span>${labels[i]}</div>`;
+                });
+            }
+
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+
+        async function refresh() {
+            const data = await fetchState();
+            updateViz(data);
+        }
+
+        // Initial load + auto-refresh
+        refresh();
+        setInterval(refresh, 2000);
+    </script>
+</body>
+</html>

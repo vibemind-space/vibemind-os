@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klotski State-Space Graph</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #050810;
+            color: #c8d6e5;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 14px;
+            background: rgba(5, 8, 16, 0.95);
+            border-bottom: 1px solid rgba(255, 152, 0, 0.12);
+            backdrop-filter: blur(12px);
+        }
+        .header h1 { font-size: 13px; font-weight: 700; color: #e8f0fe; letter-spacing: 0.3px; }
+        .header h1 .accent { color: #ff9800; }
+        .header-right { display: flex; align-items: center; gap: 8px; font-size: 10px; }
+
+        .btn {
+            background: rgba(25, 38, 55, 0.8); border: 1px solid rgba(42, 63, 84, 0.5);
+            border-radius: 4px; padding: 3px 9px;
+            cursor: pointer; transition: all 0.2s;
+            font-size: 10px; font-weight: 600;
+            color: #78909c; user-select: none;
+        }
+        .btn:hover { border-color: #ff9800; color: #ff9800; }
+        .btn.active { background: rgba(20, 38, 20, 0.8); border-color: #66bb6a; color: #66bb6a; }
+        .btn.loading { opacity: 0.5; pointer-events: none; }
+
+        .badge { color: #546e7a; font-size: 10px; }
+        .badge .n { color: #4fc3f7; font-weight: 700; }
+
+        #canvas3d { position: fixed; top: 32px; left: 0; right: 0; bottom: 0; }
+
+        /* Loading */
+        .load-overlay {
+            position: fixed; top: 32px; left: 0; right: 0; bottom: 0; z-index: 50;
+            background: rgba(5, 8, 16, 0.94);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s;
+        }
+        .load-overlay.hidden { opacity: 0; pointer-events: none; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,152,0,0.12); border-top-color: #ff9800; border-radius: 50%; animation: sp 0.7s linear infinite; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+        .load-text { margin-top: 12px; font-size: 12px; color: #78909c; }
+        .load-step { margin-top: 4px; font-size: 11px; color: #ff9800; font-weight: 600; }
+        .load-bar-wrap { width: 180px; height: 2px; background: rgba(255,152,0,0.08); border-radius: 1px; margin-top: 10px; }
+        .load-bar { height: 100%; background: #ff9800; border-radius: 1px; transition: width 0.3s; width: 0%; }
+
+        /* Info panel (node detail) */
+        .node-panel {
+            position: fixed; bottom: 12px; left: 12px; z-index: 100;
+            background: rgba(8, 12, 22, 0.95);
+            border: 1px solid rgba(255, 152, 0, 0.18);
+            border-radius: 8px;
+            padding: 12px 16px;
+            max-width: 360px; max-height: 300px;
+            font-size: 11px;
+            backdrop-filter: blur(12px);
+            display: none; overflow-y: auto;
+        }
+        .node-panel.visible { display: block; }
+        .node-panel .np-title { color: #ff9800; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+        .node-panel .np-cluster { color: #4fc3f7; font-size: 11px; font-weight: 600; }
+        .node-panel .np-content { color: #90a4ae; margin-top: 6px; line-height: 1.5; }
+        .node-panel .np-meta { color: #546e7a; margin-top: 6px; font-size: 10px; }
+        .np-tag { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 3px; margin: 1px 2px; background: rgba(79,195,247,0.1); color: #4fc3f7; }
+        .np-bubble { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(255,152,0,0.1); color: #ff9800; }
+
+        /* Stats */
+        .stats {
+            position: fixed; bottom: 12px; right: 12px; z-index: 100;
+            background: rgba(8, 12, 22, 0.95);
+            border: 1px solid rgba(30, 45, 61, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px; font-size: 10px;
+            backdrop-filter: blur(12px);
+        }
+        .stats .row { display: flex; justify-content: space-between; gap: 14px; padding: 1px 0; }
+        .stats .row .v { color: #4fc3f7; font-weight: 700; }
+
+        /* Legend */
+        .legend {
+            position: fixed; top: 42px; right: 10px; z-index: 100;
+            background: rgba(8, 12, 22, 0.9);
+            border: 1px solid rgba(30, 45, 61, 0.25);
+            border-radius: 6px;
+            padding: 6px 10px; font-size: 9px;
+            max-height: 220px; overflow-y: auto;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; padding: 1px 0; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+        /* Cluster label */
+        .cluster-label-3d { display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>&#129513; <span class="accent">Klotski</span> State-Space Graph</h1>
+        <div class="header-right">
+            <div class="badge">Nodes: <span class="n" id="nodeCount">0</span></div>
+            <div class="badge">Edges: <span class="n" id="edgeCount">0</span></div>
+            <div class="badge">Clusters: <span class="n" id="clusterCount">0</span></div>
+            <div class="btn" id="clusterBtn" onclick="runClustering()">Re-Cluster</div>
+            <div class="btn" id="seedBtn" onclick="seedAndCluster()">Seed + Cluster</div>
+            <div class="btn" id="metaBtn" onclick="toggleMetaGraph()">Meta-Graph</div>
+            <div class="badge" id="metaRoot" style="display:none">Root: <span class="n" id="metaRootTopic">-</span></div>
+            <div class="btn" onclick="resetCamera()">Reset</div>
+            <a class="btn" href="/brain" style="text-decoration:none">Brain</a>
+        </div>
+    </div>
+
+    <canvas id="canvas3d"></canvas>
+
+    <div class="load-overlay" id="loadOverlay">
+        <div class="spinner"></div>
+        <div class="load-text">Initializing Thought Graph</div>
+        <div class="load-step" id="loadStep">Loading...</div>
+        <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+    </div>
+
+    <div class="node-panel" id="nodePanel">
+        <div class="np-title" id="npTitle"></div>
+        <div class="np-cluster" id="npCluster"></div>
+        <div class="np-content" id="npContent"></div>
+        <div class="np-meta" id="npMeta"></div>
+    </div>
+
+    <div class="stats" id="statsPanel">
+        <div class="row"><span>Status</span><span class="v" id="sStatus">Init</span></div>
+        <div class="row"><span>Nodes</span><span class="v" id="sNodes">0</span></div>
+        <div class="row"><span>Edges</span><span class="v" id="sEdges">0</span></div>
+        <div class="row"><span>Clusters</span><span class="v" id="sClusters">0</span></div>
+        <div class="row"><span>Coherence</span><span class="v" id="sCoherence">-</span></div>
+    </div>
+
+    <div class="legend" id="legend"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+    // ═══════════════════════════════════════════════════════════════
+    // OrbitControls (inline)
+    // ═══════════════════════════════════════════════════════════════
+    (function(){
+        THREE.OrbitControls=function(cam,el){
+            this.camera=cam;this.domElement=el;this.target=new THREE.Vector3();
+            this.enableDamping=true;this.dampingFactor=0.06;this.rotateSpeed=0.5;
+            this.autoRotate=true;this.autoRotateSpeed=0.08;
+            var scope=this,sph=new THREE.Spherical(),sphD=new THREE.Spherical(),
+                scale=1,panOff=new THREE.Vector3(),rStart=new THREE.Vector2(),
+                mDown=false,rDown=false,pStart=new THREE.Vector2();
+            var off=new THREE.Vector3().copy(cam.position).sub(scope.target);
+            sph.setFromVector3(off);
+            this.update=function(){
+                if(scope.autoRotate&&!mDown)sphD.theta-=0.0008*scope.autoRotateSpeed;
+                sph.theta+=sphD.theta*scope.dampingFactor;
+                sph.phi+=sphD.phi*scope.dampingFactor;
+                sph.phi=Math.max(0.1,Math.min(Math.PI-0.1,sph.phi));
+                sph.radius*=scale;sph.radius=Math.max(3,Math.min(60,sph.radius));
+                var o=new THREE.Vector3().setFromSpherical(sph);
+                cam.position.copy(scope.target).add(o).add(panOff);
+                cam.lookAt(scope.target);
+                sphD.theta*=(1-scope.dampingFactor);sphD.phi*=(1-scope.dampingFactor);
+                panOff.multiplyScalar(1-scope.dampingFactor);scale=1;
+            };
+            function mD(e){if(e.button===2){rDown=true;pStart.set(e.clientX,e.clientY)}else{mDown=true;rStart.set(e.clientX,e.clientY)}}
+            function mM(e){
+                if(mDown){sphD.theta-=(e.clientX-rStart.x)*0.004*scope.rotateSpeed;sphD.phi-=(e.clientY-rStart.y)*0.004*scope.rotateSpeed;rStart.set(e.clientX,e.clientY)}
+                if(rDown){var r=new THREE.Vector3(),u=new THREE.Vector3();r.setFromMatrixColumn(cam.matrix,0);u.setFromMatrixColumn(cam.matrix,1);panOff.add(r.multiplyScalar(-(e.clientX-pStart.x)*0.015));panOff.add(u.multiplyScalar((e.clientY-pStart.y)*0.015));pStart.set(e.clientX,e.clientY)}
+            }
+            function mU(){mDown=false;rDown=false}
+            function wh(e){if(e.deltaY>0)scale*=1.06;else scale/=1.06;e.preventDefault()}
+            el.addEventListener('mousedown',mD);el.addEventListener('mousemove',mM);
+            el.addEventListener('mouseup',mU);el.addEventListener('mouseleave',mU);
+            el.addEventListener('wheel',wh,{passive:false});
+            el.addEventListener('contextmenu',function(e){e.preventDefault()});
+        };
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    // Color palettes
+    // ═══════════════════════════════════════════════════════════════
+    var CLUSTER_COLORS = [
+        0x4fc3f7, 0xff9800, 0x66bb6a, 0xef5350, 0xab47bc,
+        0x26c6da, 0xffa726, 0x42a5f5, 0x7e57c2, 0x26a69a,
+        0xec407a, 0x5c6bc0, 0xffee58, 0x8d6e63, 0x78909c,
+    ];
+    var NOISE_COLOR = 0x37474f;  // Unclustered nodes
+
+    // ═══════════════════════════════════════════════════════════════
+    // Scene
+    // ═══════════════════════════════════════════════════════════════
+    var HO = 32;
+    var canvas = document.getElementById('canvas3d');
+    var W = window.innerWidth, H = window.innerHeight - HO;
+
+    var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(W, H);
+    renderer.setClearColor(0x050810, 1);
+
+    var scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x050810, 0.012);
+
+    var camera = new THREE.PerspectiveCamera(55, W/H, 0.1, 200);
+    camera.position.set(18, 12, 18);
+
+    var controls = new THREE.OrbitControls(camera, canvas);
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0x1a2235, 0.5));
+    var sun = new THREE.DirectionalLight(0xffeedd, 0.5);
+    sun.position.set(10, 20, 10);
+    scene.add(sun);
+
+    var pLight1 = new THREE.PointLight(0xff9800, 0.6, 40);
+    pLight1.position.set(0, 5, 0);
+    scene.add(pLight1);
+
+    var pLight2 = new THREE.PointLight(0x4fc3f7, 0.3, 40);
+    pLight2.position.set(-15, 3, 10);
+    scene.add(pLight2);
+
+    // Dust particles
+    var dustCount = 400;
+    var dustGeo = new THREE.BufferGeometry();
+    var dp = new Float32Array(dustCount * 3);
+    for (var i = 0; i < dustCount; i++) {
+        dp[i*3] = (Math.random()-0.5)*60;
+        dp[i*3+1] = (Math.random()-0.5)*30;
+        dp[i*3+2] = (Math.random()-0.5)*60;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dp, 3));
+    var dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({color:0x4fc3f7, size:0.03, transparent:true, opacity:0.3}));
+    scene.add(dust);
+
+    // Central core
+    var coreOuter = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.6, 2),
+        new THREE.MeshPhongMaterial({color:0xff9800, emissive:0xff6600, emissiveIntensity:0.5, transparent:true, opacity:0.3, wireframe:true})
+    );
+    scene.add(coreOuter);
+    var coreInner = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.25, 1),
+        new THREE.MeshPhongMaterial({color:0xffb74d, emissive:0xff9800, emissiveIntensity:0.7})
+    );
+    scene.add(coreInner);
+
+    // ═══════════════════════════════════════════════════════════════
+    // Graph Data Structures
+    // ═══════════════════════════════════════════════════════════════
+    var graphGroup = new THREE.Group();
+    scene.add(graphGroup);
+
+    var nodeMeshes = [];       // {mesh, data, id}
+    var edgeLines = [];        // THREE.Line objects
+    var nodeById = {};         // id -> {mesh, data}
+    var clusterLabels = [];    // Sprite labels at cluster centroids
+    var clickTargets = [];     // Meshes for raycasting
+
+    function clearGraph() {
+        while (graphGroup.children.length > 0) graphGroup.remove(graphGroup.children[0]);
+        nodeMeshes = []; edgeLines = []; nodeById = {}; clickTargets = []; clusterLabels = [];
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Graph Rendering
+    // ═══════════════════════════════════════════════════════════════
+    function renderGraph(data) {
+        clearGraph();
+        var nodes = data.graph.nodes || [];
+        var edges = data.graph.edges || [];
+        var clusters = data.clusters || [];
+
+        if (nodes.length === 0) {
+            document.getElementById('sStatus').textContent = 'No nodes';
+            return;
+        }
+
+        // ── Build id lookup for edges ──
+        var posById = {};
+
+        // ── Render Nodes ──
+        for (var ni = 0; ni < nodes.length; ni++) {
+            var nd = nodes[ni];
+            var cid = nd.cluster_id;
+            var color = (cid >= 0) ? CLUSTER_COLORS[cid % CLUSTER_COLORS.length] : NOISE_COLOR;
+            var radius = nd.size * 0.15;
+
+            // Node sphere
+            var geo = new THREE.SphereGeometry(radius, 12, 8);
+            var mat = new THREE.MeshPhongMaterial({
+                color: color,
+                emissive: color,
+                emissiveIntensity: (cid >= 0) ? 0.25 : 0.08,
+                transparent: true,
+                opacity: (cid >= 0) ? 0.9 : 0.5,
+                shininess: 50,
+            });
+            var mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(nd.x, nd.y, nd.z);
+            graphGroup.add(mesh);
+
+            // Outer glow ring for large nodes
+            if (nd.size >= 2.5) {
+                var glowGeo = new THREE.SphereGeometry(radius * 1.6, 8, 6);
+                var glowMat = new THREE.MeshBasicMaterial({
+                    color: color, transparent: true, opacity: 0.06,
+                });
+                var glow = new THREE.Mesh(glowGeo, glowMat);
+                glow.position.copy(mesh.position);
+                graphGroup.add(glow);
+            }
+
+            // Click target (slightly larger)
+            var ctGeo = new THREE.SphereGeometry(radius * 1.5, 6, 4);
+            var ctMat = new THREE.MeshBasicMaterial({visible: false});
+            var ct = new THREE.Mesh(ctGeo, ctMat);
+            ct.position.copy(mesh.position);
+            ct.userData = {nodeId: nd.id, idx: ni};
+            graphGroup.add(ct);
+            clickTargets.push(ct);
+
+            var entry = {mesh: mesh, data: nd, id: nd.id};
+            nodeMeshes.push(entry);
+            nodeById[nd.id] = entry;
+            posById[nd.id] = mesh.position;
+        }
+
+        // ── Render Edges ──
+        for (var ei = 0; ei < edges.length; ei++) {
+            var edge = edges[ei];
+            var pA = posById[edge.source];
+            var pB = posById[edge.target];
+            if (!pA || !pB) continue;
+
+            var w = edge.weight || 0.5;
+            // Opacity based on weight
+            var opacity = Math.min(0.35, 0.05 + w * 0.3);
+
+            // Determine edge color: same cluster = cluster color, cross-cluster = grey
+            var nA = nodeById[edge.source];
+            var nB = nodeById[edge.target];
+            var edgeColor = 0x2a3f54;
+            if (nA && nB && nA.data.cluster_id >= 0 && nA.data.cluster_id === nB.data.cluster_id) {
+                edgeColor = CLUSTER_COLORS[nA.data.cluster_id % CLUSTER_COLORS.length];
+                opacity = Math.min(0.4, opacity * 1.5);
+            }
+
+            var lineGeo = new THREE.BufferGeometry().setFromPoints([pA, pB]);
+            var lineMat = new THREE.LineBasicMaterial({
+                color: edgeColor, transparent: true, opacity: opacity,
+            });
+            var line = new THREE.Line(lineGeo, lineMat);
+            graphGroup.add(line);
+            edgeLines.push(line);
+        }
+
+        // ── Cluster centroid labels ──
+        for (var ci = 0; ci < clusters.length; ci++) {
+            var cl = clusters[ci];
+            var cColor = CLUSTER_COLORS[cl.cluster_id % CLUSTER_COLORS.length];
+
+            // Sprite label at centroid
+            var lCanvas = document.createElement('canvas');
+            lCanvas.width = 512; lCanvas.height = 64;
+            var ctx = lCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 512, 64);
+
+            // Background pill
+            ctx.fillStyle = 'rgba(5, 8, 16, 0.7)';
+            ctx.beginPath();
+            ctx.roundRect(20, 8, 472, 48, 12);
+            ctx.fill();
+
+            // Border
+            ctx.strokeStyle = '#' + cColor.toString(16).padStart(6, '0');
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(20, 8, 472, 48, 12);
+            ctx.stroke();
+
+            // Text
+            ctx.font = 'bold 22px Segoe UI';
+            ctx.fillStyle = '#' + cColor.toString(16).padStart(6, '0');
+            ctx.textAlign = 'center';
+            var lText = cl.label;
+            if (lText.length > 28) lText = lText.substring(0, 26) + '..';
+            ctx.fillText(lText, 256, 38);
+
+            // Size badge
+            ctx.font = '14px Segoe UI';
+            ctx.fillStyle = '#78909c';
+            ctx.textAlign = 'right';
+            ctx.fillText(cl.size + ' nodes', 480, 38);
+
+            var tex = new THREE.CanvasTexture(lCanvas);
+            var spriteMat = new THREE.SpriteMaterial({map: tex, transparent: true, opacity: 0.85});
+            var sprite = new THREE.Sprite(spriteMat);
+            sprite.position.set(cl.centroid.x, cl.centroid.y + 1.5, cl.centroid.z);
+            sprite.scale.set(4, 0.5, 1);
+            graphGroup.add(sprite);
+            clusterLabels.push(sprite);
+        }
+
+        // ── Build Legend ──
+        buildLegend(clusters);
+
+        // ── Update stats ──
+        document.getElementById('nodeCount').textContent = nodes.length;
+        document.getElementById('edgeCount').textContent = edges.length;
+        document.getElementById('clusterCount').textContent = clusters.length;
+        document.getElementById('sNodes').textContent = nodes.length;
+        document.getElementById('sEdges').textContent = edges.length;
+        document.getElementById('sClusters').textContent = clusters.length;
+        document.getElementById('sStatus').textContent = 'Active';
+
+        if (clusters.length > 0) {
+            var avgCoh = clusters.reduce(function(s, c) { return s + c.coherence; }, 0) / clusters.length;
+            document.getElementById('sCoherence').textContent = avgCoh.toFixed(3);
+        }
+    }
+
+    function buildLegend(clusters) {
+        var el = document.getElementById('legend');
+        while (el.firstChild) el.removeChild(el.firstChild);
+
+        var title = document.createElement('div');
+        title.style.cssText = 'color:#78909c;font-weight:700;margin-bottom:2px;font-size:10px;';
+        title.textContent = 'Clusters';
+        el.appendChild(title);
+
+        for (var i = 0; i < clusters.length; i++) {
+            var cl = clusters[i];
+            var color = CLUSTER_COLORS[cl.cluster_id % CLUSTER_COLORS.length];
+
+            var item = document.createElement('div');
+            item.className = 'legend-item';
+
+            var dot = document.createElement('div');
+            dot.className = 'legend-dot';
+            dot.style.background = '#' + color.toString(16).padStart(6, '0');
+            item.appendChild(dot);
+
+            var label = document.createElement('span');
+            label.style.color = '#90a4ae';
+            var txt = cl.label;
+            if (txt.length > 24) txt = txt.substring(0, 22) + '..';
+            label.textContent = txt + ' (' + cl.size + ')';
+            item.appendChild(label);
+
+            el.appendChild(item);
+        }
+
+        // Noise entry
+        var noiseItem = document.createElement('div');
+        noiseItem.className = 'legend-item';
+        var noiseDot = document.createElement('div');
+        noiseDot.className = 'legend-dot';
+        noiseDot.style.background = '#37474f';
+        noiseItem.appendChild(noiseDot);
+        var noiseLabel = document.createElement('span');
+        noiseLabel.style.color = '#546e7a';
+        noiseLabel.textContent = 'Unclustered';
+        noiseItem.appendChild(noiseLabel);
+        el.appendChild(noiseItem);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Click Interaction
+    // ═══════════════════════════════════════════════════════════════
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2();
+    var hoveredNode = null;
+
+    canvas.addEventListener('click', function(e) {
+        mouse.x = (e.clientX / W) * 2 - 1;
+        mouse.y = -((e.clientY - HO) / H) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        var hits = raycaster.intersectObjects(clickTargets);
+
+        if (hits.length > 0) {
+            var idx = hits[0].object.userData.idx;
+            showNodeInfo(idx);
+        } else {
+            document.getElementById('nodePanel').classList.remove('visible');
+        }
+    });
+
+    function showNodeInfo(idx) {
+        var nm = nodeMeshes[idx];
+        if (!nm) return;
+        var nd = nm.data;
+
+        document.getElementById('npTitle').textContent = nd.label;
+
+        var clText = nd.cluster_id >= 0 ? ('Cluster ' + nd.cluster_id) : 'Unclustered';
+        document.getElementById('npCluster').textContent = clText;
+
+        document.getElementById('npContent').textContent = nd.content_preview || '';
+
+        // Meta info
+        var metaEl = document.getElementById('npMeta');
+        while (metaEl.firstChild) metaEl.removeChild(metaEl.firstChild);
+
+        if (nd.bubble) {
+            var bTag = document.createElement('span');
+            bTag.className = 'np-bubble';
+            bTag.textContent = nd.bubble;
+            metaEl.appendChild(bTag);
+        }
+        var tags = nd.tags || [];
+        for (var ti = 0; ti < tags.length; ti++) {
+            var tag = document.createElement('span');
+            tag.className = 'np-tag';
+            tag.textContent = tags[ti];
+            metaEl.appendChild(tag);
+        }
+        var srcSpan = document.createElement('div');
+        srcSpan.style.cssText = 'margin-top:4px;color:#546e7a;';
+        srcSpan.textContent = 'Source: ' + (nd.source || '?') + ' | Confidence: ' + nd.confidence;
+        metaEl.appendChild(srcSpan);
+
+        document.getElementById('nodePanel').classList.add('visible');
+
+        // Highlight: flash the node
+        nm.mesh.material.emissiveIntensity = 0.8;
+        setTimeout(function() { nm.mesh.material.emissiveIntensity = 0.25; }, 600);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Data Pipeline
+    // ═══════════════════════════════════════════════════════════════
+    function setLoad(text, pct) {
+        document.getElementById('loadStep').textContent = text;
+        document.getElementById('loadBar').style.width = pct + '%';
+    }
+    function hideLoad() { document.getElementById('loadOverlay').classList.add('hidden'); }
+    function showLoad() { document.getElementById('loadOverlay').classList.remove('hidden'); }
+
+    async function seedAndCluster() {
+        var btn = document.getElementById('seedBtn');
+        btn.classList.add('loading'); btn.textContent = 'Seeding...';
+        showLoad();
+
+        try {
+            setLoad('Seeding Rowboat data into Moltbook...', 15);
+            var sr = await fetch('/api/cortex/seed-rowboat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({max_seeds: 20, include_ideas: true})
+            });
+            var sd = await sr.json();
+            if (!sd.seeded) { setLoad('Seed failed: ' + (sd.error || ''), 100); btn.textContent = 'Seed + Cluster'; btn.classList.remove('loading'); setTimeout(hideLoad, 2000); return; }
+
+            setLoad(sd.moltbook_entries + ' entries seeded', 40);
+            btn.classList.add('active'); btn.textContent = 'Seeded';
+
+            await runClusterInternal(45);
+        } catch(e) {
+            setLoad('Error: ' + e.message, 100); setTimeout(hideLoad, 2000);
+        }
+        btn.classList.remove('loading');
+    }
+
+    async function runClustering() { showLoad(); setLoad('Clustering...', 20); await runClusterInternal(20); }
+
+    async function runClusterInternal(startPct) {
+        var btn = document.getElementById('clusterBtn');
+        btn.classList.add('loading'); btn.textContent = 'Clustering...';
+        setLoad('Running DBSCAN + PCA projection...', startPct + 15);
+
+        try {
+            var r = await fetch('/api/cortex/thought-clusters', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({eps: 0.45, min_samples: 2, source: 'all', edge_threshold: 0.55, spread: 14.0})
+            });
+            var d = await r.json();
+            if (d.error) { setLoad('Error: ' + d.error, 100); btn.textContent = 'Re-Cluster'; btn.classList.remove('loading'); setTimeout(hideLoad, 2000); return; }
+
+            var nc = (d.graph && d.graph.nodes) ? d.graph.nodes.length : 0;
+            var ec = (d.graph && d.graph.edges) ? d.graph.edges.length : 0;
+            setLoad('Rendering ' + nc + ' nodes, ' + ec + ' edges...', startPct + 40);
+            await new Promise(function(r) { setTimeout(r, 200); });
+
+            renderGraph(d);
+
+            btn.classList.add('active');
+            btn.textContent = (d.clusters || []).length + ' Clusters';
+            setLoad('Graph ready', 100);
+            setTimeout(hideLoad, 400);
+        } catch(e) {
+            setLoad('Error: ' + e.message, 100); btn.textContent = 'Re-Cluster'; setTimeout(hideLoad, 2000);
+        }
+        btn.classList.remove('loading');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Animation
+    // ═══════════════════════════════════════════════════════════════
+    var clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        var t = clock.getElapsedTime();
+
+        // Core
+        coreOuter.rotation.x = t * 0.15;
+        coreOuter.rotation.y = t * 0.25;
+        coreOuter.material.emissiveIntensity = 0.4 + 0.15 * Math.sin(t * 1.2);
+        coreInner.rotation.y = -t * 0.4;
+        pLight1.intensity = 0.5 + 0.2 * Math.sin(t * 0.8);
+
+        // Gentle node breathing
+        for (var i = 0; i < nodeMeshes.length; i++) {
+            var nm = nodeMeshes[i];
+            var phase = t * 0.3 + i * 0.7;
+            nm.mesh.position.y = nm.data.y + 0.04 * Math.sin(phase);
+        }
+
+        // Dust drift
+        dust.rotation.y = t * 0.005;
+
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // ═══════════════════════════════════════════════════════════════
+    // Utils
+    // ═══════════════════════════════════════════════════════════════
+    function resetCamera() { camera.position.set(18, 12, 18); controls.target.set(0, 0, 0); }
+
+    window.addEventListener('resize', function() {
+        W = window.innerWidth; H = window.innerHeight - HO;
+        camera.aspect = W / H;
+        camera.updateProjectionMatrix();
+        renderer.setSize(W, H);
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // Auto-Init Pipeline
+    // ═══════════════════════════════════════════════════════════════
+    (async function() {
+        setLoad('Checking cached graph...', 10);
+        try {
+            var cached = await fetch('/api/cortex/thought-clusters').then(function(r){return r.json()});
+            if (cached && cached.graph && cached.graph.nodes && cached.graph.nodes.length > 0) {
+                setLoad('Loading cached graph (' + cached.graph.nodes.length + ' nodes)...', 50);
+                await new Promise(function(r){setTimeout(r, 150)});
+                renderGraph(cached);
+                document.getElementById('clusterBtn').classList.add('active');
+                document.getElementById('clusterBtn').textContent = (cached.clusters||[]).length + ' Clusters';
+                setLoad('Ready', 100);
+                setTimeout(hideLoad, 300);
+                return;
+            }
+        } catch(e){}
+
+        // No cache — auto-seed + cluster if Rowboat data available
+        setLoad('Checking Rowboat data...', 15);
+        try {
+            var rd = await fetch('/api/cortex/rowboat-data').then(function(r){return r.json()});
+            if (rd && rd.loaded && rd.stats && rd.stats.bubble_count > 0) {
+                setLoad('Auto-seeding ' + rd.stats.bubble_count + ' bubbles...', 25);
+                var sr = await fetch('/api/cortex/seed-rowboat', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({max_seeds: 20, include_ideas: true})
+                });
+                var sd = await sr.json();
+                if (sd.seeded) {
+                    document.getElementById('seedBtn').classList.add('active');
+                    document.getElementById('seedBtn').textContent = 'Seeded';
+                    setLoad(sd.moltbook_entries + ' entries. Clustering...', 45);
+
+                    var cr = await fetch('/api/cortex/thought-clusters', {
+                        method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({eps: 0.45, min_samples: 2, source:'all', edge_threshold: 0.55, spread: 14.0})
+                    });
+                    var cd = await cr.json();
+                    if (cd.graph && cd.graph.nodes && cd.graph.nodes.length > 0) {
+                        setLoad('Rendering graph...', 80);
+                        await new Promise(function(r){setTimeout(r, 150)});
+                        renderGraph(cd);
+                        document.getElementById('clusterBtn').classList.add('active');
+                        document.getElementById('clusterBtn').textContent = (cd.clusters||[]).length + ' Clusters';
+                        setLoad('Ready', 100);
+                        setTimeout(hideLoad, 300);
+                        return;
+                    }
+                    setLoad('No clusters formed', 100);
+                } else {
+                    setLoad('Seed failed', 100);
+                }
+            } else {
+                setLoad('No Rowboat data available', 100);
+            }
+        } catch(e) {
+            setLoad('Use Seed + Cluster', 100);
+        }
+        setTimeout(hideLoad, 2000);
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    // Meta-Graph Overlay
+    // ═══════════════════════════════════════════════════════════════
+    var metaGroup = new THREE.Group();
+    scene.add(metaGroup);
+    var metaActive = false;
+
+    async function toggleMetaGraph() {
+        var btn = document.getElementById('metaBtn');
+        if (metaActive) {
+            // Hide meta-graph
+            metaActive = false;
+            btn.classList.remove('active');
+            while (metaGroup.children.length > 0) metaGroup.remove(metaGroup.children[0]);
+            document.getElementById('metaRoot').style.display = 'none';
+            return;
+        }
+
+        btn.classList.add('loading');
+        btn.textContent = 'Loading...';
+        try {
+            var resp = await fetch('/api/cortex/meta-graph');
+            var data = await resp.json();
+
+            if (!data.clusters || data.clusters.length === 0) {
+                btn.textContent = 'No Meta-Graph';
+                btn.classList.remove('loading');
+                setTimeout(function() { btn.textContent = 'Meta-Graph'; }, 2000);
+                return;
+            }
+
+            renderMetaGraph(data);
+            metaActive = true;
+            btn.classList.add('active');
+            btn.textContent = data.clusters.length + ' Areals';
+
+            // Show meta-root
+            if (data.meta_root && data.meta_root.topic) {
+                document.getElementById('metaRootTopic').textContent = data.meta_root.topic;
+                document.getElementById('metaRoot').style.display = '';
+            }
+        } catch(e) {
+            btn.textContent = 'Error';
+            setTimeout(function() { btn.textContent = 'Meta-Graph'; }, 2000);
+        }
+        btn.classList.remove('loading');
+    }
+
+    function renderMetaGraph(data) {
+        while (metaGroup.children.length > 0) metaGroup.remove(metaGroup.children[0]);
+
+        var clusters = data.clusters || [];
+        var edges = data.inter_cluster_edges || [];
+        var metaRootId = data.meta_root ? data.meta_root.cluster_id : null;
+
+        // Cluster-level nodes (larger spheres at centroid positions)
+        var clusterPositions = {};
+        for (var ci = 0; ci < clusters.length; ci++) {
+            var cl = clusters[ci];
+            var c3d = cl.centroid_3d;
+            var isRoot = (cl.cluster_id === metaRootId);
+
+            // Size proportional to member count
+            var radius = 0.5 + Math.sqrt(cl.member_count) * 0.3;
+            var color = CLUSTER_COLORS[cl.cluster_id % CLUSTER_COLORS.length];
+
+            // Semi-transparent sphere
+            var geo = new THREE.SphereGeometry(radius, 16, 12);
+            var mat = new THREE.MeshPhongMaterial({
+                color: color,
+                emissive: color,
+                emissiveIntensity: isRoot ? 0.6 : 0.2,
+                transparent: true,
+                opacity: 0.35,
+                shininess: 80,
+            });
+            var mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(c3d.x, c3d.y, c3d.z);
+            metaGroup.add(mesh);
+
+            // Root pulsing glow
+            if (isRoot) {
+                var glowGeo = new THREE.SphereGeometry(radius * 2.0, 12, 8);
+                var glowMat = new THREE.MeshBasicMaterial({
+                    color: 0xff9800, transparent: true, opacity: 0.08,
+                });
+                var glow = new THREE.Mesh(glowGeo, glowMat);
+                glow.position.copy(mesh.position);
+                glow.userData.isRootGlow = true;
+                metaGroup.add(glow);
+            }
+
+            // Label sprite
+            var lCanvas = document.createElement('canvas');
+            lCanvas.width = 512; lCanvas.height = 64;
+            var ctx = lCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 512, 64);
+            ctx.fillStyle = 'rgba(5, 8, 16, 0.75)';
+            ctx.beginPath(); ctx.roundRect(10, 8, 492, 48, 12); ctx.fill();
+            ctx.strokeStyle = '#' + color.toString(16).padStart(6, '0');
+            ctx.lineWidth = isRoot ? 3 : 1.5;
+            ctx.beginPath(); ctx.roundRect(10, 8, 492, 48, 12); ctx.stroke();
+            ctx.font = 'bold 20px Segoe UI';
+            ctx.fillStyle = '#' + color.toString(16).padStart(6, '0');
+            ctx.textAlign = 'center';
+            var txt = cl.dominant_topic || ('Cluster ' + cl.cluster_id);
+            if (txt.length > 26) txt = txt.substring(0, 24) + '..';
+            ctx.fillText((isRoot ? '\u2605 ' : '') + txt, 256, 38);
+
+            var tex = new THREE.CanvasTexture(lCanvas);
+            var spriteMat = new THREE.SpriteMaterial({map: tex, transparent: true, opacity: 0.9});
+            var sprite = new THREE.Sprite(spriteMat);
+            sprite.position.set(c3d.x, c3d.y + radius + 1.0, c3d.z);
+            sprite.scale.set(4, 0.5, 1);
+            metaGroup.add(sprite);
+
+            clusterPositions[cl.cluster_id] = new THREE.Vector3(c3d.x, c3d.y, c3d.z);
+        }
+
+        // Inter-cluster edges (thicker, colored by similarity)
+        for (var ei = 0; ei < edges.length; ei++) {
+            var edge = edges[ei];
+            var pA = clusterPositions[edge.source];
+            var pB = clusterPositions[edge.target];
+            if (!pA || !pB) continue;
+
+            var opacity = Math.min(0.6, 0.1 + edge.similarity * 0.5);
+            var lineGeo = new THREE.BufferGeometry().setFromPoints([pA, pB]);
+            var lineMat = new THREE.LineBasicMaterial({
+                color: 0xff9800, transparent: true, opacity: opacity, linewidth: 2,
+            });
+            metaGroup.add(new THREE.Line(lineGeo, lineMat));
+        }
+    }
+    </script>
+</body>
+</html>

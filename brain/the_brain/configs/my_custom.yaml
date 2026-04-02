@@ -1,0 +1,58 @@
+# My Custom ATM-R Configuration
+
+modalities:
+  - vision
+  - audio
+  - touch
+  - taste
+  - vestibular
+  - threat
+
+# Try different dimensions
+dimensions:
+  vision: 256      # Increased for more capacity
+  audio: 128       # Increased
+  touch: 64
+  taste: 32
+  vestibular: 32
+  threat: 16
+
+# Experiment with time constants
+tau:
+  vision: 60.0     # Slower (more stable)
+  audio: 30.0      # Faster (more responsive)
+  touch: 35.0
+  taste: 45.0
+  vestibular: 25.0
+  threat: 15.0     # Very fast for safety
+
+# Adjust priorities
+priors:
+  vision: 0.3      # Higher baseline
+  audio: 0.2
+  touch: 0.1
+  taste: 0.05
+  vestibular: 0.1
+  threat: 0.25
+
+# Make gating sharper or softer
+gating:
+  temperature: 0.3  # Lower = sharper selection (winner-take-all)
+  # Try: 0.1 (very sharp), 0.5 (balanced), 1.0 (softer)
+
+# Routing
+routing:
+  num_targets: 3
+
+# Learning (for adaptive version)
+learning:
+  lr_input: 0.002        # Faster learning
+  lr_generative: 0.02
+  lr_prior: 0.0002
+  target_entropy: 1.8    # Higher = more diversity
+
+# Simulation
+simulation:
+  dt: 1.0
+  seed: 123  # Different seed
+  nonlinearity: "tanh"

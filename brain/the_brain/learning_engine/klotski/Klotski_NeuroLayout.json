@@ -1,0 +1,118 @@
+{
+  "name": "Huarong Dao Classic",
+  "description": "Classic Klotski puzzle with brain-module mapping for neurosymbolic training",
+  "board": {
+    "width": 4,
+    "height": 5,
+    "exit": [[1, 4], [2, 4]]
+  },
+  "goal": {
+    "piece_id": "G",
+    "target_x": 1,
+    "target_y": 3,
+    "description": "Move the 2x2 General piece to the bottom center exit"
+  },
+  "pieces": [
+    {"id": "G", "x": 1, "y": 0, "w": 2, "h": 2},
+    {"id": "V", "x": 0, "y": 0, "w": 1, "h": 2},
+    {"id": "A", "x": 3, "y": 0, "w": 1, "h": 2},
+    {"id": "D", "x": 1, "y": 2, "w": 2, "h": 1},
+    {"id": "S", "x": 0, "y": 2, "w": 1, "h": 2},
+    {"id": "L", "x": 3, "y": 2, "w": 1, "h": 2},
+    {"id": "C", "x": 1, "y": 3, "w": 1, "h": 1},
+    {"id": "I", "x": 2, "y": 3, "w": 1, "h": 1},
+    {"id": "M", "x": 0, "y": 4, "w": 1, "h": 1},
+    {"id": "O", "x": 3, "y": 4, "w": 1, "h": 1}
+  ],
+  "meta": {
+    "mapping": {
+      "G": {
+        "name": "General",
+        "module": "DMN",
+        "module_name": "Default Mode Network",
+        "ba": [10, 31, 39],
+        "math": "self_reference",
+        "role": "Goal piece - self-referential processing"
+      },
+      "V": {
+        "name": "Guard-Left",
+        "module": "VIS",
+        "module_name": "Visual Cortex",
+        "ba": [17, 18, 19],
+        "math": "spatial_transform",
+        "role": "Visual processing and spatial awareness"
+      },
+      "A": {
+        "name": "Guard-Right",
+        "module": "AUD",
+        "module_name": "Auditory Cortex",
+        "ba": [41, 42, 22],
+        "math": "temporal_pattern",
+        "role": "Auditory processing and pattern recognition"
+      },
+      "D": {
+        "name": "Horizontal-Block",
+        "module": "DLPFC",
+        "module_name": "Dorsolateral Prefrontal Cortex",
+        "ba": [9, 46],
+        "math": "working_memory",
+        "role": "Executive function and working memory"
+      },
+      "S": {
+        "name": "Soldier-Left",
+        "module": "SOM",
+        "module_name": "Somatosensory Cortex",
+        "ba": [1, 2, 3],
+        "math": "proprioception",
+        "role": "Tactile and proprioceptive processing"
+      },
+      "L": {
+        "name": "Soldier-Right",
+        "module": "LAN",
+        "module_name": "Language Areas",
+        "ba": [44, 45, 22],
+        "math": "symbolic_reasoning",
+        "role": "Language processing and symbolic reasoning"
+      },
+      "C": {
+        "name": "Pawn-1",
+        "module": "ACC",
+        "module_name": "Anterior Cingulate Cortex",
+        "ba": [24, 32, 33],
+        "math": "conflict_detection",
+        "role": "Conflict monitoring and error detection"
+      },
+      "I": {
+        "name": "Pawn-2",
+        "module": "INS",
+        "module_name": "Insula",
+        "ba": [13, 14, 15],
+        "math": "interoception",
+        "role": "Interoception and emotional awareness"
+      },
+      "M": {
+        "name": "Pawn-3",
+        "module": "MTL",
+        "module_name": "Medial Temporal Lobe",
+        "ba": [27, 28, 35, 36],
+        "math": "memory_encoding",
+        "role": "Memory encoding and retrieval"
+      },
+      "O": {
+        "name": "Pawn-4",
+        "module": "OFC",
+        "module_name": "Orbitofrontal Cortex",
+        "ba": [11, 12, 47],
+        "math": "value_computation",
+        "role": "Value computation and decision making"
+      }
+    }
+  },
+  "optimal_solution_length": 81,
+  "total_states": 25955,
+  "metadata": {
+    "created": "2026-01-04",
+    "version": "1.0.0",
+    "purpose": "NeuroSymbolic Klotski training with brain module mapping"
+  }
+}

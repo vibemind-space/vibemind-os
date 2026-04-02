@@ -1,0 +1,111 @@
+# ============================================================
+# LLM Configuration — Multi-Provider Support
+# ============================================================
+# Zentrale Config fuer alle LLM-Aufrufe im Projekt.
+# Provider wechseln = nur hier aendern, kein Code anfassen.
+#
+# Unterstuetzte Provider:
+#   openai, anthropic, openrouter, gemini, ollama
+#
+# Reihenfolge: overrides[dir][role] > roles[role] > default
+# ============================================================
+
+# === API Keys (aus .env oder direkt) ===
+keys:
+  openai: ${OPENAI_API_KEY}
+  anthropic: ${ANTHROPIC_API_KEY}
+  openrouter: ${OPENROUTER_API_KEY}
+  gemini: ${GEMINI_API_KEY}
+  groq: ${GROQ_API_KEY}
+  ollama: null
+
+# === Provider Definitionen ===
+providers:
+  openai:
+    type: openai
+    base_url: https://api.openai.com/v1
+    key_ref: openai
+  anthropic:
+    type: anthropic
+    base_url: https://api.anthropic.com
+    key_ref: anthropic
+  openrouter:
+    type: openai
+    base_url: https://openrouter.ai/api/v1
+    key_ref: openrouter
+  gemini:
+    type: openai
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    key_ref: gemini
+  groq:
+    type: openai
+    base_url: https://api.groq.com/openai/v1
+    key_ref: groq
+  ollama:
+    type: openai
+    base_url: http://127.0.0.1:11434/v1
+    key_ref: null
+
+# === Default (global fallback) ===
+default:
+  provider: openrouter
+  model: openrouter/free
+  temperature: 0
+
+# === Rollen-basierte Modelle ===
+roles:
+  red_team:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0.7
+  blue_team:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0
+  judge:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0
+  analyzer:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0
+  think:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0
+  report:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0
+  issue_agent:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0
+  llm_target:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0
+  email_personalizer:
+    provider: groq
+    model: llama-3.3-70b-versatile
+    temperature: 0.7
+  email_response:
+    provider: groq
+    model: llama-3.3-70b-versatile
+    temperature: 0
+
+# === Per-Directory Overrides ===
+overrides:
+  poc_security_scanner:
+    default:
+      provider: openai
+      model: gpt-4o
+  pitch_deck_agent:
+    default:
+      provider: openrouter
+      model: arcee-ai/trinity-large-preview:free
+  pc-cleaner:
+    default:
+      provider: openai
+      model: gpt-4o-mini

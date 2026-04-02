@@ -1,0 +1,26 @@
+# Tahlamus CTM-ATM-R Requirements
+# Version: 1.0
+# Python: 3.11+
+
+# Core Dependencies
+numpy>=1.24.0
+torch>=2.0.0
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# Optional: Für Performance
+jax[cpu]>=0.4.0
+
+# Development Tools
+packaging>=23.0
+ninja>=1.11.0
+
+# Visualization
+matplotlib>=3.7.0
+
+# Note: mamba-ssm requires CUDA Toolkit on system!
+# For simulation mode (no CUDA Toolkit needed):
+#   - Use MambaSSMSimulator from mamba_integration.py
+# For real Mamba (requires System CUDA Toolkit):
+#   - pip install mamba-ssm
+#   - pip install causal-conv1d>=1.2.0

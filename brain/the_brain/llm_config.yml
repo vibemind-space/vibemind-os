@@ -1,0 +1,63 @@
+# ============================================================
+# LLM Configuration — Brain / The_Brain (MultiLLMRouter)
+# ============================================================
+# Zentrale Config fuer alle kognitiven LLM-Aufrufe.
+# Provider wechseln = nur hier aendern, kein Code anfassen.
+#
+# Reihenfolge: overrides[dir][role] > roles[role] > default
+# ============================================================
+
+keys:
+  openrouter: ${OPENROUTER_API_KEY}
+
+providers:
+  openrouter:
+    type: openai
+    base_url: https://openrouter.ai/api/v1
+    key_ref: openrouter
+
+# === Default (dev mode — free models) ===
+default:
+  provider: openrouter
+  model: openrouter/free
+  temperature: 0.5
+
+roles:
+  fast_reasoning:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0.3
+  planning:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0.7
+  context_tracking:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0.5
+  communication:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0.8
+  long_term_memory:
+    provider: openrouter
+    model: openrouter/free
+    temperature: 0.5
+  supermemory:
+    provider: openrouter
+    model: gpt-4o-mini
+    temperature: 0.5
+
+# === Production Overrides ===
+overrides:
+  production:
+    fast_reasoning:
+      model: xai/grok-code-fast-1
+    planning:
+      model: openai/gpt-5-pro
+    context_tracking:
+      model: anthropic/claude-sonnet-4.5
+    communication:
+      model: openai/gpt-5-chat
+    long_term_memory:
+      model: google/gemini-2.5-flash

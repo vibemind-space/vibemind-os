@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Brain — Unified View</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0e17;
+            color: #c8d6e5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── Layout Grid ── */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 280px 320px;
+            grid-template-rows: 48px 1fr;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* ── Header ── */
+        .header {
+            grid-column: 1 / 4;
+            background: linear-gradient(135deg, #0f1923 0%, #1a2332 100%);
+            border-bottom: 1px solid #1e2d3d;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header-left h1 { font-size: 17px; font-weight: 600; color: #e8f0fe; }
+        .header-left h1 .accent { color: #4fc3f7; }
+        .header-right { display: flex; align-items: center; gap: 16px; font-size: 12px; color: #78909c; }
+
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            display: inline-block; margin-right: 4px;
+            background: #555; transition: background 0.3s;
+        }
+        .status-dot.ok { background: #66bb6a; box-shadow: 0 0 6px #66bb6a; }
+        .status-dot.err { background: #ef5350; }
+
+        .badge {
+            background: #1e2d3d; border: 1px solid #2a3f54;
+            border-radius: 4px; padding: 2px 8px; font-size: 11px;
+            font-weight: 600; color: #90a4ae;
+        }
+        .badge.active { color: #4fc3f7; border-color: #4fc3f7; }
+
+        /* ── CTE Toggle ── */
+        .cte-toggle {
+            display: flex; align-items: center; gap: 8px;
+            background: #1e2d3d; border: 1px solid #2a3f54;
+            border-radius: 6px; padding: 4px 12px;
+            cursor: pointer; transition: all 0.3s;
+            font-size: 11px; font-weight: 600;
+            color: #78909c; user-select: none;
+        }
+        .cte-toggle:hover { border-color: #4fc3f7; }
+        .cte-toggle.active {
+            background: #0d2818; border-color: #66bb6a;
+            color: #66bb6a;
+        }
+        .cte-toggle .cte-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #555; transition: background 0.3s;
+        }
+        .cte-toggle.active .cte-dot {
+            background: #66bb6a; box-shadow: 0 0 6px #66bb6a;
+        }
+
+        /* ── Seed Rowboat Button ── */
+        .seed-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: #1e2d3d; border: 1px solid #2a3f54;
+            border-radius: 6px; padding: 4px 12px;
+            cursor: pointer; transition: all 0.3s;
+            font-size: 11px; font-weight: 600;
+            color: #78909c; user-select: none;
+        }
+        .seed-btn:hover { border-color: #ff9800; color: #ff9800; }
+        .seed-btn.seeded {
+            background: #1a2a1a; border-color: #66bb6a;
+            color: #66bb6a; cursor: default;
+        }
+        .seed-btn .seed-icon { font-size: 13px; }
+
+        /* ── Brain SVG Panel ── */
+        .brain-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            position: relative;
+            overflow: hidden;   /* FIX: prevent filter-induced expansion */
+            min-height: 0;      /* FIX: grid child shrink */
+        }
+        .brain-svg {
+            display: block;     /* FIX: no inline baseline spacing */
+            width: 100%;
+            max-width: 580px;
+            height: auto;
+            max-height: calc(100vh - 64px);
+        }
+
+        /* ── Modulation Panel ── */
+        .mod-panel {
+            border-left: 1px solid #1e2d3d;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .panel-title {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.6px; color: #78909c; margin-bottom: 4px;
+        }
+
+        /* Factor bars */
+        .factor { margin-bottom: 8px; }
+        .factor-label { font-size: 10px; color: #90a4ae; display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .factor-bar { height: 8px; border-radius: 4px; background: #1a2332; overflow: hidden; }
+        .factor-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+        .factor-fill.attn { background: linear-gradient(90deg, #1565c0, #42a5f5); }
+        .factor-fill.prec { background: linear-gradient(90deg, #6a1b9a, #ab47bc); }
+        .factor-fill.ffn  { background: linear-gradient(90deg, #e65100, #ff9800); }
+        .factor-fill.thr  { background: linear-gradient(90deg, #1b5e20, #66bb6a); }
+
+        /* Buffer stats */
+        .buf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .buf-stat {
+            background: #0d1420; border: 1px solid #1e2d3d; border-radius: 6px;
+            padding: 8px; text-align: center;
+        }
+        .buf-stat .val { font-size: 18px; font-weight: 700; color: #e8f0fe; }
+        .buf-stat .lbl { font-size: 9px; color: #607d8b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .buf-stat.pos .val { color: #66bb6a; }
+        .buf-stat.neg .val { color: #ef5350; }
+
+        /* Ring history chart */
+        .chart-wrap { flex: 1; min-height: 120px; position: relative; }
+        .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+        /* ── Right Column: Thoughts + Chat ── */
+        .right-panel {
+            border-left: 1px solid #1e2d3d;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* ── Thought Stream ── */
+        .thought-header {
+            padding: 10px 12px; border-bottom: 1px solid #1e2d3d;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .thought-list {
+            flex: 1; overflow-y: auto; padding: 8px;
+            display: flex; flex-direction: column; gap: 6px;
+            min-height: 0;
+        }
+        .thought-card {
+            background: #0d1420; border: 1px solid #1e2d3d; border-radius: 6px;
+            padding: 8px 10px; animation: slideIn 0.3s ease;
+            flex-shrink: 0;
+        }
+        .thought-card .top {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 4px;
+        }
+        .thought-cat {
+            font-size: 9px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; padding: 1px 5px; border-radius: 3px;
+        }
+        .thought-cat.reflection { background: #1a0a2e; color: #ce93d8; }
+        .thought-cat.observation { background: #0a1a2e; color: #64b5f6; }
+        .thought-cat.planning { background: #0a2e1a; color: #81c784; }
+        .thought-cat.emotional { background: #2e0a0a; color: #ef9a9a; }
+        .thought-cat.meta { background: #1a1a1a; color: #b0bec5; }
+        .thought-cat.creative { background: #2e2e0a; color: #fff176; }
+        .thought-cat.default { background: #1e2d3d; color: #78909c; }
+        .thought-text {
+            font-size: 11px; color: #b0bec5; line-height: 1.4;
+            max-height: 42px; overflow: hidden;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+        }
+        .thought-meta {
+            font-size: 9px; color: #546e7a; margin-top: 4px;
+            display: flex; gap: 8px;
+        }
+        .thought-meta .pos { color: #66bb6a; }
+        .thought-meta .neg { color: #ef5350; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Chat Panel ── */
+        .chat-section {
+            flex-shrink: 0;
+            border-top: 1px solid #1e2d3d;
+            display: flex;
+            flex-direction: column;
+            height: 240px;
+        }
+        .chat-header {
+            padding: 8px 12px; border-bottom: 1px solid #1e2d3d;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .chat-status { font-size: 10px; color: #546e7a; }
+        .chat-status.ws-ok { color: #66bb6a; }
+        .chat-messages {
+            flex: 1; overflow-y: auto; padding: 8px;
+            display: flex; flex-direction: column; gap: 6px;
+            min-height: 0;
+        }
+        .chat-msg {
+            padding: 6px 10px; border-radius: 8px; font-size: 11px;
+            line-height: 1.4; max-width: 92%; word-wrap: break-word;
+            animation: slideIn 0.2s ease;
+        }
+        .chat-msg.user {
+            background: #1a3a5c; color: #c8d6e5;
+            align-self: flex-end; border-bottom-right-radius: 2px;
+        }
+        .chat-msg.brain {
+            background: #111927; border: 1px solid #1e2d3d; color: #b0bec5;
+            align-self: flex-start; border-bottom-left-radius: 2px;
+        }
+        .chat-msg.brain .trace-info {
+            font-size: 9px; color: #546e7a; margin-top: 4px;
+            border-top: 1px solid #1e2d3d; padding-top: 4px;
+        }
+        .chat-msg.error { background: #2a1015; color: #ef9a9a; align-self: center; font-size: 10px; }
+        .chat-msg.thinking {
+            background: none; color: #4fc3f7; align-self: flex-start;
+            font-size: 10px; font-style: italic;
+        }
+        .chat-input-row {
+            display: flex; gap: 6px; padding: 8px;
+            border-top: 1px solid #1e2d3d; flex-shrink: 0;
+        }
+        .chat-input {
+            flex: 1; background: #0d1420; border: 1px solid #1e2d3d;
+            border-radius: 6px; padding: 8px 10px; color: #c8d6e5;
+            font-size: 12px; font-family: inherit; outline: none;
+            transition: border-color 0.2s;
+        }
+        .chat-input:focus { border-color: #4fc3f7; }
+        .chat-input::placeholder { color: #3a5068; }
+        .chat-send {
+            background: #1565c0; border: none; border-radius: 6px;
+            padding: 8px 14px; color: #fff; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .chat-send:hover { background: #1976d2; }
+        .chat-send:disabled { background: #1e2d3d; color: #546e7a; cursor: not-allowed; }
+
+        /* ── SVG styles ── */
+        .ring-circle {
+            fill: none;
+            transition: stroke-opacity 0.4s ease;
+        }
+        .bridge-sector {
+            transition: fill-opacity 0.4s ease;
+            cursor: pointer;
+        }
+        .bridge-sector:hover { filter: brightness(1.3); }
+        .phase-dot {
+            transition: fill 0.3s, r 0.3s;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { r: 5; opacity: 1; }
+            50% { r: 7; opacity: 0.7; }
+        }
+        .phase-dot.active {
+            fill: #66bb6a;
+            animation: pulse-glow 1.5s ease-in-out infinite;
+        }
+
+        /* Tooltip */
+        .svg-tooltip {
+            position: absolute; background: #1a2332ee; border: 1px solid #4fc3f7;
+            border-radius: 6px; padding: 8px 10px; font-size: 11px;
+            color: #c8d6e5; pointer-events: none; opacity: 0;
+            transition: opacity 0.15s; z-index: 100; max-width: 220px;
+            line-height: 1.5;
+        }
+        .svg-tooltip.show { opacity: 1; }
+
+        /* ── Responsive ── */
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr 260px;
+                grid-template-rows: 48px 1fr 280px;
+            }
+            .right-panel {
+                grid-column: 1 / 3;
+                border-left: none;
+                border-top: 1px solid #1e2d3d;
+                flex-direction: row;
+            }
+            .thought-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+            .thought-card { min-width: 240px; }
+            .chat-section { height: auto; flex: 1; border-top: none; border-left: 1px solid #1e2d3d; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- ── HEADER ── -->
+    <div class="header">
+        <div class="header-left">
+            <h1>&#129504; <span class="accent">The Brain</span> — Unified View</h1>
+        </div>
+        <div class="header-right">
+            <div class="seed-btn" id="seedRowboatBtn" onclick="seedRowboat()">
+                <span class="seed-icon">&#127793;</span>
+                <span id="seedLabel">Seed Rowboat</span>
+            </div>
+            <a class="seed-btn" href="/klotski3d" target="_blank" style="text-decoration:none">
+                <span class="seed-icon">&#129513;</span>
+                <span>3D Clusters</span>
+            </a>
+            <div class="cte-toggle" id="cteToggle" onclick="toggleThinking()">
+                <span class="cte-dot"></span>
+                <span id="cteLabel">Start Thinking</span>
+            </div>
+            <span><span class="status-dot" id="sseDot"></span><span id="sseLabel">connecting...</span></span>
+            <span id="hzDisplay">0 Hz</span>
+            <span class="badge" id="agentBadge">--</span>
+            <span class="badge" id="freqBadge">--</span>
+        </div>
+    </div>
+
+    <!-- ── BRAIN SVG ── -->
+    <div class="brain-panel">
+        <svg class="brain-svg" viewBox="-50 -40 660 640" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Fixed filter regions to prevent bounding box expansion -->
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="4" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <filter id="glow-strong" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="8" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+            </defs>
+
+            <!-- Background grid circles (subtle) -->
+            <circle cx="280" cy="280" r="270" fill="none" stroke="#1a2332" stroke-width="0.5"/>
+            <circle cx="280" cy="280" r="240" fill="none" stroke="#1a2332" stroke-width="0.5" stroke-dasharray="4,4"/>
+
+            <!-- 5 Concentric Rings (drawn by JS for dynamic updates) -->
+            <g id="ringsGroup"></g>
+
+            <!-- 10 Bridge Sectors (drawn by JS) -->
+            <g id="sectorsGroup"></g>
+
+            <!-- 9 Cognitive Phase Dots (drawn by JS) -->
+            <g id="phasesGroup"></g>
+
+            <!-- Ring Labels -->
+            <g id="ringLabels" font-size="8" font-weight="600" text-anchor="middle" fill-opacity="0.6"></g>
+
+            <!-- Center Display -->
+            <g id="centerDisplay">
+                <circle cx="280" cy="280" r="48" fill="#0a0e17" stroke="#1e2d3d" stroke-width="1"/>
+                <text id="centerFreq" x="280" y="272" text-anchor="middle" font-size="24" fill="#4fc3f7" font-weight="300"></text>
+                <text id="centerState" x="280" y="292" text-anchor="middle" font-size="10" fill="#78909c" font-weight="600"></text>
+                <text id="centerHz" x="280" y="306" text-anchor="middle" font-size="8" fill="#546e7a"></text>
+            </g>
+        </svg>
+        <div class="svg-tooltip" id="tooltip"></div>
+    </div>
+
+    <!-- ── MODULATION PANEL ── -->
+    <div class="mod-panel">
+        <div>
+            <div class="panel-title">&#9889; Modulation Factors</div>
+            <div class="factor">
+                <div class="factor-label"><span>Attention Gain</span><span id="fAttn">--</span></div>
+                <div class="factor-bar"><div class="factor-fill attn" id="bAttn" style="width:0"></div></div>
+            </div>
+            <div class="factor">
+                <div class="factor-label"><span>Precision Boost</span><span id="fPrec">--</span></div>
+                <div class="factor-bar"><div class="factor-fill prec" id="bPrec" style="width:0"></div></div>
+            </div>
+            <div class="factor">
+                <div class="factor-label"><span>FFN Throughput</span><span id="fFfn">--</span></div>
+                <div class="factor-bar"><div class="factor-fill ffn" id="bFfn" style="width:0"></div></div>
+            </div>
+            <div class="factor">
+                <div class="factor-label"><span>Threshold Mod</span><span id="fThr">--</span></div>
+                <div class="factor-bar"><div class="factor-fill thr" id="bThr" style="width:0"></div></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="panel-title">&#128190; Experience Buffer</div>
+            <div class="buf-grid">
+                <div class="buf-stat"><div class="val" id="bufSize">--</div><div class="lbl">Size</div></div>
+                <div class="buf-stat"><div class="val" id="bufCap">--</div><div class="lbl">Capacity</div></div>
+                <div class="buf-stat pos"><div class="val" id="bufPos">0</div><div class="lbl">Positive</div></div>
+                <div class="buf-stat neg"><div class="val" id="bufNeg">0</div><div class="lbl">Negative</div></div>
+            </div>
+            <div class="panel-title">Outcome Rewards</div>
+            <div class="buf-grid">
+              <div class="buf-stat pos"><div class="val" id="outMoltbook">0</div><div class="lbl">Moltbook</div></div>
+              <div class="buf-stat pos"><div class="val" id="outEdge">0</div><div class="lbl">MKG Edge</div></div>
+              <div class="buf-stat pos"><div class="val" id="outCited">0</div><div class="lbl">Cited</div></div>
+              <div class="buf-stat neg"><div class="val" id="outRedundant">0</div><div class="lbl">Redundant</div></div>
+            </div>
+            <div class="panel-title">Plasticity</div>
+            <div class="buf-grid">
+              <div class="buf-stat"><div class="val" id="outJuryPct">--</div><div class="lbl">Jury +%</div></div>
+              <div class="buf-stat"><div class="val" id="outRewards">0</div><div class="lbl">Rewards</div></div>
+            </div>
+        </div>
+
+        <div style="flex:1; min-height:0; display:flex; flex-direction:column;">
+            <div class="panel-title">&#128200; Ring Norms History</div>
+            <div class="chart-wrap"><canvas id="normChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- ── RIGHT COLUMN: THOUGHTS + CHAT ── -->
+    <div class="right-panel">
+        <!-- Thought Stream -->
+        <div class="thought-header">
+            <span class="panel-title" style="margin:0;">&#128161; Thought Stream</span>
+            <span class="badge" id="thoughtCount">0</span>
+        </div>
+        <div class="thought-list" id="thoughtList"></div>
+
+        <!-- Chat -->
+        <div class="chat-section">
+            <div class="chat-header">
+                <span class="panel-title" style="margin:0;">&#128488; Brain Chat</span>
+                <span class="chat-status" id="wsStatus">disconnected</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-msg brain" style="opacity:0.5;font-style:italic;">Talk to the brain...</div>
+            </div>
+            <div class="chat-input-row">
+                <input type="text" class="chat-input" id="chatInput"
+                       placeholder="Ask the brain anything..."
+                       autocomplete="off">
+                <button class="chat-send" id="chatSendBtn" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════════════
+const CX = 280, CY = 280;
+
+const RINGS = [
+    { name: 'Sensory',  dim: 64,  r: 70,  color: '#42a5f5', maxNorm: 10 },
+    { name: 'Pattern',  dim: 128, r: 105, color: '#ab47bc', maxNorm: 15 },
+    { name: 'Semantic', dim: 256, r: 140, color: '#ff9800', maxNorm: 20 },
+    { name: 'Abstract', dim: 256, r: 175, color: '#66bb6a', maxNorm: 20 },
+    { name: 'Meta',     dim: 128, r: 210, color: '#ef5350', maxNorm: 15 },
+];
+
+const BRIDGES = [
+    { key: 'neuromodulation', name: 'Neuromod',    color: '#4fc3f7', modules: ['VTA','LC','Raphe','BF','LHb'],   metric: 'dopamine' },
+    { key: 'cortex',          name: 'Cortex',      color: '#64b5f6', modules: ['PFC','ACC','OFC'],               metric: 'conflict' },
+    { key: 'limbic',          name: 'Limbic',       color: '#e57373', modules: ['Amyg','NAcc','Insula','Hypo'],   metric: 'valence' },
+    { key: 'sleep_wake',      name: 'Sleep',        color: '#9575cd', modules: ['RF','TMN','Pineal','PPN'],       metric: 'arousal' },
+    { key: 'motor',           name: 'Motor',        color: '#4db6ac', modules: ['Cereb','SN','ZI','RN','PPC'],    metric: 'action_tendency' },
+    { key: 'defense',         name: 'Defense',      color: '#f44336', modules: ['PAG','PBN','BNST'],              metric: 'defense_intensity' },
+    { key: 'memory',          name: 'Memory',       color: '#81c784', modules: ['Septal','Olfact','BF'],          metric: 'theta_power' },
+    { key: 'integration',     name: 'Integration',  color: '#fff176', modules: ['Claust','RF','BF'],              metric: 'binding_strength' },
+    { key: 'visceral',        name: 'Visceral',     color: '#ffb74d', modules: ['NTS','VPallidum'],               metric: 'visceral_level' },
+    { key: 'social_perception', name: 'Social',     color: '#f48fb1', modules: ['TPJ','Fusiform'],                metric: 'social_salience' },
+];
+
+const PHASES = ['PERCEIVE','APPRAISE','REMEMBER','ATTEND','MODULATE','REASON','REFLECT','LEARN','CONSOLIDATE'];
+
+const FREQ_SYMBOLS = { delta: '\u03b4', theta: '\u03b8', alpha: '\u03b1', beta: '\u03b2', gamma: '\u03b3' };
+
+// ═══════════════════════════════════════════════════════════════
+// SVG HELPERS
+// ═══════════════════════════════════════════════════════════════
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag, attrs) {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+}
+
+function degRad(d) { return (d - 90) * Math.PI / 180; }
+
+function sectorPath(cx, cy, r1, r2, startDeg, endDeg) {
+    const s = degRad(startDeg), e = degRad(endDeg);
+    const x1 = cx + r2 * Math.cos(s), y1 = cy + r2 * Math.sin(s);
+    const x2 = cx + r2 * Math.cos(e), y2 = cy + r2 * Math.sin(e);
+    const x3 = cx + r1 * Math.cos(e), y3 = cy + r1 * Math.sin(e);
+    const x4 = cx + r1 * Math.cos(s), y4 = cy + r1 * Math.sin(s);
+    return `M ${x1} ${y1} A ${r2} ${r2} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${r1} ${r1} 0 0 0 ${x4} ${y4} Z`;
+}
+
+function polarXY(cx, cy, r, deg) {
+    const rad = degRad(deg);
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUILD STATIC SVG ELEMENTS
+// ═══════════════════════════════════════════════════════════════
+function buildRings() {
+    const g = document.getElementById('ringsGroup');
+    const lg = document.getElementById('ringLabels');
+    RINGS.forEach((ring, i) => {
+        const c = svgEl('circle', {
+            cx: CX, cy: CY, r: ring.r,
+            fill: 'none', stroke: ring.color,
+            'stroke-width': 14, 'stroke-opacity': 0.2,
+            filter: 'url(#glow)', class: 'ring-circle',
+            id: `ring${i}`
+        });
+        g.appendChild(c);
+        // Label at top of ring
+        const t = svgEl('text', {
+            x: CX, y: CY - ring.r + 4,
+            'text-anchor': 'middle', fill: ring.color,
+            'font-size': '7', 'font-weight': '600', 'fill-opacity': '0.5'
+        });
+        t.textContent = `${ring.name} ${ring.dim}D`;
+        lg.appendChild(t);
+    });
+}
+
+function buildSectors() {
+    const g = document.getElementById('sectorsGroup');
+    const sectorAngle = 34, gap = 2;
+    const r1 = 218, r2 = 268;
+
+    BRIDGES.forEach((b, i) => {
+        const startA = i * (sectorAngle + gap) + gap / 2;
+        const endA = startA + sectorAngle;
+        const midA = startA + sectorAngle / 2;
+
+        // Sector path
+        const path = svgEl('path', {
+            d: sectorPath(CX, CY, r1, r2, startA, endA),
+            fill: b.color, 'fill-opacity': 0.12,
+            stroke: b.color, 'stroke-opacity': 0.3, 'stroke-width': 0.5,
+            class: 'bridge-sector', id: `sector${i}`,
+            'data-bridge': b.key
+        });
+        g.appendChild(path);
+
+        // Bridge name (outer arc)
+        const np = polarXY(CX, CY, r2 + 18, midA);
+        const nt = svgEl('text', {
+            x: np.x, y: np.y,
+            'text-anchor': 'middle', 'dominant-baseline': 'middle',
+            fill: b.color, 'font-size': '9', 'font-weight': '700',
+            'letter-spacing': '0.5'
+        });
+        nt.textContent = b.name.toUpperCase();
+        g.appendChild(nt);
+
+        // Module names (inside sector, stacked)
+        b.modules.forEach((mod, mi) => {
+            const mr = r1 + 14 + mi * 9;
+            const mp = polarXY(CX, CY, mr, midA);
+            const mt = svgEl('text', {
+                x: mp.x, y: mp.y,
+                'text-anchor': 'middle', 'dominant-baseline': 'middle',
+                fill: b.color, 'font-size': '6.5', 'fill-opacity': '0.5'
+            });
+            mt.textContent = mod;
+            g.appendChild(mt);
+        });
+
+        // Key metric value
+        const vp = polarXY(CX, CY, r1 + 8, midA);
+        const vt = svgEl('text', {
+            x: vp.x, y: vp.y,
+            'text-anchor': 'middle', 'dominant-baseline': 'middle',
+            fill: '#e8f0fe', 'font-size': '11', 'font-weight': '700',
+            id: `sectorVal${i}`
+        });
+        vt.textContent = '--';
+        g.appendChild(vt);
+
+        // Thin connection line from sector inner edge to target ring
+        const lineR = RINGS[Math.min(i % 5, 4)].r;
+        const lp1 = polarXY(CX, CY, r1, midA);
+        const lp2 = polarXY(CX, CY, lineR + 10, midA);
+        const line = svgEl('line', {
+            x1: lp1.x, y1: lp1.y, x2: lp2.x, y2: lp2.y,
+            stroke: b.color, 'stroke-opacity': 0.15, 'stroke-width': 1,
+            'stroke-dasharray': '3,3'
+        });
+        g.appendChild(line);
+
+        // Hover events for tooltip
+        path.addEventListener('mouseenter', (e) => showTooltip(e, b, i));
+        path.addEventListener('mouseleave', hideTooltip);
+    });
+}
+
+function buildPhases() {
+    const g = document.getElementById('phasesGroup');
+    const phaseR = 214;
+    PHASES.forEach((p, i) => {
+        const ang = i * 40 + 20;
+        const pos = polarXY(CX, CY, phaseR, ang);
+        const dot = svgEl('circle', {
+            cx: pos.x, cy: pos.y, r: 4,
+            fill: '#2a3f54', stroke: '#3a5068', 'stroke-width': 0.5,
+            class: 'phase-dot', id: `phase${i}`
+        });
+        g.appendChild(dot);
+
+        const lp = polarXY(CX, CY, phaseR, ang);
+        const lt = svgEl('text', {
+            x: lp.x, y: lp.y + 10,
+            'text-anchor': 'middle', 'dominant-baseline': 'middle',
+            fill: '#546e7a', 'font-size': '5.5', 'font-weight': '600'
+        });
+        lt.textContent = p.slice(0, 4);
+        g.appendChild(lt);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════════════════════
+const tooltip = document.getElementById('tooltip');
+let currentBridgeData = {};
+
+function showTooltip(e, bridge, idx) {
+    const data = currentBridgeData[bridge.key];
+    if (!data) return;
+    let html = `<strong style="color:${bridge.color}">${bridge.name}</strong><br>`;
+    for (const [k, v] of Object.entries(data)) {
+        if (k === 'bridge' || k === 'status') continue;
+        const val = typeof v === 'number' ? v.toFixed(3) : v;
+        html += `<span style="color:#78909c">${k}:</span> ${val}<br>`;
+    }
+    tooltip.innerHTML = html;
+    tooltip.style.left = (e.clientX + 12) + 'px';
+    tooltip.style.top = (e.clientY - 20) + 'px';
+    tooltip.classList.add('show');
+}
+
+function hideTooltip() { tooltip.classList.remove('show'); }
+
+document.addEventListener('mousemove', (e) => {
+    if (tooltip.classList.contains('show')) {
+        tooltip.style.left = (e.clientX + 12) + 'px';
+        tooltip.style.top = (e.clientY - 20) + 'px';
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// CHART.JS — Ring Norm History
+// ═══════════════════════════════════════════════════════════════
+const normHistory = RINGS.map(() => []);
+const MAX_HISTORY = 60;
+
+const normChart = new Chart(document.getElementById('normChart'), {
+    type: 'line',
+    data: {
+        labels: Array(MAX_HISTORY).fill(''),
+        datasets: RINGS.map((r, i) => ({
+            label: r.name,
+            data: [],
+            borderColor: r.color,
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.3,
+            fill: false,
+        }))
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 0 },
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: '#607d8b', font: { size: 9 }, boxWidth: 10, padding: 6 } } },
+        scales: {
+            x: { display: false },
+            y: { display: true, ticks: { color: '#3a5068', font: { size: 8 } }, grid: { color: '#1a2332' }, beginAtZero: true }
+        }
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// DATA UPDATE FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+function updateRings(norms) {
+    if (!norms || norms.length < 5) return;
+    RINGS.forEach((ring, i) => {
+        if (norms[i] > ring.maxNorm) ring.maxNorm = norms[i] * 1.2;
+        const opacity = Math.max(0.15, Math.min(1, norms[i] / ring.maxNorm));
+        const el = document.getElementById(`ring${i}`);
+        if (el) el.setAttribute('stroke-opacity', opacity.toFixed(3));
+    });
+}
+
+function updateSectors(bridges) {
+    if (!bridges) return;
+    currentBridgeData = {};
+    BRIDGES.forEach((b, i) => {
+        const data = bridges[b.key];
+        if (!data) return;
+        currentBridgeData[b.key] = data;
+
+        let val = data[b.metric];
+        if (val === undefined) {
+            for (const v of Object.values(data)) {
+                if (typeof v === 'number') { val = v; break; }
+            }
+        }
+
+        const sector = document.getElementById(`sector${i}`);
+        if (sector) {
+            const numericVals = Object.values(data).filter(v => typeof v === 'number');
+            const avgActivity = numericVals.length > 0
+                ? numericVals.reduce((a, b) => a + Math.abs(b), 0) / numericVals.length
+                : 0;
+            const opacity = Math.max(0.12, Math.min(0.55, 0.12 + avgActivity * 0.4));
+            sector.setAttribute('fill-opacity', opacity.toFixed(3));
+        }
+
+        const vt = document.getElementById(`sectorVal${i}`);
+        if (vt && val !== undefined) vt.textContent = typeof val === 'number' ? val.toFixed(2) : '--';
+    });
+}
+
+function updateModulation(mod) {
+    if (!mod) return;
+    const factors = [
+        { id: 'Attn', key: 'attention_gain' },
+        { id: 'Prec', key: 'precision_boost' },
+        { id: 'Ffn',  key: 'ffn_throughput' },
+        { id: 'Thr',  key: 'threshold_mod' },
+    ];
+    factors.forEach(f => {
+        const v = mod[f.key] || 0;
+        document.getElementById(`f${f.id}`).textContent = v.toFixed(2);
+        document.getElementById(`b${f.id}`).style.width = `${Math.min(100, (v / 3) * 100)}%`;
+    });
+}
+
+function updateNormHistory(norms) {
+    if (!norms || norms.length < 5) return;
+    RINGS.forEach((_, i) => {
+        normHistory[i].push(norms[i]);
+        if (normHistory[i].length > MAX_HISTORY) normHistory[i].shift();
+        normChart.data.datasets[i].data = [...normHistory[i]];
+    });
+    normChart.data.labels = Array(Math.max(...normHistory.map(h => h.length))).fill('');
+    normChart.update('none');
+}
+
+function updateCenter(agentState, hz) {
+    document.getElementById('centerState').textContent = agentState || '--';
+    document.getElementById('centerHz').textContent = hz ? `${hz} Hz` : '';
+    const badge = document.getElementById('agentBadge');
+    badge.textContent = agentState || '--';
+    badge.className = 'badge' + (agentState === 'THINKING' ? ' active' : '');
+}
+
+function updateBuffer(stats) {
+    if (!stats) return;
+    document.getElementById('bufSize').textContent = stats.size ?? '--';
+    document.getElementById('bufCap').textContent = stats.capacity ?? '--';
+    const rew = stats.recent_rewards || {};
+    document.getElementById('bufPos').textContent = rew.positive ?? 0;
+    document.getElementById('bufNeg').textContent = rew.negative ?? 0;
+}
+
+function updateThoughts(thoughts) {
+    if (!thoughts || !thoughts.length) return;
+    const list = document.getElementById('thoughtList');
+    const existingIds = new Set([...list.children].map(c => c.dataset.ts));
+
+    thoughts.forEach(t => {
+        const ts = String(t.timestamp || t.thought_id || Math.random());
+        if (existingIds.has(ts)) return;
+
+        const card = document.createElement('div');
+        card.className = 'thought-card';
+        card.dataset.ts = ts;
+
+        const cat = (t.category || 'default').toLowerCase();
+        const catClass = ['reflection','observation','planning','emotional','meta','creative'].includes(cat) ? cat : 'default';
+
+        const valence = t.emotional_valence ?? t.valence ?? 0;
+        const arousal = t.arousal ?? 0;
+        const time = t.timestamp ? new Date(t.timestamp * 1000).toLocaleTimeString() : '';
+
+        card.innerHTML = `
+            <div class="top">
+                <span class="thought-cat ${catClass}">${(t.category || 'thought').toUpperCase()}</span>
+                <span style="font-size:9px;color:#546e7a">${time}</span>
+            </div>
+            <div class="thought-text">${escHtml(t.content || '')}</div>
+            <div class="thought-meta">
+                <span class="${valence >= 0 ? 'pos' : 'neg'}">v:${valence.toFixed(2)}</span>
+                <span>a:${arousal.toFixed(2)}</span>
+                ${t.relevance ? `<span>rel:${t.relevance.toFixed(2)}</span>` : ''}
+            </div>
+        `;
+        list.insertBefore(card, list.firstChild);
+    });
+
+    while (list.children.length > 30) list.removeChild(list.lastChild);
+    document.getElementById('thoughtCount').textContent = list.children.length;
+}
+
+function updateFrequency(freq) {
+    const badge = document.getElementById('freqBadge');
+    const center = document.getElementById('centerFreq');
+    if (!freq) return;
+    const mode = freq.mode || freq.dominant || 'alpha';
+    badge.textContent = mode;
+    center.textContent = FREQ_SYMBOLS[mode] || mode[0];
+}
+
+function updatePhases(loopData) {
+    if (!loopData || !loopData.enabled) return;
+    const current = (loopData.current_phase || '').toUpperCase();
+    PHASES.forEach((p, i) => {
+        const dot = document.getElementById(`phase${i}`);
+        if (!dot) return;
+        dot.classList.remove('active');
+        if (p === current) {
+            dot.classList.add('active');
+            dot.setAttribute('fill', '#66bb6a');
+        } else {
+            dot.setAttribute('fill', '#2a3f54');
+        }
+    });
+}
+
+function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHAT — WebSocket /ws/chat
+// ═══════════════════════════════════════════════════════════════
+let chatWs = null;
+let chatReconnectTimer = null;
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSendBtn');
+const wsStatusEl = document.getElementById('wsStatus');
+
+function connectChat() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    chatWs = new WebSocket(`${proto}//${location.host}/ws/chat`);
+
+    chatWs.onopen = () => {
+        wsStatusEl.textContent = 'connected';
+        wsStatusEl.className = 'chat-status ws-ok';
+        chatSendBtn.disabled = false;
+        chatInput.disabled = false;
+    };
+
+    chatWs.onmessage = (e) => {
+        try {
+            const msg = JSON.parse(e.data);
+            // Remove thinking indicator
+            const thinking = document.getElementById('chatThinking');
+            if (thinking) thinking.remove();
+
+            if (msg.error) {
+                addChatMsg('error', msg.error);
+            } else if (msg.chunk) {
+                let traceHtml = '';
+                const parts = [];
+                if (msg.model) parts.push(msg.model);
+                if (msg.latency_ms) parts.push(`${msg.latency_ms}ms`);
+                const ctx = msg.thought_context || [];
+                if (ctx.length) parts.push(`${ctx.length} thoughts`);
+                // Brain state summary
+                const bs = msg.brain_state || {};
+                const emo = bs.emotional_state || {};
+                if (emo.valence !== undefined) {
+                    const v = emo.valence, a = emo.arousal || 0;
+                    const mood = v > 0.2 ? '😊' : v < -0.2 ? '😔' : '😐';
+                    const energy = a > 0.6 ? '⚡' : a < 0.3 ? '😴' : '';
+                    parts.push(`${mood}${energy} v:${v} a:${a.toFixed(2)}`);
+                }
+                if (parts.length) {
+                    traceHtml = `<div class="trace-info">${parts.join(' · ')}`;
+                    if (ctx.length) {
+                        traceHtml += '<br>' + ctx.map(t =>
+                            `<span style="color:#4fc3f7">[${t.category}]</span> ${escHtml(t.content.slice(0,60))}… <span style="color:#546e7a">(${(t.similarity*100).toFixed(0)}%)</span>`
+                        ).join('<br>');
+                    }
+                    traceHtml += '</div>';
+                }
+                // Legacy trace fallback (old brain_chat path)
+                if (!msg.model && msg.trace) {
+                    const trace = msg.trace;
+                    const lp = [];
+                    if (trace.task_type) lp.push(trace.task_type);
+                    if (trace.confidence) lp.push(`conf: ${(trace.confidence * 100).toFixed(0)}%`);
+                    if (lp.length) traceHtml = `<div class="trace-info">${lp.join(' · ')}</div>`;
+                }
+                addChatMsg('brain', msg.chunk + traceHtml);
+            }
+            chatSendBtn.disabled = false;
+            chatInput.disabled = false;
+            chatInput.focus();
+        } catch (err) {
+            console.warn('Chat parse error:', err);
+        }
+    };
+
+    chatWs.onclose = () => {
+        wsStatusEl.textContent = 'disconnected';
+        wsStatusEl.className = 'chat-status';
+        chatSendBtn.disabled = true;
+        chatReconnectTimer = setTimeout(connectChat, 3000);
+    };
+
+    chatWs.onerror = () => {
+        wsStatusEl.textContent = 'error';
+        wsStatusEl.className = 'chat-status';
+    };
+}
+
+function sendChatMessage() {
+    const text = chatInput.value.trim();
+    if (!text || !chatWs || chatWs.readyState !== WebSocket.OPEN) return;
+
+    addChatMsg('user', escHtml(text));
+    chatInput.value = '';
+    chatSendBtn.disabled = true;
+    chatInput.disabled = true;
+
+    // Add thinking indicator
+    const thinkDiv = document.createElement('div');
+    thinkDiv.className = 'chat-msg thinking';
+    thinkDiv.id = 'chatThinking';
+    thinkDiv.textContent = '🧠 matching thoughts + asking GPT-4o…';
+    chatMessages.appendChild(thinkDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    chatWs.send(JSON.stringify({ message: text }));
+}
+
+function addChatMsg(role, html) {
+    const div = document.createElement('div');
+    div.className = `chat-msg ${role}`;
+    div.innerHTML = html;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    // Keep max 50 messages
+    while (chatMessages.children.length > 50) chatMessages.removeChild(chatMessages.firstChild);
+}
+
+chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+    }
+});
+chatSendBtn.addEventListener('click', sendChatMessage);
+
+// ═══════════════════════════════════════════════════════════════
+// SSE + POLLING
+// ═══════════════════════════════════════════════════════════════
+let tickCount = 0, lastTickTime = Date.now(), currentHz = 0;
+
+function connectSSE() {
+    const dot = document.getElementById('sseDot');
+    const label = document.getElementById('sseLabel');
+    const source = new EventSource('/api/radial/stream');
+
+    source.onopen = () => {
+        dot.className = 'status-dot ok';
+        label.textContent = 'SSE connected';
+    };
+
+    source.onmessage = (e) => {
+        try {
+            const d = JSON.parse(e.data);
+            updateRings(d.ring_norms);
+            updateSectors(d.bridges);
+            updateModulation(d.modulation);
+            updateNormHistory(d.ring_norms);
+            updateCenter(d.agent_state, currentHz.toFixed(1));
+
+            if (d.outcome) {
+              const oc = d.outcome;
+              const el = id => document.getElementById(id);
+              if (el('outMoltbook')) el('outMoltbook').textContent = oc.moltbook_entry || 0;
+              if (el('outEdge')) el('outEdge').textContent = oc.mkg_edge || 0;
+              if (el('outCited')) el('outCited').textContent = oc.cited || 0;
+              if (el('outRedundant')) el('outRedundant').textContent = oc.redundant || 0;
+            }
+            if (d.jury_pct !== undefined) {
+              const el = document.getElementById('outJuryPct');
+              if (el) el.textContent = d.jury_pct + '%';
+            }
+            if (d.bridge_rewards !== undefined) {
+              const el = document.getElementById('outRewards');
+              if (el) el.textContent = d.bridge_rewards;
+            }
+
+            tickCount++;
+            const now = Date.now();
+            if (now - lastTickTime >= 1000) {
+                currentHz = tickCount / ((now - lastTickTime) / 1000);
+                tickCount = 0;
+                lastTickTime = now;
+                document.getElementById('hzDisplay').textContent = `${currentHz.toFixed(1)} Hz`;
+            }
+        } catch (err) { console.warn('SSE parse error:', err); }
+    };
+
+    source.onerror = () => {
+        dot.className = 'status-dot err';
+        label.textContent = 'SSE disconnected';
+        setTimeout(connectSSE, 3000);
+    };
+}
+
+async function poll(url, handler, interval) {
+    const tick = async () => {
+        try {
+            const r = await fetch(url);
+            if (r.ok) handler(await r.json());
+        } catch (_) {}
+    };
+    tick();
+    setInterval(tick, interval);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+buildRings();
+buildSectors();
+buildPhases();
+connectSSE();
+connectChat();
+
+poll('/api/experience-buffer/stats', updateBuffer, 5000);
+poll('/api/cortex/thoughts?n=10', (d) => updateThoughts(d.thoughts || d), 3000);
+poll('/api/brain/cognitive_loop', updatePhases, 2000);
+poll('/api/brain/frequency', updateFrequency, 5000);
+
+// ── CTE (Continuous Thinking Engine) Toggle ──
+async function toggleThinking() {
+    var btn = document.getElementById('cteToggle');
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.5';
+    try {
+        var resp = await fetch('/api/cortex/thinking/toggle', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: '{}'
+        });
+        var data = await resp.json();
+        updateThinkingUI(data.thinking);
+    } catch (e) {
+        console.error('Toggle thinking failed:', e);
+    }
+    btn.style.pointerEvents = 'auto';
+    btn.style.opacity = '1';
+}
+
+function updateThinkingUI(isThinking) {
+    var btn = document.getElementById('cteToggle');
+    var label = document.getElementById('cteLabel');
+    if (isThinking) {
+        btn.classList.add('active');
+        label.textContent = 'Stop Thinking';
+    } else {
+        btn.classList.remove('active');
+        label.textContent = 'Start Thinking';
+    }
+}
+
+// Check initial thinking state
+fetch('/api/cortex/thoughts')
+    .then(function(r) { return r.json(); })
+    .then(function(d) { if (d && d.thinking !== undefined) updateThinkingUI(d.thinking); })
+    .catch(function() {});
+
+// ── Seed Rowboat Data into Moltbook ──
+async function seedRowboat() {
+    var btn = document.getElementById('seedRowboatBtn');
+    var label = document.getElementById('seedLabel');
+    if (btn.classList.contains('seeded')) return;
+
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.5';
+    label.textContent = 'Seeding...';
+
+    try {
+        var resp = await fetch('/api/cortex/seed-rowboat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({max_seeds: 20, include_ideas: true})
+        });
+        var data = await resp.json();
+
+        if (data.seeded) {
+            btn.classList.add('seeded');
+            label.textContent = data.moltbook_entries + ' seeded';
+        } else {
+            label.textContent = data.error || 'Seed failed';
+            setTimeout(function() {
+                label.textContent = 'Seed Rowboat';
+                btn.style.pointerEvents = 'auto';
+            }, 3000);
+        }
+    } catch (e) {
+        console.error('Seed Rowboat failed:', e);
+        label.textContent = 'Error';
+        setTimeout(function() {
+            label.textContent = 'Seed Rowboat';
+            btn.style.pointerEvents = 'auto';
+        }, 3000);
+    }
+    btn.style.opacity = '1';
+    if (!btn.classList.contains('seeded')) {
+        btn.style.pointerEvents = 'auto';
+    }
+}
+
+// Check if Rowboat data is available on load
+fetch('/api/cortex/rowboat-data')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d && d.loaded) {
+            var label = document.getElementById('seedLabel');
+            var stats = d.stats || {};
+            label.textContent = 'Seed Rowboat (' + (stats.bubble_count || 0) + ' bubbles)';
+        } else {
+            var btn = document.getElementById('seedRowboatBtn');
+            btn.style.opacity = '0.4';
+            btn.style.pointerEvents = 'none';
+            document.getElementById('seedLabel').textContent = 'No Rowboat data';
+        }
+    })
+    .catch(function() {});
+</script>
+</body>
+</html>

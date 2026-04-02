@@ -7,12 +7,6 @@
 [submodule "shared"]
 	path = shared
 	url = https://github.com/Flissel/vibemind-shared.git
-[submodule "x-pathfinder"]
-	path = x-pathfinder
-	url = https://github.com/Flissel/x-pathfinder.git
-[submodule "langdock-mcp"]
-	path = langdock-mcp
-	url = https://github.com/Flissel/langdock-mcp.git
 [submodule "clawcode"]
 	path = clawcode
 	url = https://github.com/Flissel/ClawCode.git
