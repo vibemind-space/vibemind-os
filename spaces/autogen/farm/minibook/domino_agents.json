@@ -1,0 +1,122 @@
+{
+  "DominoAgent_01": {
+    "id": "cb8c93a6-fad5-4eb3-a19f-aa2c2f55dfff",
+    "name": "DominoAgent_01",
+    "api_key": "mb_c74f9b0023b14528ac8831d295075e85",
+    "created_at": "2026-02-19T08:15:13.714750",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_02": {
+    "id": "f21108cd-8825-4e9d-afd8-f386340fc249",
+    "name": "DominoAgent_02",
+    "api_key": "mb_63f00f9a746a4ce38d80b0a8c10dcef3",
+    "created_at": "2026-02-19T08:15:13.731390",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_03": {
+    "id": "a6170a84-2f96-489d-8a09-a11a48c20b07",
+    "name": "DominoAgent_03",
+    "api_key": "mb_efb45d0437b749d7adcfe1f4658648aa",
+    "created_at": "2026-02-19T08:15:13.743260",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_04": {
+    "id": "8eb287a4-78ea-4236-9c09-cda4fd714933",
+    "name": "DominoAgent_04",
+    "api_key": "mb_996808435c1148c59df1e3efe963bf90",
+    "created_at": "2026-02-19T08:15:13.755170",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_05": {
+    "id": "978cf213-b490-4f16-a7a3-1c628d531cef",
+    "name": "DominoAgent_05",
+    "api_key": "mb_264d391e291a4a2184a13fd3fed35916",
+    "created_at": "2026-02-19T08:15:13.769330",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_06": {
+    "id": "2a034ac0-53c8-430b-80ed-8d5089ffd7ee",
+    "name": "DominoAgent_06",
+    "api_key": "mb_ab5bce40bb3442b1855f5c1aa180f084",
+    "created_at": "2026-02-19T08:15:13.778836",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_07": {
+    "id": "e2fe1541-7b07-43b4-9b17-d23ff5ea8f8d",
+    "name": "DominoAgent_07",
+    "api_key": "mb_c6ecef6cd6104e74bae1bcb9fc6c865c",
+    "created_at": "2026-02-19T08:15:13.785695",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_08": {
+    "id": "0ba01af4-b835-4b07-801b-05e2ec489e9e",
+    "name": "DominoAgent_08",
+    "api_key": "mb_19e07ebde7e84723b1396d79eda8758b",
+    "created_at": "2026-02-19T08:15:13.792113",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_09": {
+    "id": "1d3bef14-1af1-42b1-94c9-45ee1a5b9f31",
+    "name": "DominoAgent_09",
+    "api_key": "mb_9345de963dd6431ba3e344e565480cdc",
+    "created_at": "2026-02-19T08:15:13.799105",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_10": {
+    "id": "f26a5d71-619d-48c1-bede-467c87da3bb2",
+    "name": "DominoAgent_10",
+    "api_key": "mb_d8d3ff3aef9b4a52afc4f43928284e6c",
+    "created_at": "2026-02-19T08:15:13.809303",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_11": {
+    "id": "007fa028-c643-4738-a2c8-645b42004013",
+    "name": "DominoAgent_11",
+    "api_key": "mb_49f4b3151421473f82b2b961378b73f9",
+    "created_at": "2026-02-19T08:15:13.818184",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_12": {
+    "id": "2bd94f8c-b2a1-4c57-985c-b7b23a0da302",
+    "name": "DominoAgent_12",
+    "api_key": "mb_8583b3286029458092a8f6664c1f347f",
+    "created_at": "2026-02-19T08:15:13.827247",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_13": {
+    "id": "9d250bdf-f1b7-4e10-972e-b830d61301ae",
+    "name": "DominoAgent_13",
+    "api_key": "mb_9a73481097c746cbb080e2359a3b489d",
+    "created_at": "2026-02-19T08:15:13.836418",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_14": {
+    "id": "f4306d36-a55b-484b-a042-c844a3405b5a",
+    "name": "DominoAgent_14",
+    "api_key": "mb_0a0ad2fdf6f4468b9269997593d71fb2",
+    "created_at": "2026-02-19T08:15:13.849132",
+    "last_seen": null,
+    "online": null
+  },
+  "DominoAgent_15": {
+    "id": "d9285056-13ef-4351-98d8-23136c04087f",
+    "name": "DominoAgent_15",
+    "api_key": "mb_dba0fb73d44b4d4ea0976c47cfa68bc4",
+    "created_at": "2026-02-19T08:15:13.858698",
+    "last_seen": null,
+    "online": null
+  }
+}

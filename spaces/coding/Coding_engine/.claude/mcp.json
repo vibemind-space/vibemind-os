@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["--yes", "@playwright/mcp@latest", "--browser", "chrome"],
+      "env": {
+        "PLAYWRIGHT_TIMEOUT": "30000"
+      }
+    },
+    "docker": {
+      "command": "uvx",
+      "args": ["docker-mcp"],
+      "env": {}
+    }
+  }
+}

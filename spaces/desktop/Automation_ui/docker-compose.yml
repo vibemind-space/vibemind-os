@@ -1,0 +1,223 @@
+# =============================================================================
+# TRAE Desktop Streaming - Docker Compose
+# =============================================================================
+# 
+# Hybrid Architecture:
+# - Frontend, Backend, OCR Engine laufen in Docker Containern
+# - Desktop Capture Client MUSS auf dem Host laufen (Zugriff auf physische Monitore)
+#
+# Start:
+#   docker-compose up -d
+#   python desktop-client/dual_screen_capture_client.py  (auf Host)
+#
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Frontend Container - React/Vite Web-UI
+  # ============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: trae-frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - VITE_BACKEND_URL=http://localhost:${BACKEND_PORT:-8007}
+      - VITE_WS_URL=ws://localhost:${BACKEND_PORT:-8007}/ws
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-}
+    volumes:
+      # Development: Hot reload
+      - ./src:/app/src:ro
+      - ./public:/app/public:ro
+      - ./index.html:/app/index.html:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - trae-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================
+  # Backend Container - FastAPI + WebSocket
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trae-backend
+    ports:
+      - "${BACKEND_PORT:-8007}:8007"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - OCR_ENGINE_URL=http://ocr-engine:8008
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-automation_ui}
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:5173","http://localhost:3000"]}
+    volumes:
+      - ./logs:/app/logs:rw
+      - ./backend/config:/app/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ocr-engine:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    networks:
+      - trae-network
+    restart: unless-stopped
+    # Erlaubt Zugriff auf Host-Netzwerk für Desktop-Client-Verbindungen
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/api/health/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================
+  # OCR Engine Container - Tesseract + EasyOCR
+  # ============================================
+  ocr-engine:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.ocr
+    container_name: trae-ocr-engine
+    ports:
+      - "${OCR_PORT:-8008}:8008"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TESSERACT_LANGS=${TESSERACT_LANGS:-eng+deu}
+      - OCR_ENGINE=${OCR_ENGINE:-tesseract}
+    volumes:
+      - ./logs:/app/logs:rw
+      # Optional: Eigene Tesseract-Modelle
+      - ./tessdata:/usr/share/tesseract-ocr/5/tessdata:ro
+    networks:
+      - trae-network
+    restart: unless-stopped
+    # OCR kann ressourcenintensiv sein
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================
+  # Vector Database - Qdrant (Optional)
+  # ============================================
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: trae-qdrant
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+      - qdrant_snapshots:/qdrant/snapshots
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__SERVICE__HTTP_PORT=6333
+    networks:
+      - trae-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+
+  # ============================================
+  # PostgreSQL Database - Lokale Datenhoheit
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: trae-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-automation_ui}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - trae-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-automation_ui}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
+  # Redis Cache - PubSub & Session/Caching
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: trae-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - trae-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# ============================================
+# Netzwerk-Konfiguration
+# ============================================
+networks:
+  trae-network:
+    driver: bridge
+
+# ============================================
+# Persistente Volumes
+# ============================================
+volumes:
+  qdrant_storage:
+    driver: local
+  qdrant_snapshots:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local

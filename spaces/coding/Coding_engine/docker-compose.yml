@@ -1,0 +1,313 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: coding-engine-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: coding_engine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for task queue
+  redis:
+    image: redis:7-alpine
+    container_name: coding-engine-redis
+    ports:
+      - "6382:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Gitea for Git server
+  gitea:
+    image: gitea/gitea:1.23
+    container_name: coding-engine-gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=postgres
+      - GITEA__database__PASSWD=postgres
+      - GITEA__server__ROOT_URL=http://localhost:3000/
+      - GITEA__server__HTTP_PORT=3000
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    volumes:
+      - gitea_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: coding-engine-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/coding_engine
+      - REDIS_URL=redis://redis:6379/0
+      - GIT_SERVER_URL=http://gitea:3000
+      - LLM_BACKEND=kilo
+      - DISCORD_CHANNEL_ID=1484160715580510242
+      - DISCORD_CH_DEV_TASKS=1484193408955322399
+      - DISCORD_CH_PRS=${DISCORD_CH_PRS:-1485666130474303562}
+    secrets:
+      - openai_api_key
+      - anthropic_api_key
+      - openrouter_api_key
+      - github_token
+      - discord_bot_token
+      - discord_bot_token_analyzer
+    volumes:
+      - ./src:/app/src
+      - ./mcp_plugins:/app/mcp_plugins
+      - ./config:/app/config
+      - ./run_generation.py:/app/run_generation.py
+      - ./.env:/app/.env
+      - artifact_data:/data/artifacts
+      - ./Data:/app/Data
+      - ./Data/generated:/app/output
+      - ./config/kilo:/root/.kilocode
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 1
+
+  # Sandbox - Live preview with VNC access
+  sandbox:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.sandbox
+    container_name: coding-engine-sandbox
+    privileged: true
+    devices:
+      - /dev/kvm:/dev/kvm
+    ports:
+      - "6090:6090"   # noVNC web client (VNC + Android Emulator)
+      - "3100:3100"   # App preview (Expo Web / static files)
+      - "3201:3000"   # Backend dev server (NestJS/FastAPI) — 3200 taken by ExpressVPN
+    volumes:
+      - ./Data:/workspace/data
+      - ./Data/generated:/workspace/app
+    environment:
+      - DISPLAY=:99
+      - ENABLE_VNC=true
+      - NOVNC_PORT=6090
+      - PREVIEW_MODE=auto
+      - ENGINE_API_URL=http://api:8000
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/coding_engine
+      - REDIS_URL=redis://redis:6379/0
+      - ANDROID_HOME=/opt/android-sdk
+    depends_on:
+      - api
+
+  # Worker Service
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.worker
+    container_name: coding-engine-worker
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/coding_engine
+      - REDIS_URL=redis://redis:6379/0
+      - GIT_SERVER_URL=http://gitea:3000
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ./src:/app/src
+      - /var/run/docker.sock:/var/run/docker.sock
+      - artifact_data:/data/artifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Automation_ui - Component Debug Agent
+  # Provides LLM-driven desktop/browser automation for debugging generated components.
+  # The backend runs on port 8007 and exposes the /api/llm/intent endpoint
+  # that the coding engine's automation_ui_bridge.py calls after code generation.
+  automation-ui-backend:
+    build:
+      context: ./external/Automation_ui/backend
+      dockerfile: Dockerfile
+    container_name: coding-engine-automation-ui
+    ports:
+      - "8007:8007"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - LOG_LEVEL=INFO
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN_ANALYZER}
+      - DISCORD_CH_FIXES=1484193412679733302
+      - DISCORD_CH_DEV_TASKS=1484193408955322399
+      - DISCORD_CH_PRS=1485666130474303562
+      - DISCORD_CH_ORCHESTRATOR=1484193339405369344
+      - DISCORD_CH_TESTING=1484193415364214958
+      - DISCORD_CH_DONE=1484193417381679225
+      # LLM models — all OpenRouter free
+      - LLM_MODEL=qwen/qwen3-coder:free
+      - VISION_MODEL=nvidia/nemotron-nano-12b-v2-vl:free
+      - COMPACTION_MODEL=qwen/qwen3-next-80b-a3b-instruct:free
+      - CORS_ORIGINS=["http://localhost:3100","http://localhost:5173","http://localhost:8000"]
+      # Point at API container for !commands
+      - CODING_ENGINE_API_URL=http://api:8000
+      # Point at sandbox for browser debug
+      - SANDBOX_APP_URL=http://sandbox:3100
+    volumes:
+      - ./Data:/workspace/data:ro
+      - automation_ui_data:/app/data
+      - ./external/Automation_ui/backend/app/services/discord_listener.py:/app/app/services/discord_listener.py
+      - ./external/Automation_ui/backend/app/config.py:/app/app/config.py
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    depends_on:
+      - sandbox
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/api/health/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # OpenClaw Gateway - Master Orchestrator (GPT-5.4)
+  # Requires separate openclaw repo at ../../openclaw
+  # Start with: docker compose --profile openclaw up -d openclaw
+  openclaw:
+    profiles: ["openclaw"]
+    build:
+      context: ../../openclaw
+      dockerfile: Dockerfile
+      args:
+        OPENCLAW_EXTENSIONS: "coding-engine-bridge hotel-concierge discord whatsapp ollama"
+    container_name: coding-engine-openclaw
+    environment:
+      - HOME=/home/node
+      - TERM=xterm-256color
+      - NODE_OPTIONS=--max-old-space-size=8192
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - CODING_ENGINE_API_URL=http://api:8000
+      - TZ=Europe/Berlin
+    volumes:
+      - ../../openclaw/data/openclaw:/home/node/.openclaw
+    ports:
+      - "18789:18789"
+    init: true
+    restart: unless-stopped
+    command: ["sh", "-c", "find /home/node/.openclaw/extensions -maxdepth 1 -type d -exec chmod 755 {} + 2>/dev/null; find /home/node/.openclaw/extensions -type f -exec chmod 644 {} + 2>/dev/null; exec node dist/index.js gateway --bind lan --port 18789 --verbose"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:18789/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # Frontend - DaveLovable Web UI
+  frontend:
+    build:
+      context: ./web-app/front
+    container_name: coding-engine-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # VITE_API_URL is NOT set here — browser uses relative /api/v1 path
+      # Vite proxy (server-side) routes /api/v1 to http://api:8000
+      - VITE_PROXY_TARGET=http://api:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5173').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # VSCode Server - Live code inspection
+  vscode:
+    image: codercom/code-server:latest
+    container_name: coding-engine-vscode
+    ports:
+      - "8444:8443"
+    volumes:
+      - ./Data/generated:/home/coder/project
+      - vscode_extensions:/home/coder/.local/share/code-server/extensions
+    environment:
+      - PASSWORD=dev123
+    command: --auth password --bind-addr 0.0.0.0:8443
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+volumes:
+  postgres_data:
+  redis_data:
+  gitea_data:
+  artifact_data:
+  automation_ui_data:
+  vscode_extensions:
+
+# Docker Secrets — all sensitive keys
+# In compose mode: reads from .env via environment directive
+# In Swarm mode: use `docker secret create` + external: true
+secrets:
+  openai_api_key:
+    environment: OPENAI_API_KEY
+  anthropic_api_key:
+    environment: ANTHROPIC_API_KEY
+  openrouter_api_key:
+    environment: OPENROUTER_API_KEY
+  github_token:
+    environment: GITHUB_TOKEN
+  discord_bot_token:
+    environment: DISCORD_BOT_TOKEN
+  discord_bot_token_analyzer:
+    environment: DISCORD_BOT_TOKEN_ANALYZER

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Engine Widget</title>
+    <!-- Inline SVG Favicon - prevents 404 error -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%234f46e5' rx='15' width='100' height='100'/><text x='50%' y='55%' font-size='60' text-anchor='middle' dominant-baseline='middle' fill='white'>⚡</text></svg>">
+    <link rel="stylesheet" href="widget.css">
+</head>
+<body>
+    <div class="coding-engine-widget" id="coding-engine-widget">
+        <!-- Header -->
+        <div class="widget-header">
+            <div class="header-title">
+                <span class="status-indicator" id="status-indicator"></span>
+                <h2>Coding Engine</h2>
+            </div>
+            <div class="header-actions">
+                <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+                <button id="fullscreen-btn" class="icon-btn" title="Fullscreen">⛶</button>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="status-text">Idle</span>
+            <span id="connection-status" class="connection disconnected">Disconnected</span>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="preview">Preview</button>
+            <button class="tab" data-tab="logs">Logs</button>
+            <button class="tab" data-tab="metrics">Metrics</button>
+            <button class="tab" data-tab="config">Config</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Preview Tab -->
+            <div class="tab-pane active" id="preview-tab">
+                <div class="preview-container">
+                    <iframe 
+                        id="vnc-iframe" 
+                        src=""
+                        frameborder="0"
+                        allow="clipboard-read; clipboard-write"
+                    ></iframe>
+                    <div class="preview-overlay" id="preview-overlay">
+                        <div class="overlay-content">
+                            <span class="loading-spinner"></span>
+                            <p>Waiting for preview...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div class="tab-pane" id="logs-tab">
+                <div class="logs-container" id="logs-container">
+                    <div class="log-entry info">
+                        <span class="log-time">--:--:--</span>
+                        <span class="log-message">Ready to start...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Tab -->
+            <div class="tab-pane" id="metrics-tab">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Iterations</div>
+                        <div class="metric-value" id="metric-iterations">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Files Generated</div>
+                        <div class="metric-value" id="metric-files">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Tests Passed</div>
+                        <div class="metric-value" id="metric-tests-passed">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Tests Failed</div>
+                        <div class="metric-value" id="metric-tests-failed">0</div>
+                    </div>
+                    <div class="metric-card error-card">
+                        <div class="metric-label">CLI Errors</div>
+                        <div class="metric-value" id="metric-cli-errors">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Confidence</div>
+                        <div class="metric-value" id="metric-confidence">0%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Uptime</div>
+                        <div class="metric-value" id="metric-uptime">0s</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config Tab -->
+            <div class="tab-pane" id="config-tab">
+                <div class="config-form">
+                    <!-- Requirements Upload Section -->
+                    <div class="form-section requirements-section">
+                        <h3>
+                            <span class="section-icon">📋</span>
+                            Project Requirements
+                        </h3>
+                        
+                        <!-- File Upload -->
+                        <div class="form-group">
+                            <label>Requirements JSON</label>
+                            <div class="file-upload-container">
+                                <input type="file" id="requirements-upload" accept=".json" class="file-input">
+                                <div class="file-drop-zone" id="file-drop-zone">
+                                    <span class="drop-icon">📁</span>
+                                    <span class="drop-text">Drop JSON file here or click to upload</span>
+                                    <span class="file-name" id="uploaded-file-name"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Or use server file -->
+                        <div class="form-group">
+                            <label for="requirements-file">Or use server file</label>
+                            <input type="text" id="requirements-file" placeholder="requirements/example.json">
+                            <small class="form-hint">Path relative to /data/ directory</small>
+                        </div>
+                        
+                        <!-- JSON Preview -->
+                        <div class="form-group json-preview-container" id="json-preview-container" style="display: none;">
+                            <label>Loaded Requirements <button id="clear-json-btn" class="btn-small">Clear</button></label>
+                            <div class="json-preview" id="json-preview"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="output-dir">Output Directory</label>
+                        <input type="text" id="output-dir" placeholder="my-project">
+                    </div>
+                    <div class="form-group">
+                        <label for="max-concurrent">Max Concurrent</label>
+                        <input type="number" id="max-concurrent" value="2" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="slice-size">Slice Size</label>
+                        <input type="number" id="slice-size" value="30" min="1" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="run-mode">Run Mode</label>
+                        <select id="run-mode" class="form-select">
+                            <option value="hybrid">Hybrid Pipeline (Standard)</option>
+                            <option value="society_hybrid">Society Hybrid (Extended)</option>
+                        </select>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="enable-preview" checked>
+                        <label for="enable-preview">Enable Preview</label>
+                    </div>
+                    
+                    <!-- Git Configuration Section -->
+                    <div class="form-section git-section">
+                        <h3>
+                            <span class="section-icon">📦</span>
+                            Git Integration
+                            <span id="git-status-badge" class="badge badge-disabled">Disabled</span>
+                        </h3>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="enable-git">
+                            <label for="enable-git">Push to GitHub on completion</label>
+                        </div>
+                        <div class="git-options" id="git-options" style="display: none;">
+                            <div class="form-group">
+                                <label for="repo-name">Repository Name</label>
+                                <input type="text" id="repo-name" placeholder="(auto-generate from output dir)">
+                            </div>
+                            <div class="form-group">
+                                <label for="repo-description">Description</label>
+                                <input type="text" id="repo-description" placeholder="Generated by Coding Engine">
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="repo-private" checked>
+                                <label for="repo-private">Private Repository</label>
+                            </div>
+                        </div>
+                        <div class="git-warning" id="git-warning" style="display: none;">
+                            ⚠️ GITHUB_TOKEN not configured on server
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Git Result Banner -->
+        <div class="git-result-banner" id="git-result-banner" style="display: none;">
+            <div class="git-result-content">
+                <span class="git-result-icon">✅</span>
+                <div class="git-result-info">
+                    <span class="git-result-title">Repository Created!</span>
+                    <a id="git-repo-link" href="#" target="_blank" class="git-repo-url"></a>
+                </div>
+                <button id="git-result-close" class="icon-btn">✕</button>
+            </div>
+        </div>
+
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <button id="start-btn" class="btn btn-primary">
+                <span class="btn-icon">▶</span>
+                Start
+            </button>
+            <button id="stop-btn" class="btn btn-danger" disabled>
+                <span class="btn-icon">⏹</span>
+                Stop
+            </button>
+            <div class="control-spacer"></div>
+            <span id="project-type" class="project-badge"></span>
+        </div>
+    </div>
+
+    <!-- Cache-busting version parameter ensures latest JS is loaded -->
+    <script src="widget.js?v=20251127-2"></script>
+    <script>
+        // Initialize widget when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // apiUrl is auto-detected to use port 8000
+            // vncUrl defaults to current hostname with port 6080
+            console.log('Widget initializing with auto-detected URL...');
+            const widget = new CodingEngineWidget();
+        });
+    </script>
+</body>
+</html>

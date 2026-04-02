@@ -1,0 +1,97 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cell-{{ cell.name }}-netpol
+  namespace: {{ cell.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+    app.kubernetes.io/managed-by: cell-colony
+    colony.codingengine.io/cell-id: {{ cell.id }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ cell.name }}
+      app.kubernetes.io/instance: {{ cell.id[:8] }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from same cell pods
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ cell.name }}
+      ports:
+        {% for port in cell.ports %}
+        - protocol: TCP
+          port: {{ port }}
+        {% endfor %}
+    # Allow traffic from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        {% for port in cell.ports %}
+        - protocol: TCP
+          port: {{ port }}
+        {% endfor %}
+    # Allow traffic from monitoring (Prometheus)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: {{ metrics_port | default(9090) }}
+    {% if allow_ingress_from %}
+    # Allow traffic from specified cells
+    {% for cell_name in allow_ingress_from %}
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ cell_name }}
+      ports:
+        {% for port in cell.ports %}
+        - protocol: TCP
+          port: {{ port }}
+        {% endfor %}
+    {% endfor %}
+    {% endif %}
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow traffic to same namespace services
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ cell.namespace }}
+    {% if depends_on %}
+    # Allow traffic to dependency cells
+    {% for dep_cell in depends_on %}
+    - to:
+        - podSelector:
+            matchLabels:
+              colony.codingengine.io/cell-id: {{ dep_cell }}
+    {% endfor %}
+    {% endif %}
+    {% if allow_external_egress | default(false) %}
+    # Allow external traffic (use with caution)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+    {% endif %}

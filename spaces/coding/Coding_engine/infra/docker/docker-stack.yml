@@ -1,0 +1,205 @@
+version: "3.8"
+
+# Docker Swarm Stack for Coding Engine
+# Deploy: docker stack deploy -c infra/docker/docker-stack.yml coding-engine
+
+services:
+  # === Database ===
+  postgres:
+    image: postgres:16-alpine
+    secrets:
+      - postgres_password
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: coding_engine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+
+  # === Cache ===
+  redis:
+    image: redis:7-alpine
+    secrets:
+      - redis_password
+    command: >
+      sh -c 'redis-server --requirepass "$$(cat /run/secrets/redis_password)" --appendonly yes'
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+
+  # === API Server ===
+  api:
+    image: davefelix-coding-engine-api:latest
+    ports:
+      - "8000:8000"
+    secrets:
+      - openrouter_api_key
+      - postgres_password
+      - discord_bot_token_engine
+      - openclaw_gateway_token
+    environment:
+      OPENROUTER_API_KEY_FILE: /run/secrets/openrouter_api_key
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/coding_engine
+      REDIS_URL: redis://redis:6379/0
+      LLM_BACKEND: claude
+      DISCORD_CHANNEL_ID: "1484160715580510242"
+    volumes:
+      - artifact_data:/data/artifacts
+      - generation_data:/app/Data
+    networks:
+      - backend
+      - frontend
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+        reservations:
+          cpus: "1"
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+
+  # === Sandbox (Live Preview + VNC) ===
+  sandbox:
+    image: davefelix-coding-engine-sandbox:latest
+    ports:
+      - "6090:6090"
+      - "3100:3100"
+    environment:
+      DISPLAY: ":99"
+      ENABLE_VNC: "true"
+      NOVNC_PORT: "6090"
+      ENGINE_API_URL: http://api:8000
+      PROJECT_TYPE: react
+      START_CMD: npx serve -s /workspace/data -l 3100 -C
+    volumes:
+      - generation_data:/workspace/data
+    networks:
+      - backend
+      - frontend
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+
+  # === Worker ===
+  worker:
+    image: davefelix-coding-engine-worker:latest
+    secrets:
+      - openrouter_api_key
+      - postgres_password
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/coding_engine
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - artifact_data:/data/artifacts
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+
+  # === Automation UI Backend ===
+  trae-backend:
+    image: automation_ui-backend:latest
+    ports:
+      - "8007:8007"
+    secrets:
+      - openrouter_api_key
+      - discord_bot_token_analyzer
+      - trae_postgres_password
+    environment:
+      DISPLAY: ":99"
+      PYAUTOGUI_FAILSAFE: "False"
+      LOG_LEVEL: INFO
+      OPENAI_API_BASE: https://openrouter.ai/api/v1
+      LLM_MODEL: qwen/qwen3-coder:free
+      VISION_MODEL: nvidia/nemotron-nano-12b-v2-vl:free
+      DISCORD_CHANNEL_ID: "1484160715580510242"
+    networks:
+      - backend
+      - frontend
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+
+# === Secrets (external — created via docker secret create) ===
+secrets:
+  openrouter_api_key:
+    external: true
+  anthropic_api_key:
+    external: true
+  discord_bot_token_engine:
+    external: true
+  discord_bot_token_analyzer:
+    external: true
+  openclaw_gateway_token:
+    external: true
+  postgres_password:
+    external: true
+  trae_postgres_password:
+    external: true
+  redis_password:
+    external: true
+
+# === Networks (overlay for Swarm) ===
+networks:
+  backend:
+    driver: overlay
+  frontend:
+    driver: overlay
+
+# === Volumes ===
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  artifact_data:
+    driver: local
+  generation_data:
+    driver: local

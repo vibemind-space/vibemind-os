@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "description": "Code node — run custom JavaScript or Python code",
+    "placeholders": ["language", "code"]
+  },
+  "type": "n8n-nodes-base.code",
+  "typeVersion": 2,
+  "name": "Code",
+  "position": [1000, 300],
+  "parameters": {
+    "language": "javaScript",
+    "jsCode": "// Process data here\nreturn items;"
+  }
+}

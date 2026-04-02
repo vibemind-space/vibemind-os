@@ -1,0 +1,63 @@
+# config/llm_models.yml — SINGLE SOURCE OF TRUTH for all LLM models
+# Edit THIS file to change any model globally across the entire system.
+#
+# Roles:
+#   primary      - Anthropic SDK direct (base agent, vision, monitor)
+#   cli          - Claude CLI / Kilo CLI --model flag
+#   mcp_standard - AutoGen teams, EventFix orchestrator, task executor
+#   mcp_agent    - Individual MCP plugin agents (filesystem, docker, etc.)
+#   judge        - MCMP judge, fungus agents, differential analysis
+#   reasoning    - Complex reasoning, architecture analysis
+#   enrichment   - Phase 30 schema discovery, task mapping
+#
+# Override any model via environment variable:
+#   LLM_MODEL_PRIMARY=claude-opus-4-20250514
+#   LLM_MODEL_JUDGE=anthropic/claude-sonnet-4.5
+#   etc.
+
+providers:
+  anthropic:
+    base_url: null
+    api_key_env: ANTHROPIC_API_KEY
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+  openai:
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+models:
+  primary:
+    provider: openai
+    model: gpt-5.4
+    max_tokens: 32768
+    description: OpenAI GPT-4.1 — primary code generation model
+  cli:
+    provider: openai
+    model: gpt-5.4
+    max_tokens: 32768
+    description: Claude CLI --model flag
+  mcp_standard:
+    provider: openai
+    model: gpt-5.4-mini
+    max_tokens: 16384
+    description: AutoGen teams, EventFix orchestrator, task executor, LLM search
+  mcp_agent:
+    provider: openai
+    model: gpt-5.4-mini
+    max_tokens: 16384
+    description: Individual MCP plugin agents (filesystem, docker, prisma, etc.)
+  judge:
+    provider: openai
+    model: gpt-5.4
+    max_tokens: 16384
+    description: MCMP judge, fungus agents, differential analysis, MCP planner
+  reasoning:
+    provider: openai
+    model: o4-mini
+    max_tokens: 32768
+    description: Complex reasoning, architecture analysis
+  enrichment:
+    provider: openai
+    model: gpt-5.4-mini
+    max_tokens: 16384
+    description: Phase 30 schema discovery and task mapping

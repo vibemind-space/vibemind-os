@@ -1,0 +1,155 @@
+# GitHub Actions workflow for automated external repository updates
+# Part of autonomous programmer project - maintains external dependencies
+# Author: Autonomous Agent
+# Purpose: Automatically pull updates from external repositories maintained by other teams
+
+name: Update External Repositories
+
+# Trigger conditions for the workflow
+on:
+  # Run daily at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * *'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update even if no changes detected'
+        required: false
+        default: 'false'
+        type: boolean
+  
+  # Run when external repo configuration changes
+  push:
+    paths:
+      - 'scripts/update-external-repos.ps1'
+      - '.github/workflows/update-external-repos.yml'
+
+# Define workflow permissions
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-external-repos:
+    name: Update External Dependencies
+    runs-on: windows-latest
+    
+    steps:
+      # Checkout the main repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      # Configure Git for automated commits
+      - name: Configure Git
+        run: |
+          git config --global user.name "External Repo Updater"
+          git config --global user.email "noreply@github.com"
+      
+      # Run the external repository update script
+      - name: Update External Repositories
+        shell: pwsh
+        run: |
+          Write-Host "Starting external repository update process..."
+          
+          # Execute the update script
+          .\scripts\update-external-repos.ps1
+          
+          # Check if there are any changes
+          $changes = git status --porcelain
+          if ($changes) {
+            Write-Host "Changes detected in external repositories"
+            Write-Host "Changes:"
+            git status --short
+          } else {
+            Write-Host "No changes detected in external repositories"
+          }
+      
+      # Commit and push changes if any
+      - name: Commit External Repository Updates
+        shell: pwsh
+        run: |
+          # Check for changes
+          $changes = git status --porcelain
+          
+          if ($changes -or "${{ github.event.inputs.force_update }}" -eq "true") {
+            Write-Host "Committing external repository updates..."
+            
+            # Add all changes in external directory
+            git add external/
+            git add .gitignore
+            
+            # Create commit message with timestamp
+            $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
+            $commitMessage = "chore: update external repositories - $timestamp
+            
+            Auto-updated by GitHub Actions workflow
+            - Updated external dependencies from upstream repositories
+            - Maintained by other teams, automatically synchronized
+            
+            [skip ci]"
+            
+            # Commit changes
+            git commit -m "$commitMessage"
+            
+            # Push changes
+            git push origin main
+            
+            Write-Host "Successfully pushed external repository updates"
+          } else {
+            Write-Host "No changes to commit"
+          }
+      
+      # Create summary report
+      - name: Generate Update Report
+        shell: pwsh
+        run: |
+          Write-Host "=== External Repository Update Report ==="
+          Write-Host "Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')"
+          Write-Host "Workflow: ${{ github.workflow }}"
+          Write-Host "Run ID: ${{ github.run_id }}"
+          
+          # List external directories
+          if (Test-Path "external") {
+            Write-Host "\nExternal repositories found:"
+            Get-ChildItem "external" -Directory | ForEach-Object {
+              $repoPath = $_.FullName
+              $repoName = $_.Name
+              
+              if (Test-Path "$repoPath\.git") {
+                Push-Location $repoPath
+                $lastCommit = git log -1 --format="%h - %s (%cr)"
+                $branch = git branch --show-current
+                Write-Host "  📁 $repoName (branch: $branch)"
+                Write-Host "     Latest: $lastCommit"
+                Pop-Location
+              }
+            }
+          } else {
+            Write-Host "\nNo external repositories directory found"
+          }
+          
+          Write-Host "\n=== End Report ==="
+      
+      # Handle workflow failures
+      - name: Handle Failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Write-Host "❌ External repository update workflow failed" -ForegroundColor Red
+          Write-Host "Please check the logs above for detailed error information"
+          Write-Host "Common issues:"
+          Write-Host "  - Network connectivity problems"
+          Write-Host "  - Authentication issues with external repositories"
+          Write-Host "  - Merge conflicts in external repositories"
+          Write-Host "  - Invalid repository URLs or branches"
+          
+          # Output git status for debugging
+          Write-Host "\nCurrent git status:"
+          git status
+          
+          exit 1

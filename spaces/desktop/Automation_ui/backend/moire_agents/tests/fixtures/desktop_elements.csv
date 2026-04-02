@@ -1,0 +1,212 @@
+element_id,name,category,ocr_text,x,y,width,height,center_x,center_y,confidence
+box_0,Element_box_0,unknown,,525,106,20,14,535,113,0.5
+box_1,29.11.2025 12:31,input,29.11.2025 12:31,579,341,86,13,622,347,0.65
+box_2,24.10.2025 16:01,input,24.10.2025 16:01,579,649,86,13,622,655,0.65
+box_3,24.10.2025 08:34,input,24.10.2025 08:34,579,201,88,13,623,207,0.65
+box_4,24.10.2025 08:34,input,24.10.2025 08:34,579,313,88,13,623,319,0.65
+box_5,24.10.2025 08:34,input,24.10.2025 08:34,579,397,88,13,623,403,0.65
+box_6,24.10.2025 08:34,input,24.10.2025 08:34,579,425,88,13,623,431,0.65
+box_7,24.10.2025 08:34,input,24.10.2025 08:34,579,453,88,13,623,459,0.65
+box_8,24.10.2025 08:34,input,24.10.2025 08:34,579,537,88,13,623,543,0.65
+box_9,24.10.2025 08:34,input,24.10.2025 08:34,579,565,88,13,623,571,0.65
+box_10,24.10.2025 08:34,input,24.10.2025 08:34,579,621,88,13,623,627,0.65
+box_11,24.10.2025 08:34,input,24.10.2025 08:34,579,677,88,13,623,683,0.65
+box_12,24.10.2025 08:34,input,24.10.2025 08:34,579,733,88,13,623,739,0.65
+box_13,24.10.2025 08:34,input,24.10.2025 08:34,579,901,88,13,623,907,0.65
+box_14,24.10.2025 08:34,input,24.10.2025 08:34,579,929,88,13,623,935,0.65
+box_15,24.10.2025 08:34,input,24.10.2025 08:34,579,985,88,13,623,991,0.65
+box_16,Element_box_16,icon,,321,898,15,18,328,907,0.7
+box_17,Element_box_17,icon,,321,926,15,18,328,935,0.7
+box_18,Element_box_18,icon,,321,982,15,18,328,991,0.7
+box_19,24.10.2025 16:50,input,24.10.2025 16:50,579,593,88,13,623,599,0.65
+box_20,25.10.2025 00:49,input,25.10.2025 00:49,579,509,88,13,623,515,0.65
+box_21,25.10.2025 14:54,input,25.10.2025 14:54,579,369,88,13,623,375,0.65
+box_22,28.10.2025 11:35,input,28.10.2025 11:35,579,761,88,13,623,767,0.65
+box_23,25.10.2025 15:16,input,25.10.2025 15:16,579,173,88,13,623,179,0.65
+box_24,24.10.2025 15:03,input,24.10.2025 15:03,579,257,88,13,623,263,0.65
+box_25,28.10.2025 12:03,input,28.10.2025 12:03,579,285,88,13,623,291,0.65
+box_26,28.11.2025 00:43,input,28.11.2025 00:43,579,481,88,13,623,487,0.65
+box_27,29.11.2025 12:36,input,29.11.2025 12:36,579,789,88,13,623,795,0.65
+box_28,24.10.2025 10:46,input,24.10.2025 10:46,579,873,88,13,623,879,0.65
+box_29,24.10.2025 10:46,input,24.10.2025 10:46,579,957,88,13,623,963,0.65
+box_30,24.10.2025 12:37,input,24.10.2025 12:37,579,817,88,13,623,823,0.65
+box_31,24.10.2025 12:37,input,24.10.2025 12:37,579,845,88,13,623,851,0.65
+box_32,24.10.2025 10:45,input,24.10.2025 10:45,579,229,88,13,623,235,0.65
+box_33,28.11.2025 16:40,input,28.11.2025 16:40,579,705,88,13,623,711,0.65
+box_34,ARCHITECTURE.md,input,ARCHITECTURE.md,339,985,109,13,393,991,0.65
+box_35,EXAMPLE-Datei,input,EXAMPLE-Datei,724,873,86,13,767,879,0.65
+box_36,2KB,button,2KB,886,957,27,13,899,963,0.6
+box_37,11KB,button,11KB,881,985,32,13,897,991,0.6
+box_38,ENV-Datei,button,ENV-Datei,724,845,57,13,752,851,0.6
+box_39,1KB,unknown,1KB,887,845,26,13,900,851,0.5
+box_40,1KB,unknown,1KB,887,873,26,13,900,879,0.5
+box_41,1KB,unknown,1KB,887,901,26,13,900,907,0.5
+box_42,1KB,unknown,1KB,887,929,26,13,900,935,0.5
+box_43,Bilder,button,Bilder,62,375,33,13,78,381,0.6
+box_44,Neu,button,Neu,49,108,25,12,61,114,0.6
+box_45,>,icon,>,28,728,9,13,32,734,0.5
+box_46,76 Elemente,button,76 Elemente,21,1005,67,13,54,1011,0.6
+box_47,Linux,button,Linux,62,791,31,13,77,797,0.6
+box_48,Dateiordner,button,Dateiordner,724,173,65,13,756,179,0.6
+box_49,Dateiordner,button,Dateiordner,724,201,65,13,756,207,0.6
+box_50,Dateiordner,button,Dateiordner,724,229,65,13,756,235,0.6
+box_51,Dateiordner,button,Dateiordner,724,257,65,13,756,263,0.6
+box_52,Dateiordner,button,Dateiordner,724,285,65,13,756,291,0.6
+box_53,Dateiordner,button,Dateiordner,724,313,65,13,756,319,0.6
+box_54,Dateiordner,button,Dateiordner,724,341,65,13,756,347,0.6
+box_55,Dateiordner,button,Dateiordner,724,369,65,13,756,375,0.6
+box_56,Dateiordner,button,Dateiordner,724,397,65,13,756,403,0.6
+box_57,Dateiordner,button,Dateiordner,724,425,65,13,756,431,0.6
+box_58,Dateiordner,button,Dateiordner,724,453,65,13,756,459,0.6
+box_59,Dateiordner,button,Dateiordner,724,481,65,13,756,487,0.6
+box_60,Dateiordner,button,Dateiordner,724,509,65,13,756,515,0.6
+box_61,Dateiordner,button,Dateiordner,724,537,65,13,756,543,0.6
+box_62,Dateiordner,button,Dateiordner,724,565,65,13,756,571,0.6
+box_63,Dateiordner,button,Dateiordner,724,593,65,13,756,599,0.6
+box_64,Dateiordner,button,Dateiordner,724,621,65,13,756,627,0.6
+box_65,Dateiordner,button,Dateiordner,724,649,65,13,756,655,0.6
+box_66,Dateiordner,button,Dateiordner,724,677,65,13,756,683,0.6
+box_67,Dateiordner,button,Dateiordner,724,705,65,13,756,711,0.6
+box_68,Dateiordner,button,Dateiordner,724,733,65,13,756,739,0.6
+box_69,Dateiordner,button,Dateiordner,724,761,65,13,756,767,0.6
+box_70,Dateiordner,button,Dateiordner,724,817,65,13,756,823,0.6
+box_71,Downloads,button,Downloads,62,311,62,13,93,317,0.6
+box_72,Name,button,Name,332,142,35,13,349,148,0.6
+box_73,Dateiordner,button,Dateiordner,724,789,65,13,756,795,0.6
+box_74,Dokumente:,button,Dokumente:,62,343,65,13,94,349,0.6
+box_75,User,button,User,666,57,31,14,681,64,0.6
+box_76,Sortieren,button,Sortieren,434,107,53,13,460,113,0.6
+box_77,>,icon,>,28,696,9,13,32,702,0.5
+box_78,Dieser PC,input,Dieser PC,281,56,61,15,311,63,0.65
+box_79,‘Windows-Batchda.,input,‘Windows-Batchda.,723,957,110,13,778,963,0.65
+box_80,Benutzer,button,Benutzer,570,57,57,14,598,64,0.6
+box_81,MoireTracker,input,MoireTracker,969,56,83,15,1010,63,0.65
+box_82,>,icon,>,256,58,9,12,260,64,0.5
+box_83,>,icon,>,358,58,9,12,362,64,0.5
+box_84,>,icon,>,546,58,9,12,550,64,0.5
+box_85,>,icon,>,642,58,9,12,646,64,0.5
+box_86,>,icon,>,711,58,9,12,715,64,0.5
+box_87,>,icon,>,804,58,9,12,808,64,0.5
+box_88,>,icon,>,945,58,9,12,949,64,0.5
+box_89,>,icon,>,1068,58,9,12,1072,64,0.5
+box_90,‘Vorschau,button,‘Vorschau,1838,107,53,13,1864,113,0.6
+box_91,MoireTracker durchsuchen,input,MoireTracker durchsuchen,1417,56,165,15,1499,63,0.65
+box_92,Markdown-Quelld.,input,Markdown-Quelld.,724,985,109,14,778,992,0.65
+box_93,Git Attributes-Que.,input,Git Attributes-Que.,724,901,109,14,778,908,0.65
+box_94,#» OneDrive,input,#» OneDrive,40,630,74,15,77,637,0.65
+box_95,Größe,button,Größe,844,142,35,13,861,148,0.6
+box_96,= Volume (E),input,= Volume (E),49,727,84,15,91,734,0.65
+box_97,Q,icon,Q,1874,56,15,15,1881,63,0.7
+box_98,»,icon,»,284,279,14,14,291,286,0.7
+box_99,»,icon,»,284,311,14,14,291,318,0.7
+box_100,»,icon,»,284,343,14,14,291,350,0.7
+box_101,»,icon,»,284,375,14,14,291,382,0.7
+box_102,»,icon,»,284,407,14,14,291,414,0.7
+box_103,»,icon,»,284,439,14,14,291,446,0.7
+box_104,# OneDrive - Personal,input,# OneDrive - Personal,40,214,130,15,105,221,0.65
+box_105,Element_box_105,icon,,27,56,16,15,35,63,0.7
+box_106,>,icon,>,75,56,16,15,83,63,0.7
+box_107,Element_box_107,icon,,123,56,15,16,130,64,0.7
+box_108,Element_box_108,icon,,171,56,16,16,179,64,0.7
+box_109,jan],unknown,jan],1814,105,20,16,1824,113,0.5
+box_110,m,icon,m,216,103,18,20,225,113,0.7
+box_111,Element_box_111,icon,,24,103,19,19,33,112,0.7
+box_112,Element_box_112,icon,,263,103,20,20,273,113,0.7
+box_113,Element_box_113,icon,,360,103,18,20,369,113,0.7
+box_114,©,icon,©,168,104,18,18,177,113,0.7
+box_115,Q,icon,Q,220,54,20,19,230,63,0.7
+box_116,X,icon,X,120,103,18,20,129,113,0.7
+box_117,Element_box_117,unknown,,410,105,20,16,420,113,0.5
+box_118,ry,icon,ry,42,790,16,18,50,799,0.7
+box_119,Moaire_vibemind,input,Moaire_vibemind,828,56,102,17,879,64,0.65
+box_120,Lokaler Datenträger (C:),input,Lokaler Datenträger (C:),70,695,128,16,134,703,0.65
+box_121,Desktop,input,Desktop,735,57,54,17,762,65,0.65
+box_122,Lokaler Datenträger (C:),input,Lokaler Datenträger (C:),382,57,149,17,456,65,0.65
+box_123,BW Desktop.,input,BW Desktop.,40,278,68,17,74,286,0.65
+box_124,Element_box_124,text,,40,533,108,17,94,541,0.65
+box_125,FF Videos,button,FF Videos,41,436,59,20,70,446,0.6
+box_126,Anzeigen,button,Anzeigen,549,107,54,16,576,115,0.6
+box_127,& Galerie,input,& Galerie,40,180,61,20,70,190,0.65
+box_128,"Wechseln Sie zu den Einstellungen, um Windows zu aktivieren.",container,"Wechseln Sie zu den Einstellungen, um Windows zu aktivieren.",1434,965,411,18,1639,974,0.5
+box_129,® Musik,button,® Musik,40,404,57,20,68,414,0.6
+box_130,start,button,start,40,149,49,19,64,158,0.6
+box_131,BB credentials,input,BB credentials,319,394,81,17,359,402,0.65
+box_132,8 shaders,input,8 shaders,319,674,64,17,351,682,0.65
+box_133,B® workflows,input,B® workflows,319,814,78,17,358,822,0.65
+box_134,B® external,input,B® external,319,562,65,17,351,570,0.65
+box_135,Element_box_135,icon,,312,105,17,17,320,113,0.7
+box_136,i debug,input,i debug,40,469,59,18,69,478,0.65
+box_137,BB claude,input,BB claude,319,170,62,17,350,178,0.65
+box_138,test data,input,test data,319,730,71,18,354,739,0.65
+box_139,BB Nachbearbeitung,input,BB Nachbearbeitung,40,501,117,18,98,510,0.65
+box_140,BB Wohnung_angelegenheiten,input,BB Wohnung_angelegenheiten,40,565,171,18,125,574,0.65
+box_141,BB grid_from_image,input,BB grid_from_image,319,590,114,19,376,599,0.65
+box_142,WW Dieser PC,input,WW Dieser PC,40,661,75,19,77,670,0.65
+box_143,BB agents,input,BB agents,319,254,59,19,348,263,0.65
+box_144,© Netzwerk,input,© Netzwerk,40,756,74,20,77,766,0.65
+box_145,Git Ignore-Quelld.,input,Git Ignore-Quelld.,724,929,104,16,776,937,0.65
+box_146,8 archive,input,8 archive,319,282,62,17,350,290,0.65
+box_147,Element_box_147,unknown,,321,841,16,20,329,851,0.5
+box_148,Element_box_148,icon,,41,373,18,18,50,382,0.7
+box_149,Element_box_149,text,,319,198,62,19,350,207,0.65
+box_150,Element_box_150,text,,319,478,113,18,375,487,0.65
+box_151,Tye,icon,Tye,716,135,30,27,731,148,0.7
+box_152,Element_box_152,link,,319,758,48,17,343,766,0.6
+box_153,Windows,input,Windows,1434,940,83,19,1475,949,0.65
+box_154,8 build,button,8 build,319,338,51,17,344,346,0.6
+box_155,[_ docs,button,[_ docs,319,534,49,17,343,542,0.6
+box_156,BB backups,input,BB backups,319,310,68,19,353,319,0.65
+box_157,Element_box_157,unknown,,42,340,16,20,50,350,0.5
+box_158,Element_box_158,unknown,,321,869,16,20,329,879,0.5
+box_159,BB docker,input,BB docker,319,506,60,17,349,514,0.65
+box_160,BB desktop_grid,input,BB desktop_grid,319,450,92,19,365,459,0.65
+box_161,aktivieren,input,aktivieren,1520,940,87,19,1563,949,0.65
+box_162,BB installer,input,BB installer,319,618,65,17,351,626,0.65
+box_163,m activate bat,input,m activate bat,319,955,85,16,361,963,0.65
+box_164,Element_box_164,link,,319,226,52,17,345,234,0.6
+box_165,8 tools,button,8 tools,319,786,50,17,344,794,0.6
+box_166,BB config,input,BB config,319,366,58,19,348,375,0.65
+box_167,Element_box_167,link,,319,702,39,17,338,710,0.6
+box_168,Element_box_168,link,,340,848,25,10,352,853,0.6
+box_169,Element_box_169,text,,340,901,70,16,375,909,0.65
+box_170,[_ demo,input,[_ demo,319,422,55,17,346,430,0.65
+box_171,Element_box_171,text,,340,873,72,16,376,881,0.65
+box_172,1 Element ausgewählt,input,1 Element ausgewählt,106,1005,118,16,165,1013,0.65
+box_173,EY,icon,EY,48,692,19,16,57,700,0.7
+box_174,BB logs,button,BB logs,319,646,46,19,342,655,0.6
+box_175,gitignore.,button,gitignore.,340,929,54,16,367,937,0.6
+box_176,DEU,button,DEU,1744,1051,26,12,1757,1057,0.6
+box_177,12.12.2025,button,12.12.2025,1842,1058,61,12,1872,1064,0.6
+box_178,X,icon,X,1883,9,12,12,1889,15,0.7
+box_179,X,icon,X,228,17,13,13,234,23,0.7
+box_180,o,icon,o,1836,8,14,14,1843,15,0.7
+box_181,>,icon,>,20,216,9,13,24,222,0.5
+box_182,>,icon,>,20,632,9,13,24,638,0.5
+box_183,Element_box_183,unknown,,18,665,13,9,24,669,0.5
+box_184,>,icon,>,20,760,9,13,24,766,0.5
+box_185,>,icon,>,20,792,9,13,24,798,0.5
+box_186,Suche,button,Suche,645,1049,40,14,665,1056,0.6
+box_187,Element_box_187,text,,50,18,76,13,88,24,0.65
+box_188,Element_box_188,unknown,,1711,1050,16,11,1719,1055,0.5
+box_189,Anderungsdatum,input,Anderungsdatum,572,135,104,27,624,148,0.65
+box_190,+,icon,+,42,308,16,20,50,318,0.5
+box_191,+,icon,+,272,18,14,14,279,25,0.7
+box_192,07:34,button,07:34,1870,1042,33,12,1886,1048,0.6
+box_193,Element_box_193,container,,1279,1042,28,35,1293,1059,0.5
+box_194,Element_box_194,icon,,1785,1046,20,20,1795,1056,0.7
+box_195,Element_box_195,icon,,1809,1047,20,18,1819,1056,0.7
+box_196,Element_box_196,icon,,839,1043,28,25,853,1055,0.7
+box_197,Element_box_197,icon,,971,1042,28,28,985,1056,0.7
+box_198,Element_box_198,icon,,23,15,20,17,33,23,0.7
+box_199,|,icon,|,571,1043,27,27,584,1056,0.7
+box_200,Element_box_200,container,,1235,1042,28,35,1249,1059,0.5
+box_201,Element_box_201,container,,1015,1042,28,35,1029,1059,0.5
+box_202,o,unknown,o,1059,1045,28,23,1073,1056,0.5
+box_203,©,icon,©,1323,1043,28,34,1337,1060,0.5
+box_204,«,icon,«,1191,1042,28,27,1205,1055,0.7
+box_205,Element_box_205,container,,1147,1042,28,35,1161,1059,0.5
+box_206,Element_box_206,container,,883,1043,28,34,897,1060,0.5
+box_207,Element_box_207,container,,1104,1042,27,36,1117,1060,0.5
+box_208,Element_box_208,container,,927,1037,33,40,943,1057,0.5
+box_209,Q,icon,Q,619,1047,18,18,628,1056,0.7
+box_210,Element_box_210,button,,1858,998,48,29,1882,1012,0.6

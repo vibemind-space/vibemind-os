@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "description": "Tool Workflow node — exposes another workflow as a tool for the AI Agent",
+    "placeholders": ["workflow_id", "tool_name", "tool_description"]
+  },
+  "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+  "typeVersion": 2,
+  "name": "Call Workflow Tool",
+  "position": [1000, 700],
+  "parameters": {
+    "name": "custom_tool",
+    "description": "A custom tool that executes a workflow",
+    "workflowId": {
+      "__rl": true,
+      "value": "",
+      "mode": "id"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+# ============================================================
+# ValidationTeam Docker Compose
+# Port-isolated testing environment
+# Frontend: 3100, Backend: 8100
+# ============================================================
+version: "3.9"
+
+services:
+  # Combined validation service (Frontend + Backend)
+  validation-app:
+    build:
+      context: ${PROJECT_DIR:-.}
+      dockerfile: infra/docker/Dockerfile.validation
+    container_name: validation-app-${RUN_ID:-default}
+    ports:
+      # Isolated ports - different from dev (5173/8000) and prod (80/443)
+      - "${FRONTEND_PORT:-3100}:3100"
+      - "${BACKEND_PORT:-8100}:8100"
+    environment:
+      - NODE_ENV=production
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - VALIDATION_RUN_ID=${RUN_ID:-default}
+    volumes:
+      # Mount test results directory
+      - ${TEST_OUTPUT_DIR:-./test-results}:/app/test-results
+      # Mount logs for debugging
+      - ${LOG_DIR:-./logs}:/var/log/validation
+    networks:
+      - validation-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: "no"
+    # Resource limits for predictable testing
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  # Separate services mode (optional - for independent scaling)
+  validation-frontend:
+    build:
+      context: ${PROJECT_DIR:-.}
+      dockerfile: infra/docker/Dockerfile.frontend
+    container_name: validation-frontend-${RUN_ID:-default}
+    profiles:
+      - separate
+    ports:
+      - "${FRONTEND_PORT:-3100}:3100"
+    environment:
+      - NODE_ENV=production
+      - BACKEND_URL=http://validation-backend:8100
+    networks:
+      - validation-network
+    depends_on:
+      validation-backend:
+        condition: service_healthy
+
+  validation-backend:
+    build:
+      context: ${PROJECT_DIR:-.}
+      dockerfile: infra/docker/Dockerfile.backend
+    container_name: validation-backend-${RUN_ID:-default}
+    profiles:
+      - separate
+    ports:
+      - "${BACKEND_PORT:-8100}:8100"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ${TEST_OUTPUT_DIR:-./test-results}:/app/test-results
+      - ${LOG_DIR:-./logs}:/var/log/validation
+    networks:
+      - validation-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  validation-network:
+    name: validation-net-${RUN_ID:-default}
+    driver: bridge
+    # Isolated network for validation testing
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1
+
+volumes:
+  test-results:
+  validation-logs:

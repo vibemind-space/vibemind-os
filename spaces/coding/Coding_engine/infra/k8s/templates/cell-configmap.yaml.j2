@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ cell.k8s_configmap_name }}
+  namespace: {{ cell.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+    app.kubernetes.io/managed-by: cell-colony
+    colony.codingengine.io/cell-id: {{ cell.id }}
+data:
+  # Cell identity
+  CELL_ID: "{{ cell.id }}"
+  CELL_NAME: "{{ cell.name }}"
+  CELL_NAMESPACE: "{{ cell.namespace }}"
+  CELL_VERSION: "{{ cell.version }}"
+
+  # Source information
+  SOURCE_TYPE: "{{ cell.source_type.value }}"
+  SOURCE_REF: "{{ cell.source_ref | truncate(500) }}"
+
+  # Runtime configuration
+  LOG_LEVEL: "{{ log_level | default('info') }}"
+  LOG_FORMAT: "{{ log_format | default('json') }}"
+
+  # Health check configuration
+  HEALTH_CHECK_PATH: "{{ cell.health_check.path }}"
+  HEALTH_CHECK_PORT: "{{ cell.health_check.port }}"
+
+  # Metrics configuration
+  METRICS_ENABLED: "{{ metrics_enabled | default('true') }}"
+  METRICS_PORT: "{{ metrics_port | default('9090') }}"
+  METRICS_PATH: "{{ metrics_path | default('/metrics') }}"
+
+  # Feature flags
+  TRACING_ENABLED: "{{ tracing_enabled | default('true') }}"
+
+  {% if extra_config %}
+  # Extra configuration
+  {% for key, value in extra_config.items() %}
+  {{ key }}: "{{ value }}"
+  {% endfor %}
+  {% endif %}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cell-{{ cell.name }}-sa
+  namespace: {{ cell.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+    app.kubernetes.io/managed-by: cell-colony
+automountServiceAccountToken: false

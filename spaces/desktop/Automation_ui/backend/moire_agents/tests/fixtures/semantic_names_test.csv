@@ -1,0 +1,173 @@
+element_id,name,category,ocr_text,x,y,width,height,center_x,center_y,confidence
+box_0,MCPS (text),text,MCPS,650,941,35,13,667.5,947.5,0.6
+box_1,Text Field,text,,816,114,110,13,871.0,120.5,0.65
+box_2,FileZilla Client (text),text,FileZilla Client,1404,288,77,13,1442.5,294.5,0.65
+box_3,OBS Studio (text),text,OBS Studio,1335,691,62,13,1366.0,697.5,0.6
+box_4,X2Go Client (text),text,X2Go Client,558,506,65,13,590.5,512.5,0.6
+box_5,HISinOne (text),text,HISinOne,484,531,53,13,510.5,537.5,0.6
+box_6,Riot Client (text),text,Riot Client,1188,897,58,13,1217.0,903.5,0.6
+box_7,Kindle (button),button,Kindle,1133,641,36,13,1151.0,647.5,0.6
+box_8,Dieser PC (text),text,Dieser PC,1105,561,52,13,1131.0,567.5,0.6
+box_9,Hswt (text),text,Hswt,343,109,30,13,358.0,115.5,0.6
+box_10,Arbeit Otto (button),button,Arbeit Otto,1261,851,63,13,1292.5,857.5,0.6
+box_11,out (button),button,out,535,952,21,12,545.5,958.0,0.5
+box_12,Text Field,text,,621,812,89,13,665.5,818.5,0.65
+box_13,Netzwerk (button),button,Netzwerk,1588,457,52,13,1614.0,463.5,0.6
+box_14,Riot Games (text),text,Riot Games,743,192,63,13,774.5,198.5,0.6
+box_15,Text Field,text,,1308,910,115,15,1365.5,917.5,0.65
+box_16,Vibemind.docx (text),text,Vibemind.docx,871,206,83,13,912.5,212.5,0.65
+box_17,Text Field,text,,895,285,97,13,943.5,291.5,0.65
+box_18,RUN_MULTIINPUTO. (text),text,RUN_MULTIINPUTO.,497,783,116,15,555.0,790.5,0.65
+box_19,Comet (button),button,Comet,233,102,39,13,252.5,108.5,0.6
+box_20,User (text),text,User,1133,930,26,13,1146.0,936.5,0.5
+box_21,TeamViewer (text),text,TeamViewer,397,577,67,13,430.5,583.5,0.6
+box_22,"20250320_Bewerbu, (input)",input,"20250320_Bewerbu,",153,265,111,15,208.5,272.5,0.65
+box_23,Neuer Ordner (2) (input),input,Neuer Ordner (2),131,851,91,15,176.5,858.5,0.65
+box_24,Text Field,text,,380,131,110,15,435.0,138.5,0.65
+box_25,Link,link,,1800,968,42,12,1821.0,974.0,0.6
+box_26,"[Y
+9 (text)",text,"[Y
+9",269,265,87,70,312.5,300.0,0.5
+box_27,"5
+Microsoft Edge (text)",text,"5
+Microsoft Edge",1481,398,83,70,1522.5,433.0,0.5
+box_28,shutdown (button),button,shutdown,1420,400,56,67,1448.0,433.5,0.5
+box_29,"Aufzeichnung
+2025-07-18 (text)",text,"Aufzeichnung
+2025-07-18",1582,266,77,28,1620.5,280.0,0.6
+box_30,"Screenshot
+2025-10- (text)",text,"Screenshot
+2025-10-",880,403,61,28,910.5,417.0,0.6
+box_31,"2022-05-17 Workshop
+EXIST Förderung im. (text)",text,"2022-05-17 Workshop
+EXIST Förderung im.",611,678,119,31,670.5,693.5,0.65
+box_32,Signal (button),button,Signal,521,434,35,16,538.5,442.0,0.6
+box_33,ExpressVPN (text),text,ExpressVPN,1306,770,64,16,1338.0,778.0,0.65
+box_34,Wichtiges (text),text,Wichtiges,1536,819,56,16,1564.0,827.0,0.6
+box_35,"Aufgabenplaner
+Studiumadsx (text)",text,"Aufgabenplaner
+Studiumadsx",200,399,89,28,244.5,413.0,0.65
+box_36,Text Field,text,,1278,285,106,16,1331.0,293.0,0.65
+box_37,‘AutomatonGUIDE. pdf (text),text,‘AutomatonGUIDE. pdf,1369,363,119,16,1428.5,371.0,0.65
+box_38,Papierkorb. (text),text,Papierkorb.,679,262,60,16,709.0,270.0,0.65
+box_39,Poetry (button),button,Poetry,42,59,37,16,60.5,67.0,0.6
+box_40,Zoom Workplace (text),text,Zoom Workplace,1008,629,95,16,1055.5,637.0,0.65
+box_41,start_ai_systems.py (text),text,start_ai_systems.py,409,444,103,16,460.5,452.0,0.65
+box_42,Button,button,,774,678,52,26,800.0,691.0,0.6
+box_43,GeForce Experience (text),text,GeForce Experience,258,707,105,16,310.5,715.0,0.65
+box_44,Systemsteuerung (text),text,Systemsteuerung,774,349,93,16,820.5,357.0,0.65
+box_45,Project_and_ideas_. (text),text,Project_and_ideas_.,27,954,110,16,82.0,962.0,0.65
+box_46,Nmap - Zenmap GUI (header),header,Nmap - Zenmap GUI,744,719,112,16,800.0,727.0,0.65
+box_47,Programmiern (input),input,Programmiern,924,558,80,16,964.0,566.0,0.65
+box_48,Sublease_Agreemen. (text),text,Sublease_Agreemen.,1598,137,117,16,1656.5,145.0,0.65
+box_49,test-electron-simple. (text),text,test-electron-simple.,459,667,111,16,514.5,675.0,0.65
+box_50,Container,container,,644,893,46,37,667.0,911.5,0.5
+box_51,Container,container,,522,903,46,37,545.0,921.5,0.5
+box_52,Container,container,,1541,771,46,37,1564.0,789.5,0.5
+box_53,Container,container,,1123,882,46,37,1146.0,900.5,0.5
+box_54,Text Field,text,,210,945,80,16,250.0,953.0,0.65
+box_55,Application Icon,icon,,893,361,28,26,907.0,374.0,0.7
+box_56,Windows (text),text,Windows,1434,941,83,18,1475.5,950.0,0.65
+box_57,EX (button),button,EX,335,56,45,49,357.5,80.5,0.5
+box_58,"ungen, um Windows zu akt (text)",text,"ungen, um Windows zu akt",1619,966,178,17,1708.0,974.5,0.65
+box_59,aktivieren (button),button,aktivieren,1520,941,86,18,1563.0,950.0,0.65
+box_60,GitMind (text),text,GitMind,1021,488,52,67,1047.0,521.5,0.5
+box_61,Container,container,,408,527,44,44,430.0,549.0,0.5
+box_62,eduVPN Client (text),text,eduVPN Client,1488,241,80,63,1528.0,272.5,0.5
+box_63,"je a
+Geschäftlich - Edge (container)",container,"je a
+Geschäftlich - Edge",345,310,105,70,397.5,345.0,0.5
+box_64,|] (icon),icon,|],391,672,38,48,410.0,696.0,0.5
+box_65,Neutron Al (text),text,Neutron Al,1591,318,60,67,1621.0,351.5,0.5
+box_66,Text Field,text,,1573,965,8,15,1577.0,972.5,0.5
+box_67,le | (text),text,le |,290,665,39,28,309.5,679.0,0.5
+box_68,Container,container,,751,144,46,37,774.0,162.5,0.5
+box_69,"=
+PDF
+— (text)",text,"=
+PDF
+—",653,627,36,46,671.0,650.0,0.5
+box_70,Container,container,,227,897,46,37,250.0,915.5,0.5
+box_71,Container,container,,60,906,46,37,83.0,924.5,0.5
+box_72,Container,container,,37,411,46,37,60.0,429.5,0.5
+box_73,Text Field,text,,485,156,205,20,587.5,166.0,0.65
+box_74,Container,container,,1270,803,46,37,1293.0,821.5,0.5
+box_75,"=
+PDF
+— (text)",text,"=
+PDF
+—",658,383,36,46,676.0,406.0,0.5
+box_76,[6] (text),text,[6],1125,587,52,47,1151.0,610.5,0.5
+box_77,Text Field,text,,112,351,106,13,165.0,357.5,0.65
+box_78,Container,container,,154,803,46,37,177.0,821.5,0.5
+box_79,Container,container,,941,510,46,37,964.0,528.5,0.5
+box_80,Text Field,text,m,640,765,49,40,664.5,785.0,0.5
+box_81,Container,container,,518,113,49,41,542.5,133.5,0.5
+box_82,Container,container,,918,238,49,41,942.5,258.5,0.5
+box_83,Text Field,text,®,1342,639,48,48,1366.0,663.0,0.5
+box_84,nstel (text),text,nstel,1584,968,29,12,1598.5,974.0,0.6
+box_85,Zu cen (button),button,Zu cen,1524,968,46,12,1547.0,974.0,0.6
+box_86,DEU (button),button,DEU,1744,1051,26,12,1757.0,1057.0,0.6
+box_87,12.12.2025 (text),text,12.12.2025,1842,1058,61,12,1872.5,1064.0,0.6
+box_88,Container,container,,1588,403,52,50,1614.0,428.0,0.5
+box_89,Container,container,,492,619,46,37,515.0,637.5,0.5
+box_90,Container,container,,140,299,44,48,162.0,323.0,0.5
+box_91,Container,container,,410,79,44,48,432.0,103.0,0.5
+box_92,Container,container,,1632,85,44,48,1654.0,109.0,0.5
+box_93,Container,container,,689,209,40,48,709.0,233.0,0.5
+box_94,Text Field,text,,581,378,74,13,618.0,384.5,0.65
+box_95,Suche (button),button,Suche,645,1049,39,14,664.5,1056.0,0.6
+box_96,Button,button,,1712,1051,14,10,1719.0,1056.0,0.5
+box_97,(Gi (text),text,(Gi,226,48,51,51,251.5,73.5,0.5
+box_98,Wechseln Sie (button),button,Wechseln Sie,1434,965,88,15,1478.0,972.5,0.65
+box_99,Container,container,,593,326,44,48,615.0,350.0,0.5
+box_100,Container,container,,623,108,46,37,646.0,126.5,0.5
+box_101,"=
+PDF
+— (text)",text,"=
+PDF
+—",1411,312,36,46,1429.0,335.0,0.5
+box_102,Fy (text),text,Fy,743,370,44,48,765.0,394.0,0.5
+box_103,EX (icon),icon,EX,567,453,45,49,589.5,477.5,0.5
+box_104,Text Field,text,m,220,352,49,40,244.5,372.0,0.5
+box_105,Docker Desktop (text),text,Docker Desktop,17,505,86,70,60.0,540.0,0.5
+box_106,Container,container,,1596,221,48,39,1620.0,240.5,0.5
+box_107,Text Field,text,B,442,393,36,46,460.0,416.0,0.5
+box_108,"=
+PDF
+— (text)",text,"=
+PDF
+—",192,214,36,46,210.0,237.0,0.5
+box_109,"VLC media player
+2022-05-17 Workshop
+EXIST Förderung im. (text)",text,"VLC media player
+2022-05-17 Workshop
+EXIST Förderung im.",616,422,197,43,714.5,443.5,0.5
+box_110,AusweisApp (text),text,AusweisApp,1491,313,69,70,1525.5,348.0,0.5
+box_111,Container,container,,1108,512,46,40,1131.0,532.0,0.5
+box_112,07:54 (text),text,07:54,1870,1042,32,12,1886.0,1048.0,0.6
+box_113,Application Icon,icon,,1785,1046,20,20,1795.0,1056.0,0.7
+box_114,Application Icon,icon,,1809,1047,20,18,1819.0,1056.0,0.7
+box_115,zoom (button),button,zoom,1038,595,37,12,1056.5,601.0,0.6
+box_116,Container,container,,795,301,52,40,821.0,321.0,0.5
+box_117,Text Field,text,|,571,1043,27,27,584.5,1056.5,0.7
+box_118,Text Field,text,,3,459,112,16,59.0,467.0,0.65
+box_119,Container,container,,37,11,46,37,60.0,29.5,0.5
+box_120,Text Field,text,,400,724,20,13,410.0,730.5,0.5
+box_121,Container,container,,1279,1042,28,35,1293.0,1059.5,0.5
+box_122,Container,container,,1147,1042,28,35,1161.0,1059.5,0.5
+box_123,| 74 (text),text,| 74,1423,241,38,39,1442.0,260.5,0.5
+box_124,Button,button,,1033,575,49,28,1057.5,589.0,0.6
+box_125,>] (icon),icon,>],846,80,49,29,870.5,94.5,0.6
+box_126,Container,container,,929,1037,31,40,944.5,1057.0,0.5
+box_127,=> (icon),icon,=>,1313,721,51,42,1338.5,742.0,0.5
+box_128,(0) (text),text,(0),1306,232,50,49,1331.0,256.5,0.5
+box_129,Application Icon,icon,Q,619,1047,18,18,628.0,1056.0,0.7
+box_130,Button,button,,1191,1043,14,19,1198.0,1052.5,0.5
+box_131,Container,container,,888,154,44,48,910.0,178.0,0.5
+box_132,Application Icon,icon,,1201,855,30,28,1216.0,869.0,0.7
+box_133,BR (text),text,BR,537,732,36,46,555.0,755.0,0.5
+box_134,Text Field,text,,244,911,13,8,250.5,915.0,0.5
+box_135,BR (text),text,BR,1347,859,36,46,1365.0,882.0,0.5
+box_136,Container,container,,496,482,34,34,513.0,499.0,0.5
+box_137,Application Icon,icon,,1067,1046,19,22,1076.5,1057.0,0.7

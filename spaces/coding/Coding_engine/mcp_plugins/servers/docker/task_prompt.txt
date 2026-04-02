@@ -1,0 +1,4 @@
+Use the available Docker tools to accomplish the goal.
+Be explicit about container names, image specifications, and configuration requirements.
+Provide progress updates and handle connection errors properly.
+If the Docker daemon is not running, report it clearly.

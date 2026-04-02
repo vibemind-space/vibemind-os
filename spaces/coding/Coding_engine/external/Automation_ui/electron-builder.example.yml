@@ -1,0 +1,102 @@
+# electron-builder Beispiel-Konfiguration
+# Kopiere diese Datei als electron-builder.yml für dein Electron-Projekt
+
+appId: com.automationui.desktop
+productName: AutomationUI
+copyright: Copyright © 2024
+
+# Verzeichnisse
+directories:
+  buildResources: build
+  output: dist
+
+# Dateien die in die App gepackt werden
+files:
+  - "**/*"
+  - "!**/*.{ts,tsx,map}"
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+  
+# Desktop-Client einbinden
+extraResources:
+  - from: "desktop-client/"
+    to: "desktop-client/"
+    filter:
+      - "**/*.py"
+      - "requirements.txt"
+      - "README.md"
+
+# Windows-spezifische Einstellungen
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+  
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: AutomationUI
+  
+  # Nach-Installation Script für Desktop-Streaming Setup
+  include: build/installer-scripts/installer.nsh
+  
+  # Berechtigungen
+  runAfterFinish: true
+
+# macOS-spezifische Einstellungen  
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  category: public.app-category.utilities
+  icon: build/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  
+dmg:
+  background: build/background.png
+  icon: build/icon.icns
+  iconSize: 100
+  contents:
+    - x: 380
+      y: 280
+      type: link
+      path: /Applications
+    - x: 110
+      y: 280
+      type: file
+
+# Linux-spezifische Einstellungen
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: rpm
+      arch:
+        - x64
+  category: Utility
+  icon: build/icons
+
+# Publish-Konfiguration (optional)
+publish:
+  provider: generic
+  url: https://your-update-server.com/releases
+
+# Nach-Installation Hooks
+afterInstall: scripts/electron-installer-setup.js
+afterAllArtifactBuild: scripts/post-build-verify.js

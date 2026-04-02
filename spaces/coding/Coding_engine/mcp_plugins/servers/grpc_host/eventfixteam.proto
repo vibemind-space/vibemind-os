@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package eventfixteam;
+
+// Haupt-Service für EventFixTeam
+service EventFixTeam {
+    // Führe eine Aufgabe aus
+    rpc ExecuteTask(TaskRequest) returns (TaskResponse);
+    
+    // Hole Informationen über einen Agenten
+    rpc GetAgentInfo(AgentInfoRequest) returns (AgentInfo);
+    
+    // Liste alle verfügbaren Agenten auf
+    rpc ListAgents(Empty) returns (AgentList);
+    
+    // Streame Logs von einem Agenten
+    rpc StreamLogs(LogRequest) returns (stream LogEntry);
+    
+    // Streame Metriken von einem Agenten
+    rpc StreamMetrics(MetricsRequest) returns (stream MetricEntry);
+}
+
+// Task-Anfrage
+message TaskRequest {
+    string agent_type = 1;           // Typ des Agenten (z.B. "code_writer", "fix_migrator", "debugger")
+    string task_type = 2;            // Typ der Aufgabe
+    map<string, string> parameters = 3;  // Parameter für die Aufgabe
+    string task_id = 4;              // Eindeutige Task-ID
+}
+
+// Task-Antwort
+message TaskResponse {
+    bool success = 1;
+    string message = 2;
+    map<string, string> result = 3;  // Ergebnis der Aufgabe
+    string task_id = 4;              // Task-ID (zurückgegeben)
+}
+
+// Agent-Info Anfrage
+message AgentInfoRequest {
+    string agent_type = 1;
+}
+
+// Agent-Informationen
+message AgentInfo {
+    string agent_id = 1;
+    string name = 2;
+    string description = 3;
+    string status = 4;               // "active", "idle", "error"
+    repeated string capabilities = 5;
+}
+
+// Liste von Agenten
+message AgentList {
+    repeated AgentInfo agents = 1;
+}
+
+// Leere Nachricht
+message Empty {}
+
+// Log-Anfrage
+message LogRequest {
+    string agent_type = 1;
+    string task_id = 2;
+    int32 lines = 3;                 // Anzahl der Zeilen (0 = alle)
+}
+
+// Log-Eintrag
+message LogEntry {
+    string timestamp = 1;
+    string level = 2;                // "INFO", "WARNING", "ERROR"
+    string message = 3;
+}
+
+// Metriken-Anfrage
+message MetricsRequest {
+    string agent_type = 1;
+    string task_id = 2;
+}
+
+// Metrik-Eintrag
+message MetricEntry {
+    string timestamp = 1;
+    string metric_name = 2;
+    string metric_value = 3;
+}

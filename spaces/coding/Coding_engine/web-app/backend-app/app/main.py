@@ -1,0 +1,93 @@
+import logging
+import sys
+import io
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api import api_router
+from app.core.config import settings
+from app.db import init_db
+
+# Set UTF-8 encoding for Windows console (for child processes)
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True, errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True, errors='replace')
+
+# Configure logging to show agent interactions
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+
+# Set specific loggers to DEBUG level for detailed agent output
+logging.getLogger("app.services.chat_service").setLevel(logging.DEBUG)
+logging.getLogger("app.agents").setLevel(logging.DEBUG)
+logging.getLogger("autogen").setLevel(logging.INFO)
+logging.getLogger("uvicorn.error").setLevel(logging.INFO)  # Show our custom logs
+
+# Create FastAPI app
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    debug=settings.DEBUG,
+    redirect_slashes=False,  # Disable automatic trailing slash redirects
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Events
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    init_db()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    from app.agents import shutdown_orchestrators
+
+    await shutdown_orchestrators()
+
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {
+        "message": "Welcome to DaveLovable API",
+        "version": settings.APP_VERSION,
+        "docs": "/docs",
+    }
+
+
+# Health check
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy"}
+
+
+# Include API routes
+app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.DEBUG,
+    )

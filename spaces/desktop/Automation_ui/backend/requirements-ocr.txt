@@ -1,0 +1,51 @@
+# =============================================================================
+# TRAE OCR Engine - Docker Requirements
+# =============================================================================
+# OCR-spezifische Dependencies für Tesseract und EasyOCR
+# =============================================================================
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+starlette==0.27.0
+
+# Data Handling / Validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Image Processing (headless)
+Pillow==10.1.0
+opencv-python-headless==4.6.0.66
+numpy==1.24.4
+
+# OCR Engines
+pytesseract==0.3.10
+easyocr==1.7.0
+
+# PaddleOCR (optional - großer Download)
+# paddlepaddle==2.5.2
+# paddleocr==2.7.0.3
+
+# HTTP Client
+httpx==0.25.2
+requests==2.31.0
+aiohttp==3.9.1
+
+# Utilities
+python-dotenv==1.0.0
+typing-extensions==4.8.0
+python-dateutil==2.8.2
+
+# JSON Handling
+orjson==3.9.10
+
+# Logging
+loguru==0.7.2
+
+# PDF Processing (optional)
+pdf2image==1.16.3
+PyPDF2==3.0.1
+
+# Image Enhancement
+scikit-image==0.22.0

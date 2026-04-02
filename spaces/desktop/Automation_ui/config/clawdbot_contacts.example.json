@@ -1,0 +1,35 @@
+{
+  "contacts": {
+    "john": {
+      "name": "John Doe",
+      "whatsapp": "+1-555-0100",
+      "telegram": "123456789",
+      "email": "john@example.com",
+      "aliases": ["jd", "johnny"]
+    },
+    "manager": {
+      "name": "Jane Manager",
+      "whatsapp": "+1-555-0200",
+      "email": "manager@example.com",
+      "aliases": ["boss", "jane"]
+    },
+    "support": {
+      "name": "IT Support",
+      "telegram": "it_support_bot",
+      "email": "support@example.com",
+      "aliases": ["it", "help", "tech"]
+    }
+  },
+  "variables": {
+    "company_name": "Acme Corp",
+    "default_signature": "Best regards",
+    "emergency_number": "+1-555-0911",
+    "project_folder": "./projects",
+    "backup_path": "./backups"
+  },
+  "templates": {
+    "meeting_invite": "Hello {name},\n\nYou are invited to a meeting on {date} at {time}.\n\n{default_signature}",
+    "status_update": "Status Update for {project}:\n\n{message}\n\nQuestions? Call {emergency_number}",
+    "task_done": "Task '{task}' completed successfully.\nDuration: {duration}"
+  }
+}

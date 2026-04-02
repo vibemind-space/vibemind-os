@@ -1,0 +1,37 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    
+    // === STRICT MODE MIGRATION (Phase 1) ===
+    // Aktivierte strenge Optionen:
+    "strict": false,                    // Wird in Phase 3 aktiviert
+    "strictNullChecks": true,           // AKTIVIERT: Verhindert null/undefined Fehler
+    "strictFunctionTypes": true,        // AKTIVIERT: Strenge Funktionstyp-Prüfung
+    "strictBindCallApply": true,        // AKTIVIERT: Strenge bind/call/apply Prüfung
+    "strictPropertyInitialization": false, // Noch deaktiviert wegen Klassen ohne Konstruktor
+    
+    // === PHASE 2: Nach Behebung der any-Typen aktivieren ===
+    "noImplicitAny": false,             // TODO: Aktivieren nach Behebung der 76 any-Typen
+    "noImplicitThis": true,             // AKTIVIERT: Kein implizites this
+    
+    // === UNUSED CODE DETECTION ===
+    "noUnusedLocals": false,            // TODO: Aktivieren nach Code-Cleanup
+    "noUnusedParameters": false,        // TODO: Aktivieren nach Code-Cleanup
+    
+    // === IMMER AKTIVIERT ===
+    "skipLibCheck": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true, // AKTIVIERT: Verhindert switch-case Fehler
+    "useUnknownInCatchVariables": true  // AKTIVIERT: catch(e) ist unknown statt any
+  }
+}

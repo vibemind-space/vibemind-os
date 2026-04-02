@@ -1,0 +1,109 @@
+# OpenClaw Agent Configuration for AgentFarm Hybrid-Pipeline
+#
+# Defines the OpenClaw agent that orchestrates the 13-step pipeline.
+# Each step routes to Swarm (LLM), OpenClaw (Docker sandbox), or Claude CLI (ACP).
+#
+# Start Gateway: openclaw daemon start
+# Verify: openclaw status
+
+# --- Agent Definition ---
+agents:
+  defaults:
+    model: "openai/gpt-5.4"
+    sandbox:
+      mode: "non-main"
+      scope: "per-session"
+      backend: "docker"
+
+  list:
+    - id: "agentfarm-orchestrator"
+      name: "AgentFarm Pipeline Orchestrator"
+      model: "openai/gpt-5.4"
+      sandbox:
+        mode: "all"
+        scope: "per-session"
+        backend: "docker"
+        docker:
+          image: "node:22-slim"
+          bindMounts:
+            - source: "./python/spaces/autogen/farm"
+              target: "/app/farm"
+              readOnly: true
+            - source: "./data"
+              target: "/app/data"
+      tools:
+        allow:
+          - "exec"
+          - "read"
+          - "write"
+          - "apply_patch"
+        deny:
+          - "browser"
+        elevated:
+          allow:
+            - "docker compose *"
+            - "docker build *"
+            - "docker run *"
+            - "git *"
+
+# --- Channel Bindings ---
+# Route user messages to agentfarm-orchestrator based on channel
+bindings:
+  # WhatsApp — User bekommt Pipeline-Updates + antwortet auf Fragen
+  - type: "agent"
+    agent: "agentfarm-orchestrator"
+    match:
+      channel: "whatsapp"
+      peer:
+        type: "user"
+      # Optional: restrict to specific phone number
+      # account: "+49..."
+
+  # Slack — Alternative für Teams
+  - type: "agent"
+    agent: "agentfarm-orchestrator"
+    match:
+      channel: "slack"
+      peer:
+        type: "dm"
+
+  # WebChat — Fallback für Browser
+  - type: "agent"
+    agent: "agentfarm-orchestrator"
+    match:
+      channel: "webchat"
+
+# --- ACP Runtimes (Claude CLI Delegation) ---
+acp:
+  runtimes:
+    claude:
+      command: "claude"
+      args: ["--print", "--output-format", "text"]
+      mode: "session"
+      thread: true
+      # Claude CLI generates code (CoderAgent, TodoImplementer)
+      # Better than GPT-4o for code — no truncation
+
+    kilo:
+      command: "kilocode"
+      args: ["--mode", "code", "--yolo"]
+      mode: "session"
+      thread: true
+      # Kilo Code als Alternative für Code-Generation
+
+# --- Pipeline Status Channel ---
+# OpenClaw sends status updates to user via configured channel
+status:
+  channel: "whatsapp"  # or "slack", "webchat"
+  format: "compact"     # "compact" or "verbose"
+  # compact: "[Step 4/13] CoderAgent generiert tools.py..."
+  # verbose: Full step output with code snippets
+
+# --- Timeouts ---
+timeouts:
+  user_response: null    # NO TIMEOUT — waits until user responds
+  docker_build: null     # NO TIMEOUT — builds can take minutes
+  docker_run: null       # NO TIMEOUT — runs can take minutes
+  claude_cli: 300        # 5 min — code generation
+  swarm_step: 120        # 2 min — LLM reasoning
+  export: 60             # 1 min — git push

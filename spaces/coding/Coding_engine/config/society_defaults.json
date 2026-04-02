@@ -1,0 +1,104 @@
+{
+  "auto_output_dir": true,
+  "output_dir_pattern": "output_{id}_{uuid}",
+
+  "autonomous": true,
+  "continuous_sandbox": true,
+  "enable_vnc": true,
+  "vnc_port": 6080,
+  "enable_sandbox": true,
+  "enable_validation": true,
+  "validation_docker": true,
+  "dashboard": true,
+  "dashboard_port": 8080,
+  "persistent_deploy": true,
+  "verbose": true,
+  "max_concurrent": 10,
+  "sandbox_interval": 30,
+
+  "async_e2e": true,
+  "async_ux": true,
+  "async_e2e_interval": 60,
+  "async_ux_interval": 120,
+
+  "llm_verification": true,
+  "verification_debate_rounds": 3,
+
+  "intelligent_chunking": true,
+  "chunk_planner_llm": true,
+  "max_requirements_per_chunk": 10,
+  "min_requirements_per_chunk": 5,
+  "chunk_time_simple": 5,
+  "chunk_time_medium": 7,
+  "chunk_time_complex": 12,
+  "load_balance_threshold": 0.2,
+
+  "enable_continuous_debug": true,
+  "debug_cycle_interval": 5,
+
+  "deployment_team": true,
+
+  "design_pipeline": true,
+
+  "enable_checkpoints": true,
+
+  "max_debug_iterations": 5,
+  "validation_timeout": 600,
+
+  "shell_stream": true,
+
+  "enable_fungus": true,
+  "fungus_agents": 300,
+  "fungus_iterations": 100,
+  "fungus_judge_provider": "openrouter",
+  "fungus_judge_model": "anthropic/claude-sonnet-4.5",
+
+  "_fungus_advanced_comment": "Below are MCMP simulation params (not CLI-configurable yet)",
+  "fungus_top_k": 20,
+  "fungus_max_rounds": 8,
+  "fungus_min_confidence": 0.6,
+  "fungus_enable_llm_steering": true,
+  "fungus_steering_every": 3,
+  "fungus_judge_every": 3,
+  "fungus_exploration_bonus": 0.15,
+
+  "som_bridge": {
+    "enable_docker_sandbox": true,
+    "enable_vnc_preview": true,
+    "enable_autonomous_debug": true,
+    "enable_dependency_manager": true,
+    "enable_db_migration": true,
+    "enable_docker_diagnostics": true,
+    "enable_preview_monitor": true,
+    "enable_e2e_testing": false,
+    "enable_security_scan": true,
+    "enable_verification_debate": false,
+    "enable_fullstack_verify": true,
+    "enable_architecture_health": false,
+    "enable_traceability": false,
+    "enable_mcp_proxy": true,
+    "enable_git_push": false,
+    "enable_fungus": false,
+    "enable_fungus_validation": false,
+    "enable_fungus_memory": false,
+    "enable_supermemory": true,
+    "enable_differential_analysis": true,
+    "enable_cross_layer_validation": true,
+    "pipeline_max_parallel": 5,
+    "enable_deployment_team": false,
+    "enable_ux_review": false,
+    "enable_mcp_orchestrator": true,
+    "fix_wait_timeout": 120,
+    "vnc_port": 6081,
+    "app_port": 3001
+  },
+
+  "unified_engine": {
+    "enable_som": true,
+    "parallel": 10,
+    "fail_forward": true,
+    "diff_validation": true,
+    "diff_fixes": 0,
+    "convergence_max_rounds": 3
+  }
+}

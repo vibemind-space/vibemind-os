@@ -1,0 +1,60 @@
+Use the available Redis tools to accomplish the goal efficiently and safely.
+
+**Instructions:**
+1. Validate Redis connection before performing operations
+2. Choose the appropriate data structure for the task
+3. Use namespaced keys (e.g., "user:1234:profile" not "user1234profile")
+4. Set TTL for temporary/cached data using EXPIRE or SET with EX option
+5. Handle errors gracefully (connection failures, memory limits, key not found)
+6. For batch operations, use pipelining when possible
+7. Provide clear feedback on operation results
+
+**Common Operations:**
+
+**Caching:**
+```
+SET cache:key value EX 3600  # Cache with 1-hour TTL
+GET cache:key
+```
+
+**Counters:**
+```
+INCR counter:page_views
+DECR counter:stock_items
+```
+
+**User Profiles (Hash):**
+```
+HSET user:1234 name "John" email "john@example.com"
+HGETALL user:1234
+```
+
+**Activity Feed (List):**
+```
+LPUSH feed:user:1234 "new activity"
+LRANGE feed:user:1234 0 9  # Get latest 10 items
+```
+
+**Tags (Set):**
+```
+SADD post:1234:tags "python" "redis" "tutorial"
+SMEMBERS post:1234:tags
+```
+
+**Leaderboard (Sorted Set):**
+```
+ZADD leaderboard:game 1000 "player1" 1500 "player2"
+ZREVRANGE leaderboard:game 0 9 WITHSCORES  # Top 10 players
+```
+
+**Vector Search:**
+```
+# Store embeddings and perform similarity search
+# Use appropriate vector indexing tools
+```
+
+**Error Handling:**
+- Check if keys exist before operations
+- Handle connection timeouts
+- Manage memory limits (maxmemory-policy)
+- Validate data types before operations

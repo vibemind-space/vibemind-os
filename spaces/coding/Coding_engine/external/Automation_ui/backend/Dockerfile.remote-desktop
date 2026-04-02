@@ -1,0 +1,199 @@
+# Remote Desktop Automation Dockerfile
+# Provides a complete virtual desktop environment with X11, automation tools, and WebSocket streaming
+
+FROM python:3.11-slim
+
+# Set environment variables for X11 and automation
+ENV DISPLAY=:99
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV AUTOMATION_MODE=docker
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies including X11, window manager, automation tools, and SSH client
+RUN apt-get update && apt-get install -y \
+    # Basic system tools
+    curl \
+    git \
+    build-essential \
+    libpq-dev \
+    wget \
+    unzip \
+    # SSH client and networking tools
+    openssh-client \
+    sshpass \
+    netcat-openbsd \
+    iputils-ping \
+    dnsutils \
+    # X11 and virtual display
+    xvfb \
+    x11vnc \
+    xauth \
+    xfonts-base \
+    xfonts-75dpi \
+    xfonts-100dpi \
+    # Window manager and desktop environment
+    openbox \
+    obconf \
+    obmenu \
+    tint2 \
+    # Image processing and OCR
+    tesseract-ocr \
+    tesseract-ocr-deu \
+    tesseract-ocr-eng \
+    libtesseract-dev \
+    imagemagick \
+    # GUI automation dependencies
+    libxtst6 \
+    libxrandr2 \
+    libasound2-dev \
+    libpangocairo-1.0-0 \
+    libatk1.0-0 \
+    libcairo-gobject2 \
+    libgtk-3-0 \
+    libgdk-pixbuf2.0-0 \
+    # Browser automation (optional)
+    chromium \
+    chromium-driver \
+    # Cleanup
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install additional automation, streaming, and SSH dependencies
+RUN pip install --no-cache-dir \
+    # Desktop automation
+    pyautogui \
+    pynput \
+    python-xlib \
+    # OCR libraries
+    easyocr \
+    pytesseract \
+    # Image processing
+    opencv-python-headless \
+    pillow \
+    numpy \
+    # WebSocket and streaming
+    websockets \
+    fastapi \
+    uvicorn[standard] \
+    # SSH and remote connectivity
+    paramiko \
+    asyncssh \
+    scp \
+    # Enhanced OCR dependencies
+    pydantic \
+    pydantic-settings \
+    cachetools \
+    # Development tools
+    pytest \
+    pytest-asyncio \
+    black \
+    flake8 \
+    mypy
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p \
+    logs \
+    desktop_screenshots \
+    click_masks \
+    /tmp/.X11-unix \
+    /root/.vnc \
+    docs \
+    tests/test_data \
+    ocr_results
+
+# Set environment variables for enhanced OCR
+ENV OCR_TESSERACT_PATH=/usr/bin/tesseract
+ENV OCR_DEFAULT_LANGUAGE=eng
+ENV OCR_CACHE_ENABLED=true
+ENV OCR_CACHE_SIZE=1000
+ENV OCR_CACHE_TTL=3600
+ENV OCR_MAX_WORKERS=4
+ENV OCR_PERFORMANCE_TRACKING=true
+ENV OCR_MONITORING_POLLING_INTERVAL=1.0
+ENV OCR_MONITORING_MAX_SESSIONS=10
+
+# Set up X11 permissions
+RUN chmod 1777 /tmp/.X11-unix
+
+# Copy SSH scripts and make them executable
+COPY scripts/ssh-auto-connect.sh /usr/local/bin/ssh-auto-connect.sh
+COPY scripts/ssh-healthcheck.sh /usr/local/bin/ssh-healthcheck.sh
+RUN chmod +x /usr/local/bin/ssh-auto-connect.sh
+RUN chmod +x /usr/local/bin/ssh-healthcheck.sh
+
+# Create startup script for X11, services, and SSH auto-connect
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Starting TRAE Remote Desktop with SSH Auto-Connect..."\n\
+\n\
+# Start X11 virtual display\n\
+echo "Starting X11 virtual display..."\n\
+Xvfb :99 -screen 0 1920x1080x24 -ac +extension GLX +render -noreset &\n\
+XVFB_PID=$!\n\
+echo "Xvfb started with PID: $XVFB_PID"\n\
+\n\
+# Wait for X11 to be ready\n\
+sleep 2\n\
+\n\
+# Start window manager\n\
+echo "Starting window manager..."\n\
+openbox &\n\
+OPENBOX_PID=$!\n\
+echo "Openbox started with PID: $OPENBOX_PID"\n\
+\n\
+# Verify X11 is working\n\
+echo "Testing X11 display..."\n\
+xdpyinfo -display :99 > /dev/null 2>&1 || {\n\
+    echo "ERROR: X11 display not available"\n\
+    exit 1\n\
+}\n\
+echo "X11 display is ready"\n\
+\n\
+# Start the TRAE application in background\n\
+echo "Starting TRAE Remote Desktop Service..."\n\
+python server.py &\n\
+TRAE_PID=$!\n\
+echo "TRAE started with PID: $TRAE_PID"\n\
+\n\
+# Wait a moment for TRAE to initialize\n\
+sleep 5\n\
+\n\
+# Start SSH auto-connect if configured\n\
+if [ -n "$SSH_HOST" ] && [ -n "$SSH_USER" ] && ([ -n "$SSH_PASS" ] || [ -n "$SSH_KEY" ]); then\n\
+    echo "SSH configuration detected, starting auto-connect..."\n\
+    /usr/local/bin/ssh-auto-connect.sh &\n\
+    SSH_PID=$!\n\
+    echo "SSH auto-connect started with PID: $SSH_PID"\n\
+else\n\
+    echo "No SSH configuration found, skipping auto-connect"\n\
+    echo "To enable SSH auto-connect, set: SSH_HOST, SSH_USER, and SSH_PASS or SSH_KEY"\n\
+fi\n\
+\n\
+# Wait for TRAE process\n\
+wait $TRAE_PID\n\
+' > /app/start-remote-desktop.sh
+
+# Make startup script executable
+RUN chmod +x /app/start-remote-desktop.sh
+
+# Expose ports
+# 8010: Main FastAPI server
+# 8007: Live Desktop WebSocket
+# 5900: VNC (optional)
+EXPOSE 8010 8007 5900
+
+# Health check - includes SSH connectivity check
+HEALTHCHECK --interval=30s --timeout=15s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8010/api/health && /usr/local/bin/ssh-healthcheck.sh status || exit 1
+
+# Set the startup command
+CMD ["/app/start-remote-desktop.sh"]

@@ -1,0 +1,32 @@
+version: '3.8'
+
+# Qdrant Vector Database for la_fungus_search Context System
+# Usage: docker-compose -f infra/docker/docker-compose.fungus.yml up -d
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: coding-engine-qdrant
+    ports:
+      - "6333:6333"  # REST API
+      - "6334:6334"  # gRPC
+    volumes:
+      - qdrant_storage:/qdrant/storage
+      - qdrant_snapshots:/qdrant/snapshots
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  qdrant_storage:
+    name: coding-engine-qdrant-storage
+  qdrant_snapshots:
+    name: coding-engine-qdrant-snapshots

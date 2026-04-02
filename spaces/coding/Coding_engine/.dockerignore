@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+.next/
+.nuxt/
+out/
+build/
+
+# Dev files
+.git/
+.github/
+.vscode/
+.idea/
+*.md
+!README.md
+tests/
+test_*.py
+*_test.py
+
+# Logs and temp
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Data and cache
+Data/
+.requirements-cache/
+*.sqlite
+*.db
+
+# Dashboard dev files
+dashboard-app/node_modules/
+dashboard-app/dist/
+dashboard-app/out/
+
+# Large files
+*.zip
+*.tar.gz
+*.rar

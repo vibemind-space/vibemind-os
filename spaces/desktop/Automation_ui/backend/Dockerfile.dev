@@ -1,0 +1,95 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Install system dependencies including VNC clients, RTSP streaming, Tesseract OCR, X11/Xvfb, and automation tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    build-essential \
+    libpq-dev \
+    postgresql-client \
+    redis-tools \
+    netcat-openbsd \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    tesseract-ocr-deu \
+    libtesseract-dev \
+    python3-tk \
+    xxd \
+    swig \
+    pkg-config \
+    libfreetype6-dev \
+    libjpeg-dev \
+    libopenjp2-7-dev \
+    zlib1g-dev \
+    tigervnc-viewer \
+    xtightvncviewer \
+    ffmpeg \
+    v4l-utils \
+    imagemagick \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    xvfb \
+    x11-utils \
+    x11-xserver-utils \
+    libx11-dev \
+    libxtst6 \
+    libxrandr2 \
+    libasound2-dev \
+    libpangocairo-1.0-0 \
+    libatk1.0-dev \
+    libcairo-gobject2 \
+    libgtk-3-0 \
+    libgdk-pixbuf2.0-0 \
+    gnome-screenshot \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python project files
+COPY pyproject.toml .
+COPY requirements.txt .
+
+# Install Python dependencies using uv
+RUN uv pip install --system --no-cache -r requirements.txt
+
+# Install development dependencies using uv
+RUN uv pip install --system --no-cache \
+    pytest>=7.4.3 \
+    pytest-asyncio>=0.21.1 \
+    pytest-cov>=4.0.0 \
+    pytest-timeout>=2.1.0 \
+    pytest-mock>=3.10.0 \
+    pytest-xdist>=3.2.1 \
+    black \
+    flake8 \
+    mypy \
+    watchfiles
+
+# Copy startup script
+COPY scripts/docker-startup.sh /usr/local/bin/docker-startup.sh
+COPY scripts/docker-healthcheck.sh /usr/local/bin/docker-healthcheck.sh
+RUN chmod +x /usr/local/bin/docker-startup.sh
+RUN chmod +x /usr/local/bin/docker-healthcheck.sh
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p logs desktop_screenshots click_masks ocr_results data
+
+# Expose ports
+EXPOSE 8010 8007
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD /usr/local/bin/docker-healthcheck.sh backend
+
+# Development command with hot reload
+ENV SERVICE_TYPE=backend
+CMD ["/usr/local/bin/docker-startup.sh"]

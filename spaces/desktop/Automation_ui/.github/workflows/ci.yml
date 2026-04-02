@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend - Lint, Typecheck, Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: ESLint
+        run: npm run lint
+      - name: TypeScript typecheck
+        run: npx tsc --noEmit
+      - name: Build
+        run: npm run build
+
+  backend_lint:
+    name: Backend - Format, Lint, Types
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tooling only (fast)
+        run: |
+          python -m pip install --upgrade pip
+          pip install black flake8 mypy
+      - name: Black (check)
+        run: black --check backend
+      - name: Flake8
+        run: flake8 backend
+      - name: Mypy (ignore external imports)
+        run: mypy --ignore-missing-imports backend
+
+  docs_check:
+    name: Docs - Language and link sanity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fail on German terms in English docs
+        run: |
+          set -e
+          # NOTE: Curated list of German terms we want to avoid in English docs
+          PATTERN='(Übersicht|Zusammenfassung|Konfiguration|Bildschirm(foto)?|Maus(klick)?|Workflow-Ausführung|Verfügbar|abrufen|erstellen|Migration|System-Inventar|Screenshot erstellen|Bildschirm-Informationen|Text aus)'
+          if grep -RInE "$PATTERN" docs/en; then
+            echo "Found non-English terms in docs/en. Please translate to English."
+            exit 1
+          else
+            echo "✅ No disallowed terms found in docs/en"
+          fi

@@ -1,0 +1,188 @@
+{
+  "version": "1.0.0",
+  "created": "2024-12-12T08:00:00.000Z",
+  "lastUpdated": "2024-12-12T08:00:00.000Z",
+  "settings": {
+    "autoApproveThreshold": 3,
+    "enableHierarchy": true,
+    "maxPendingCategories": 50
+  },
+  "categories": {
+    "button": {
+      "description": "Clickable UI element that triggers an action when clicked",
+      "examples": ["Submit Button", "Cancel Button", "OK", "Save", "Close"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "icon": {
+      "description": "Small graphical symbol representing an application, action, or status",
+      "examples": ["Settings Icon", "Menu Icon", "Arrow Icon"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "browser_icon": {
+      "description": "Desktop or taskbar icon for web browser applications",
+      "examples": ["Chrome Browser", "Firefox Browser", "Microsoft Edge", "Safari"],
+      "parent": "icon",
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "editor_icon": {
+      "description": "Desktop or taskbar icon for code editors and IDEs",
+      "examples": ["Visual Studio Code", "Sublime Text", "Notepad++", "IntelliJ IDEA"],
+      "parent": "icon",
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "system_icon": {
+      "description": "Windows system icons for settings, control panel, and system utilities",
+      "examples": ["Settings", "Control Panel", "File Explorer", "Task Manager"],
+      "parent": "icon",
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "app_icon": {
+      "description": "Generic application icon for desktop shortcuts and taskbar items",
+      "examples": ["Microsoft Word", "Excel", "Photoshop", "Discord"],
+      "parent": "icon",
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "game_icon": {
+      "description": "Gaming application and game launcher icons",
+      "examples": ["Steam", "Epic Games", "GOG Galaxy", "Minecraft"],
+      "parent": "icon",
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "input": {
+      "description": "Text input field, text area, or form control for user input",
+      "examples": ["Search Box", "Username Field", "Password Field", "Comment Box"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "text": {
+      "description": "Static text label, heading, or paragraph content",
+      "examples": ["Page Title", "Description Text", "Status Message", "Error Text"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "link": {
+      "description": "Clickable hyperlink that navigates to another page or resource",
+      "examples": ["Learn More", "Click Here", "Visit Website", "Download Link"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "checkbox": {
+      "description": "Toggle element for boolean selection or multi-selection",
+      "examples": ["Remember Me", "Accept Terms", "Enable Feature", "Select All"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "radio": {
+      "description": "Single selection element within a group of options",
+      "examples": ["Option A", "Small/Medium/Large Size", "Yes/No Selection"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "dropdown": {
+      "description": "Expandable selection menu with multiple options",
+      "examples": ["Country Selector", "Sort By Menu", "File Menu", "Category Picker"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "image": {
+      "description": "Visual content such as photos, illustrations, or graphics",
+      "examples": ["Profile Picture", "Banner Image", "Thumbnail", "Logo"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "container": {
+      "description": "Layout container that groups and organizes other elements",
+      "examples": ["Card", "Panel", "Dialog Box", "Sidebar", "Content Area"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "header": {
+      "description": "Top navigation bar or header section of an application",
+      "examples": ["Navigation Bar", "Title Bar", "App Header", "Top Menu"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "footer": {
+      "description": "Bottom section with copyright, links, or status information",
+      "examples": ["Copyright Footer", "Status Bar", "Quick Links Footer"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "menu": {
+      "description": "Navigation menu or list of selectable options",
+      "examples": ["Main Menu", "Context Menu", "Right-Click Menu", "Settings Menu"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "toolbar": {
+      "description": "Row of tools, buttons, or controls for quick actions",
+      "examples": ["Edit Toolbar", "Formatting Bar", "Quick Actions", "Tool Palette"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "tab": {
+      "description": "Tab element for switching between views or content sections",
+      "examples": ["Browser Tab", "Settings Tab", "General Tab", "Advanced Tab"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "taskbar_item": {
+      "description": "Windows taskbar pinned application or running window indicator",
+      "examples": ["Pinned Chrome", "Running VS Code", "System Tray Icon"],
+      "parent": "icon",
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "notification": {
+      "description": "Popup notification, toast message, or alert dialog",
+      "examples": ["System Notification", "Update Available", "New Message Alert"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "scrollbar": {
+      "description": "Scrollbar element for navigating content that exceeds viewport",
+      "examples": ["Vertical Scrollbar", "Horizontal Scrollbar", "Scroll Thumb"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    },
+    "unknown": {
+      "description": "Unidentified UI element that does not match any known category",
+      "examples": ["Unrecognized Element", "Custom Widget", "Unknown Control"],
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2024-12-12T08:00:00.000Z"
+    }
+  },
+  "pendingCategories": [],
+  "categoryHistory": []
+}

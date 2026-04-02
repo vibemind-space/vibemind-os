@@ -1,0 +1,160 @@
+# Alert Rules for EventFix Team Monitoring
+groups:
+  - name: eventfix_alerts
+    interval: 30s
+    rules:
+      # gRPC Host Alerts
+      - alert: GrpcHostDown
+        expr: up{job="grpc-host"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: grpc-host
+        annotations:
+          summary: "gRPC Host ist down"
+          description: "gRPC Host ist seit mehr als 1 Minute nicht erreichbar"
+
+      - alert: GrpcHostHighLatency
+        expr: histogram_quantile(0.95, rate(grpc_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: grpc-host
+        annotations:
+          summary: "gRPC Host hat hohe Latenz"
+          description: "95. Perzentil der gRPC Request-Dauer ist über 1 Sekunde"
+
+      # Agent Alerts
+      - alert: AgentDown
+        expr: up{job="agents"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: agents
+        annotations:
+          summary: "Agent ist down"
+          description: "Agent {{ $labels.instance }} ist seit mehr als 2 Minuten nicht erreichbar"
+
+      - alert: AgentTaskQueueBacklog
+        expr: agent_task_queue_size > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: agents
+        annotations:
+          summary: "Agent Task Queue hat Backlog"
+          description: "Agent {{ $labels.instance }} hat mehr als 100 Tasks in der Queue"
+
+      - alert: AgentHighErrorRate
+        expr: rate(agent_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: agents
+        annotations:
+          summary: "Agent hat hohe Fehlerrate"
+          description: "Agent {{ $labels.instance }} hat eine Fehlerrate von mehr als 10%"
+
+      # Database Alerts
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL ist down"
+          description: "PostgreSQL Datenbank ist seit mehr als 1 Minute nicht erreichbar"
+
+      - alert: PostgresHighConnections
+        expr: pg_stat_database_numbackends{datname="eventfix"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "PostgreSQL hat viele Verbindungen"
+          description: "PostgreSQL hat mehr als 80 aktive Verbindungen"
+
+      - alert: PostgresSlowQueries
+        expr: rate(pg_stat_statements_mean_exec_time_ms[5m]) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "PostgreSQL hat langsame Queries"
+          description: "Durchschnittliche Query-Ausführungszeit ist über 1 Sekunde"
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis ist down"
+          description: "Redis Cache ist seit mehr als 1 Minute nicht erreichbar"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis hat hohen Speicherverbrauch"
+          description: "Redis nutzt mehr als 90% des verfügbaren Speichers"
+
+      # System Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Hohe CPU-Auslastung"
+          description: "CPU-Auslastung auf {{ $labels.instance }} ist über 80%"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Hoher Speicherverbrauch"
+          description: "Speicherauslastung auf {{ $labels.instance }} ist über 90%"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Wenig Festplattenspeicher"
+          description: "Festplattenspeicher auf {{ $labels.instance }} ist unter 10%"
+
+      # Task Processing Alerts
+      - alert: TaskProcessingStalled
+        expr: rate(tasks_completed_total[10m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+          component: tasks
+        annotations:
+          summary: "Task-Verarbeitung gestoppt"
+          description: "Keine Tasks wurden in den letzten 15 Minuten abgeschlossen"
+
+      - alert: TaskFailureRateHigh
+        expr: rate(tasks_failed_total[5m]) / rate(tasks_completed_total[5m]) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          component: tasks
+        annotations:
+          summary: "Hohe Task-Fehlerrate"
+          description: "Task-Fehlerrate ist über 20%"

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Society of Mind - Live Dashboard</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-yellow: #d29922;
+            --accent-blue: #58a6ff;
+            --border: #30363d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header h1::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-connected { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+        .status-disconnected { background: rgba(248, 81, 73, 0.2); color: var(--accent-red); }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        /* Progress Section */
+        .progress-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .metric-success { color: var(--accent-green); }
+        .metric-error { color: var(--accent-red); }
+        .metric-warning { color: var(--accent-yellow); }
+        .metric-info { color: var(--accent-blue); }
+
+        /* Agents Section */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .agent-card {
+            background: var(--bg-tertiary);
+            padding: 12px 16px;
+            border-radius: 6px;
+            border-left: 3px solid var(--border);
+        }
+
+        .agent-card.active { border-left-color: var(--accent-green); }
+        .agent-card.idle { border-left-color: var(--text-secondary); }
+        .agent-card.error { border-left-color: var(--accent-red); }
+
+        .agent-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .agent-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Event Log */
+        .event-log {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 12px;
+        }
+
+        .event-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 80px 120px 1fr;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .event-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .event-time {
+            color: var(--text-secondary);
+        }
+
+        .event-type {
+            font-weight: 500;
+        }
+
+        .event-type.success { color: var(--accent-green); }
+        .event-type.error { color: var(--accent-red); }
+        .event-type.warning { color: var(--accent-yellow); }
+        .event-type.info { color: var(--accent-blue); }
+
+        .event-message {
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Preview Section */
+        .preview-frame {
+            width: 100%;
+            height: 500px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        /* VNC Monitor Section */
+        .vnc-monitor {
+            display: none;
+        }
+
+        .vnc-monitor.active {
+            display: block;
+        }
+
+        .vnc-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+            background: #000;
+            border-radius: 4px;
+        }
+
+        .vnc-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .vnc-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-red);
+        }
+
+        .vnc-status-dot.connected {
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        .vnc-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            background: var(--border);
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Society of Mind Dashboard</h1>
+        <span id="connection-status" class="status-badge status-disconnected">Disconnected</span>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <!-- Progress Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <span>Convergence Progress</span>
+                    <span id="iteration-count">Iteration: 0</span>
+                </div>
+                <div class="card-body">
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span>Overall Progress</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div id="tests-passed" class="metric-value metric-success">0</div>
+                            <div class="metric-label">Tests Passed</div>
+                        </div>
+                        <div class="metric-card">
+                            <div id="build-status" class="metric-value metric-info">--</div>
+                            <div class="metric-label">Build Status</div>
+                        </div>
+                        <div class="metric-card">
+                            <div id="error-count" class="metric-value metric-error">0</div>
+                            <div class="metric-label">Errors</div>
+                        </div>
+                        <div class="metric-card">
+                            <div id="confidence" class="metric-value metric-warning">0%</div>
+                            <div class="metric-label">Confidence</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agents -->
+            <div class="card">
+                <div class="card-header">Active Agents</div>
+                <div class="card-body">
+                    <div id="agents-grid" class="agents-grid">
+                        <!-- Agents will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="card">
+                <div class="card-header">
+                    <span>Live Preview</span>
+                    <div class="preview-controls">
+                        <button class="btn" onclick="refreshPreview()">Refresh</button>
+                        <button class="btn btn-primary" onclick="openPreview()">Open in New Tab</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <iframe id="preview-frame" class="preview-frame" src="about:blank"></iframe>
+                </div>
+            </div>
+
+            <!-- VNC Monitor (for Electron/GUI apps in sandbox) -->
+            <div id="vnc-monitor" class="card vnc-monitor">
+                <div class="card-header">
+                    <span>Sandbox Monitor (VNC)</span>
+                    <div class="vnc-controls">
+                        <div class="vnc-status">
+                            <span id="vnc-status-dot" class="vnc-status-dot"></span>
+                            <span id="vnc-status-text">Disconnected</span>
+                        </div>
+                        <button class="btn" onclick="reconnectVnc()">Reconnect</button>
+                        <button class="btn" onclick="fullscreenVnc()">Fullscreen</button>
+                        <button class="btn btn-primary" onclick="openVnc()">Open in New Tab</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <iframe id="vnc-frame" class="vnc-frame" src="about:blank" allow="fullscreen"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <!-- Event Log -->
+            <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="card-header">
+                    <span>Event Log</span>
+                    <button class="btn" onclick="clearEvents()">Clear</button>
+                </div>
+                <div class="card-body" style="flex: 1; overflow: hidden;">
+                    <div id="event-log" class="event-log">
+                        <!-- Events will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - get WS port from URL param or use default
+        const urlParams = new URLSearchParams(window.location.search);
+        const wsPort = urlParams.get('ws') || '8765';
+        const WS_URL = `ws://${window.location.hostname}:${wsPort}`;
+        let previewUrl = null;
+        let ws = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+
+        // DOM Elements
+        const connectionStatus = document.getElementById('connection-status');
+        const progressFill = document.getElementById('progress-fill');
+        const progressPercent = document.getElementById('progress-percent');
+        const iterationCount = document.getElementById('iteration-count');
+        const testsPassed = document.getElementById('tests-passed');
+        const buildStatus = document.getElementById('build-status');
+        const errorCount = document.getElementById('error-count');
+        const confidence = document.getElementById('confidence');
+        const agentsGrid = document.getElementById('agents-grid');
+        const eventLog = document.getElementById('event-log');
+        const previewFrame = document.getElementById('preview-frame');
+
+        // Connect to WebSocket
+        function connect() {
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                connectionStatus.textContent = 'Connected';
+                connectionStatus.className = 'status-badge status-connected';
+                reconnectAttempts = 0;
+                addEvent('info', 'system', 'Connected to Society of Mind');
+            };
+
+            ws.onclose = () => {
+                connectionStatus.textContent = 'Disconnected';
+                connectionStatus.className = 'status-badge status-disconnected';
+
+                // Reconnect
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    setTimeout(connect, 2000);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleMessage(data);
+                } catch (e) {
+                    console.error('Error parsing message:', e);
+                }
+            };
+        }
+
+        // VNC state
+        let vncUrl = null;
+        const vncMonitor = document.getElementById('vnc-monitor');
+        const vncFrame = document.getElementById('vnc-frame');
+        const vncStatusDot = document.getElementById('vnc-status-dot');
+        const vncStatusText = document.getElementById('vnc-status-text');
+
+        // Handle incoming messages
+        function handleMessage(data) {
+            switch (data.type) {
+                case 'metrics':
+                    updateMetrics(data.data);
+                    break;
+                case 'event':
+                    handleEvent(data.data);
+                    break;
+                case 'agents':
+                    updateAgents(data.data);
+                    break;
+                case 'preview_url':
+                    setPreviewUrl(data.data.url);
+                    break;
+                case 'vnc_url':
+                    setVncUrl(data.data.url);
+                    break;
+                default:
+                    console.log('Unknown message type:', data.type);
+            }
+        }
+
+        // Update metrics display
+        function updateMetrics(metrics) {
+            if (!metrics) return;
+
+            // Progress
+            const progress = metrics.progress || 0;
+            progressFill.style.width = `${progress}%`;
+            progressPercent.textContent = `${progress.toFixed(1)}%`;
+
+            // Iteration
+            iterationCount.textContent = `Iteration: ${metrics.iteration || 0}`;
+
+            // Tests
+            const passed = metrics.tests_passed || 0;
+            const total = metrics.total_tests || 0;
+            testsPassed.textContent = total > 0 ? `${passed}/${total}` : '--';
+
+            // Build
+            if (metrics.build_success === true) {
+                buildStatus.textContent = 'OK';
+                buildStatus.className = 'metric-value metric-success';
+            } else if (metrics.build_success === false) {
+                buildStatus.textContent = 'FAIL';
+                buildStatus.className = 'metric-value metric-error';
+            } else {
+                buildStatus.textContent = '--';
+                buildStatus.className = 'metric-value metric-info';
+            }
+
+            // Errors
+            const errors = (metrics.validation_errors || 0) + (metrics.type_errors || 0);
+            errorCount.textContent = errors;
+
+            // Confidence
+            const conf = (metrics.confidence_score || 0) * 100;
+            confidence.textContent = `${conf.toFixed(0)}%`;
+        }
+
+        // Handle event
+        function handleEvent(event) {
+            const eventType = event.type || 'unknown';
+            const source = event.source || 'system';
+            const message = event.data?.message || event.error_message || JSON.stringify(event.data || {});
+
+            let category = 'info';
+            if (eventType.includes('error') || eventType.includes('failed')) {
+                category = 'error';
+            } else if (eventType.includes('success') || eventType.includes('passed') || eventType.includes('completed')) {
+                category = 'success';
+            } else if (eventType.includes('warning')) {
+                category = 'warning';
+            }
+
+            // Handle VNC screen stream events
+            if (eventType === 'screen_stream_ready' && event.data?.vnc_url) {
+                setVncUrl(event.data.vnc_url);
+                addEvent('success', 'vnc', `VNC stream ready at ${event.data.vnc_url}`);
+                return;
+            }
+            if (eventType === 'screen_stream_stopped') {
+                hideVnc();
+                addEvent('info', 'vnc', 'VNC stream stopped');
+                return;
+            }
+
+            addEvent(category, eventType, `[${source}] ${message}`.substring(0, 100));
+        }
+
+        // VNC Monitor functions
+        function setVncUrl(url) {
+            vncUrl = url;
+            if (url) {
+                vncFrame.src = url;
+                vncMonitor.classList.add('active');
+                vncStatusDot.classList.add('connected');
+                vncStatusText.textContent = 'Connected';
+                addEvent('info', 'vnc', `VNC monitor connected to ${url}`);
+            }
+        }
+
+        function hideVnc() {
+            vncFrame.src = 'about:blank';
+            vncMonitor.classList.remove('active');
+            vncStatusDot.classList.remove('connected');
+            vncStatusText.textContent = 'Disconnected';
+            vncUrl = null;
+        }
+
+        function reconnectVnc() {
+            if (vncUrl) {
+                vncFrame.src = vncUrl;
+                vncStatusDot.classList.add('connected');
+                vncStatusText.textContent = 'Connected';
+            }
+        }
+
+        function fullscreenVnc() {
+            if (vncFrame.requestFullscreen) {
+                vncFrame.requestFullscreen();
+            } else if (vncFrame.webkitRequestFullscreen) {
+                vncFrame.webkitRequestFullscreen();
+            }
+        }
+
+        function openVnc() {
+            if (vncUrl) {
+                window.open(vncUrl, '_blank');
+            }
+        }
+
+        // Add event to log
+        function addEvent(category, type, message) {
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { hour12: false });
+
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            item.innerHTML = `
+                <span class="event-time">${time}</span>
+                <span class="event-type ${category}">${type}</span>
+                <span class="event-message">${message}</span>
+            `;
+
+            eventLog.insertBefore(item, eventLog.firstChild);
+
+            // Keep only last 100 events
+            while (eventLog.children.length > 100) {
+                eventLog.removeChild(eventLog.lastChild);
+            }
+        }
+
+        // Update agents display
+        function updateAgents(agents) {
+            if (!agents || !Array.isArray(agents)) return;
+
+            agentsGrid.innerHTML = agents.map(agent => {
+                const status = agent.is_acting ? 'active' : 'idle';
+                const action = agent.last_action || 'Idle';
+                return `
+                    <div class="agent-card ${status}">
+                        <div class="agent-name">${agent.name || 'Unknown'}</div>
+                        <div class="agent-status">${action}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Set preview URL
+        function setPreviewUrl(url) {
+            previewUrl = url;
+            if (url) {
+                previewFrame.src = url;
+                addEvent('info', 'preview', `Preview available at ${url}`);
+            }
+        }
+
+        // Refresh preview
+        function refreshPreview() {
+            if (previewUrl) {
+                previewFrame.src = previewUrl;
+            }
+        }
+
+        // Open preview in new tab
+        function openPreview() {
+            if (previewUrl) {
+                window.open(previewUrl, '_blank');
+            }
+        }
+
+        // Clear events
+        function clearEvents() {
+            eventLog.innerHTML = '';
+        }
+
+        // Initialize
+        connect();
+
+        // Add some default agents
+        updateAgents([
+            { name: 'Tester', is_acting: false, last_action: 'Waiting' },
+            { name: 'Builder', is_acting: false, last_action: 'Waiting' },
+            { name: 'Validator', is_acting: false, last_action: 'Waiting' },
+            { name: 'Fixer', is_acting: false, last_action: 'Waiting' },
+            { name: 'Generator', is_acting: false, last_action: 'Waiting' },
+        ]);
+    </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cell-{{ cell.name }}-hpa
+  namespace: {{ cell.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+    app.kubernetes.io/managed-by: cell-colony
+    colony.codingengine.io/cell-id: {{ cell.id }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ cell.k8s_deployment_name }}
+  minReplicas: {{ min_replicas | default(1) }}
+  maxReplicas: {{ max_replicas | default(5) }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ cpu_target_utilization | default(70) }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ memory_target_utilization | default(80) }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ scale_down_stabilization | default(300) }}
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: {{ scale_up_stabilization | default(0) }}
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      selectPolicy: Max

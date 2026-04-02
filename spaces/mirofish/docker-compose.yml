@@ -1,0 +1,89 @@
+# MiroFish-Offline Docker Compose Stack
+# Swarm Intelligence Prediction Engine
+#
+# Usage:
+#   docker compose -f docker-compose.mirofish.yml up -d
+#
+# Services:
+#   - mirofish: Flask API (port 5001) + Vue.js frontend (port 3001)
+#   - neo4j: Graph database (bolt: 7688, browser: 7475)
+#
+# Note: Uses host Ollama (port 11434) — no separate Ollama container.
+# If you don't have Ollama installed locally, uncomment the ollama service below.
+
+services:
+  mirofish:
+    build:
+      context: ./python/spaces/mirofish/mirofish
+      dockerfile: Dockerfile
+    container_name: mirofish-app
+    ports:
+      - "5001:5001"   # Flask API
+      - "3001:3000"   # Vue.js frontend (3001 to avoid conflict with Rowboat)
+    environment:
+      - LLM_API_KEY=${MIROFISH_LLM_API_KEY:-${OPENAI_API_KEY}}
+      - LLM_BASE_URL=${MIROFISH_LLM_BASE_URL:-https://api.openai.com/v1}
+      - LLM_MODEL_NAME=${MIROFISH_LLM_MODEL:-gpt-4o}
+      - NEO4J_URI=bolt://neo4j-mirofish:7687
+      - NEO4J_USER=${MIROFISH_NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=${MIROFISH_NEO4J_PASSWORD:-mirofish}
+      - EMBEDDING_MODEL=${MIROFISH_EMBEDDING_MODEL:-nomic-embed-text}
+      - EMBEDDING_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      neo4j-mirofish:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - mirofish-net
+
+  neo4j-mirofish:
+    image: neo4j:5.18-community
+    container_name: neo4j-mirofish
+    ports:
+      - "7475:7474"   # Browser (7475 to avoid conflict)
+      - "7688:7687"   # Bolt (7688 to avoid conflict)
+    environment:
+      - NEO4J_AUTH=${MIROFISH_NEO4J_USER:-neo4j}/${MIROFISH_NEO4J_PASSWORD:-mirofish}
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+    volumes:
+      - neo4j-mirofish-data:/data
+      - neo4j-mirofish-plugins:/plugins
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - mirofish-net
+
+  # Uncomment if you don't have Ollama installed locally:
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: ollama-mirofish
+  #   ports:
+  #     - "11435:11434"   # 11435 to avoid conflict with host Ollama
+  #   volumes:
+  #     - ollama-mirofish-data:/root/.ollama
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   restart: unless-stopped
+  #   networks:
+  #     - mirofish-net
+
+volumes:
+  neo4j-mirofish-data:
+  neo4j-mirofish-plugins:
+  # ollama-mirofish-data:
+
+networks:
+  mirofish-net:
+    driver: bridge

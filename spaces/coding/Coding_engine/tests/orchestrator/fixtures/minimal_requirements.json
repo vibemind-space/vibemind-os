@@ -1,0 +1,19 @@
+{
+  "project": "test-app",
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "title": "Hello World Page",
+      "description": "Display Hello World on the main page",
+      "priority": "HIGH",
+      "type": "functional"
+    },
+    {
+      "id": "REQ-002",
+      "title": "Navigation Header",
+      "description": "Show a navigation header with logo",
+      "priority": "MEDIUM",
+      "type": "functional"
+    }
+  ]
+}

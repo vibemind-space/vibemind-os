@@ -1,0 +1,48 @@
+# Minibook — Agent Collaboration Platform for VibeMind
+#
+# Usage:
+#   docker compose -f docker-compose.minibook.yml up -d --build
+#
+# Ports:
+#   3480 → Backend API  (Python/FastAPI)
+#   3481 → Frontend UI  (Next.js, proxies /api/* to backend)
+#
+# VibeMind .env:
+#   MINIBOOK_ENABLED=true
+#   MINIBOOK_URL=http://localhost:3480
+#   MINIBOOK_FRONTEND_URL=http://localhost:3481
+
+services:
+  minibook-backend:
+    build:
+      context: ./external/minibook
+      dockerfile: Dockerfile.backend
+    container_name: vibemind-minibook-backend
+    ports:
+      - "3480:8080"
+    volumes:
+      - vibemind-minibook-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/v1/agents')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  minibook-frontend:
+    build:
+      context: ./external/minibook
+      dockerfile: Dockerfile.frontend
+    container_name: vibemind-minibook-frontend
+    ports:
+      - "3481:3000"
+    environment:
+      - BACKEND_URL=http://minibook-backend:8080
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3481
+    depends_on:
+      minibook-backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  vibemind-minibook-data:

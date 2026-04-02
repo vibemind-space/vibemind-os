@@ -1,0 +1,219 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: eventfix_postgres
+    environment:
+      POSTGRES_DB: eventfix_team
+      POSTGRES_USER: eventfix_user
+      POSTGRES_PASSWORD: eventfix_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./mcp_plugins/servers/grpc_host/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventfix_user -d eventfix_team"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eventfix_network
+
+  # Redis Cache & Message Queue
+  redis:
+    image: redis:7-alpine
+    container_name: eventfix_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eventfix_network
+
+  # gRPC Server
+  grpc_server:
+    build:
+      context: ./mcp_plugins/servers/grpc_host
+      dockerfile: Dockerfile
+    container_name: eventfix_grpc_server
+    environment:
+      - GRPC_SERVER_HOST=0.0.0.0
+      - GRPC_SERVER_PORT=50051
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=eventfix_team
+      - POSTGRES_USER=eventfix_user
+      - POSTGRES_PASSWORD=eventfix_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - LOG_LEVEL=INFO
+    ports:
+      - "50051:50051"
+      - "9090:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./mcp_plugins/servers/grpc_host:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - eventfix_network
+    restart: unless-stopped
+
+  # Code Writer Agent
+  code_writer_agent:
+    build:
+      context: ./mcp_plugins/servers/grpc_host
+      dockerfile: Dockerfile
+    container_name: eventfix_code_writer
+    command: python -m agents.code_writer_agent
+    environment:
+      - AGENT_TYPE=code_writer
+      - GRPC_SERVER_HOST=grpc_server
+      - GRPC_SERVER_PORT=50051
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=eventfix_team
+      - POSTGRES_USER=eventfix_user
+      - POSTGRES_PASSWORD=eventfix_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - grpc_server
+    volumes:
+      - ./mcp_plugins/servers/grpc_host:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - eventfix_network
+    restart: unless-stopped
+
+  # Fixer Agent
+  fixer_agent:
+    build:
+      context: ./mcp_plugins/servers/grpc_host
+      dockerfile: Dockerfile
+    container_name: eventfix_fixer
+    command: python -m agents.fixer_agent
+    environment:
+      - AGENT_TYPE=fixer
+      - GRPC_SERVER_HOST=grpc_server
+      - GRPC_SERVER_PORT=50051
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=eventfix_team
+      - POSTGRES_USER=eventfix_user
+      - POSTGRES_PASSWORD=eventfix_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - grpc_server
+    volumes:
+      - ./mcp_plugins/servers/grpc_host:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - eventfix_network
+    restart: unless-stopped
+
+  # Migrator Agent
+  migrator_agent:
+    build:
+      context: ./mcp_plugins/servers/grpc_host
+      dockerfile: Dockerfile
+    container_name: eventfix_migrator
+    command: python -m agents.migrator_agent
+    environment:
+      - AGENT_TYPE=migrator
+      - GRPC_SERVER_HOST=grpc_server
+      - GRPC_SERVER_PORT=50051
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=eventfix_team
+      - POSTGRES_USER=eventfix_user
+      - POSTGRES_PASSWORD=eventfix_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - grpc_server
+    volumes:
+      - ./mcp_plugins/servers/grpc_host:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - eventfix_network
+    restart: unless-stopped
+
+  # Tester Agent
+  tester_agent:
+    build:
+      context: ./mcp_plugins/servers/grpc_host
+      dockerfile: Dockerfile
+    container_name: eventfix_tester
+    command: python -m agents.tester_agent
+    environment:
+      - AGENT_TYPE=tester
+      - GRPC_SERVER_HOST=grpc_server
+      - GRPC_SERVER_PORT=50051
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=eventfix_team
+      - POSTGRES_USER=eventfix_user
+      - POSTGRES_PASSWORD=eventfix_password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PLAYWRIGHT_HEADLESS=true
+    depends_on:
+      - grpc_server
+    volumes:
+      - ./mcp_plugins/servers/grpc_host:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - eventfix_network
+    restart: unless-stopped
+
+  # Prometheus Metrics (Optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: eventfix_prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./mcp_plugins/servers/grpc_host/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - eventfix_network
+    restart: unless-stopped
+
+  # Grafana Dashboard (Optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: eventfix_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - eventfix_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  grafana_data:
+
+networks:
+  eventfix_network:
+    driver: bridge

@@ -1,0 +1,154 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+*.mo
+*.pot
+instance/
+.webassets-cache
+.scrapy
+htmlcov/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Environment files
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Supabase temp files
+supabase/.temp/
+
+# Temp files
+nul
+
+# External repositories (auto-managed)
+# These are maintained by other teams and updated automatically
+external/
+
+# Test artifacts
+test_*.png
+**/test_*.png
+
+# Linter outputs
+eslint-*.txt
+eslint-*.json
+
+# Test reports
+playwright-report/
+test-results/
+
+# External projects with their own node_modules
+moire_server/node_modules/
+desktop-agent/**/node_modules/
+electron-app/node_modules/
+
+# All nested node_modules
+**/node_modules/
+
+# Environment files (secrets)
+**/.env
+!**/.env.example
+
+# Crash dumps
+bash.exe.stackdump
+*.stackdump
+
+# Windows artifacts
+%USERPROFILE%/
+
+# Kilocode
+.kilocode/
+
+# SQLite databases
+*.db
+*.sqlite3
+
+# Docker volumes
+postgres_data/
+redis_data/
+qdrant_storage/
+
+# Log files
+*.log
+
+# Playwright MCP logs
+.playwright-mcp/
+
+# Desktop screenshots
+desktop_screenshots/
+
+# Claude Code (user-specific session permissions)
+.claude/settings.local.json
+.claude/.vscode/
+
+# Runtime data caches (recreated at runtime)
+backend/conversation_memory/
+backend/training_data/
+backend/ui_memory/
+
+# Personal contacts config (use .example instead)
+config/clawdbot_contacts.json

@@ -1,0 +1,129 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node.js (for generated projects)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+
+# Environment variables (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Generated output directories
+output/
+output_*/
+# Exception: WhatsApp generated output
+!output_whatsapp-messaging-service_20260211_025459/
+
+# Data — only WhatsApp requirements/docs included
+Data/logs/
+Data/all_services/unnamed_project_*/
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Logs
+*.log
+logs/
+
+# Electron build artifacts
+electron-minimal-test/dist/
+electron-minimal-test/out/
+
+# Screenshots/captures
+screenshots/*.png
+screenshots/*.jpg
+
+# Temporary root-level debug/poll/fix scripts
+_*.py
+check_task_data.py
+dry_run_enrichment.py
+dry_run_prompts.py
+merge_requirements.py
+monitor_test.py
+reset_failed_tasks.py
+test_api.py
+test_prompt_enrichment.py
+test_single_task.py
+test_workflow_integration.py
+fix_*.py
+generate_modules.py
+test_fungus.py
+MANUAL_FIXES_LOG.md
+
+# Temporary plan/debug docs
+DEBUG_CONTAINER_PLAN.md
+PLAN_PHASE_29_TASK_ENRICHMENT.md
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+NUL
+
+# Docker
+.docker/
+
+# Memory/State
+*.db
+*.sqlite
+
+# Playwright browser profiles (large binary data)
+mcp_plugins/servers/playwright/profiles/
+
+# Large binaries
+*.exe
+dashboard-app/electron-bin.exe
+
+# Hook logs (may contain secrets from commands)
+.claude/hooks/command-log.txt
+discord_debug.py
+discord_monitor.py
+test_mcmp_prerun.py

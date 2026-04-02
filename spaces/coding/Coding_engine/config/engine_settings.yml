@@ -1,0 +1,117 @@
+models:
+  generation:
+    provider: openai
+    model: gpt-5.4
+    max_tokens: 32768
+  fixing:
+    provider: openai
+    model: gpt-5.4
+    max_tokens: 16384
+  schema:
+    provider: openai
+    model: gpt-5.4
+    max_tokens: 8000
+  review:
+    provider: openai
+    model: gpt-5.4
+    max_tokens: 8000
+  planning:
+    provider: openai
+    model: gpt-5.4-mini
+    max_tokens: 16384
+  reasoning:
+    provider: openai
+    model: o4-mini
+    max_tokens: 32768
+providers:
+  openai:
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+  anthropic:
+    base_url: null
+    api_key_env: ANTHROPIC_API_KEY
+discord:
+  bot_token_env: DISCORD_BOT_TOKEN_ANALYZER
+  channels:
+    dev_tasks: '1484193408955322399'
+    fixes: '1484193412679733302'
+    prs: '1485666130474303562'
+    orchestrator: '1484193339405369344'
+    integration: '1484193411182366902'
+    testing: '1484193415364214958'
+    done: '1484193417381679225'
+  auto_status:
+    enabled: true
+    interval_seconds: 600
+    channel: dev_tasks
+  auto_fix:
+    enabled: true
+    max_rounds: 3
+    trigger_on_idle: true
+    channel: fixes
+  use_threads: false
+generation:
+  backend: openai
+  max_parallel_tasks: 4
+  max_parallel_epics: 3
+  task_timeout_seconds: 540
+  epic_timeout_seconds: 3600
+  max_task_retries: 3
+  retry_delay_seconds: 5
+  feature_based_ordering: true
+  consolidation_mode: feature  # granular|endpoint|feature — "feature" recommended (1 task per module)
+  enable_som: false
+  som_agents: 0
+  output_base: /app/output
+fix_strategies:
+  migration:
+    method: prisma_push
+    fallback: gpt_schema_fix
+    max_attempts: 5
+  lint:
+    method: eslint_fix
+    command: npx eslint --fix 'src/**/*.{ts,tsx}' 2>&1 || true
+  build:
+    method: build_check
+    command: npm run build 2>&1 || npx tsc --noEmit 2>&1
+    fallback: gpt_fix
+  code:
+    method: gpt_fix
+    max_retries: 3
+  verify:
+    method: rerun
+    fallback: gpt_fix
+verification:
+  build_check: true
+  build_command: npm run build
+  file_check: true
+  min_files: 10
+  browser_check: false
+  preview_url: http://localhost:3100
+  auto_pr: true
+  pr_base_branch: main
+  auto_review: true
+  auto_merge: true
+  merge_strategy: squash
+projects:
+  whatsapp-messaging-service:
+    id: whatsapp-messaging-service_20260211_025459
+    name: WhatsApp Messaging Service
+    requirements_path: /app/Data/all_services/whatsapp-messaging-service_20260211_025459
+    output_dir: /app/output/whatsapp-messaging-service_20260211_025459
+    db_project_id: 2
+    db_schema: whatsapp_app
+    tech_stack: react-native
+    preview_url: http://localhost:3100
+    vnc_port: 6090
+    app_port: 3100
+    key: whatsapp-messaging-service
+infrastructure:
+  sandbox_url: http://sandbox:3100
+  sandbox_exec_url: http://api:8000/api/v1/dashboard/sandbox/exec
+  database_url_env: DATABASE_URL
+  redis_url: redis://redis:6379
+  docker_compose_path: /app/docker-compose.yml

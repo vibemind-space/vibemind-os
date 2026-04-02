@@ -1,0 +1,37 @@
+# ============================================================
+# LLM Configuration — Autogen/Minibook Swarm
+# ============================================================
+# Zentrale Config fuer alle LLM-Aufrufe im Swarm Pipeline.
+# Provider wechseln = nur hier aendern, kein Code anfassen.
+#
+# Reihenfolge: overrides[dir][role] > roles[role] > default
+# ============================================================
+
+keys:
+  openai: ${OPENAI_API_KEY}
+  anthropic: ${ANTHROPIC_API_KEY}
+
+providers:
+  openai:
+    type: openai
+    base_url: https://api.openai.com/v1
+    key_ref: openai
+  anthropic:
+    type: anthropic
+    base_url: https://api.anthropic.com
+    key_ref: anthropic
+
+default:
+  provider: openai
+  model: gpt-5.4
+  temperature: 0
+
+roles:
+  agentfarm:
+    provider: openai
+    model: gpt-5.4
+    temperature: 0
+  agentfarm_anthropic:
+    provider: anthropic
+    model: claude-sonnet-4-6
+    temperature: 0

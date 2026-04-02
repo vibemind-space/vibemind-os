@@ -1,0 +1,60 @@
+{
+  "name": "automation-ui-desktop",
+  "version": "1.0.0",
+  "description": "Desktop-Client für Automation UI mit Screen-Streaming, OCR und Moire Canvas Support",
+  "main": "main.js",
+  "author": "TRAE Unity AI Platform",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "start:dev": "electron . --dev",
+    "test": "echo \"No tests specified\" && exit 0",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "electron-is-dev": "^2.0.0"
+  },
+  "optionalDependencies": {
+    "@moire/canvas": "^1.0.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.trae.desktop-streaming",
+    "productName": "TRAE Desktop Streaming",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "assets/**/*"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true
+    }
+  }
+}

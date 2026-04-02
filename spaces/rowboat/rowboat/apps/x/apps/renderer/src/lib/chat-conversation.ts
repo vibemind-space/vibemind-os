@@ -1,0 +1,261 @@
+import type { ToolUIPart } from 'ai'
+import z from 'zod'
+import { AskHumanRequestEvent, ToolPermissionRequestEvent } from '@x/shared/src/runs.js'
+
+export interface MessageAttachment {
+  path: string
+  filename: string
+  mimeType: string
+  size?: number
+  thumbnailUrl?: string
+}
+
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  attachments?: MessageAttachment[]
+  timestamp: number
+}
+
+export interface ToolCall {
+  id: string
+  name: string
+  input: ToolUIPart['input']
+  result?: ToolUIPart['output']
+  status: 'pending' | 'running' | 'completed' | 'error'
+  timestamp: number
+}
+
+export interface ErrorMessage {
+  id: string
+  kind: 'error'
+  message: string
+  timestamp: number
+}
+
+export type ConversationItem = ChatMessage | ToolCall | ErrorMessage
+export type PermissionResponse = 'approve' | 'deny'
+
+export type ChatTabViewState = {
+  runId: string | null
+  conversation: ConversationItem[]
+  currentAssistantMessage: string
+  pendingAskHumanRequests: Map<string, z.infer<typeof AskHumanRequestEvent>>
+  allPermissionRequests: Map<string, z.infer<typeof ToolPermissionRequestEvent>>
+  permissionResponses: Map<string, PermissionResponse>
+}
+
+export const createEmptyChatTabViewState = (): ChatTabViewState => ({
+  runId: null,
+  conversation: [],
+  currentAssistantMessage: '',
+  pendingAskHumanRequests: new Map(),
+  allPermissionRequests: new Map(),
+  permissionResponses: new Map(),
+})
+
+export type ToolState = 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
+
+export const isChatMessage = (item: ConversationItem): item is ChatMessage => 'role' in item
+export const isToolCall = (item: ConversationItem): item is ToolCall => 'name' in item
+export const isErrorMessage = (item: ConversationItem): item is ErrorMessage =>
+  'kind' in item && item.kind === 'error'
+
+export const toToolState = (status: ToolCall['status']): ToolState => {
+  switch (status) {
+    case 'pending':
+      return 'input-streaming'
+    case 'running':
+      return 'input-available'
+    case 'completed':
+      return 'output-available'
+    case 'error':
+      return 'output-error'
+    default:
+      return 'input-available'
+  }
+}
+
+export const normalizeToolInput = (
+  input: ToolCall['input'] | string | undefined
+): ToolCall['input'] => {
+  if (input === undefined || input === null) return {}
+  if (typeof input === 'string') {
+    const trimmed = input.trim()
+    if (!trimmed) return {}
+    try {
+      return JSON.parse(trimmed)
+    } catch {
+      return input
+    }
+  }
+  return input
+}
+
+export const normalizeToolOutput = (
+  output: ToolCall['result'] | undefined,
+  status: ToolCall['status']
+) => {
+  if (output === undefined || output === null) {
+    return status === 'completed' ? 'No output returned.' : null
+  }
+  if (output === '') return '(empty output)'
+  if (typeof output === 'boolean' || typeof output === 'number') return String(output)
+  return output
+}
+
+export type WebSearchCardResult = { title: string; url: string; description: string }
+
+export type WebSearchCardData = {
+  query: string
+  results: WebSearchCardResult[]
+  title?: string
+}
+
+export const getWebSearchCardData = (tool: ToolCall): WebSearchCardData | null => {
+  if (tool.name === 'web-search') {
+    const input = normalizeToolInput(tool.input) as Record<string, unknown> | undefined
+    const result = tool.result as Record<string, unknown> | undefined
+    const rawResults = (result?.results as Array<{
+      title: string
+      url: string
+      description?: string
+      highlights?: string[]
+      text?: string
+    }>) || []
+    const mapped = rawResults.map((entry) => ({
+      title: entry.title,
+      url: entry.url,
+      description: entry.description || entry.highlights?.[0] || (entry.text ? entry.text.slice(0, 200) : ''),
+    }))
+    const category = input?.category as string | undefined
+    return {
+      query: (input?.query as string) || '',
+      results: mapped,
+      title: (!category || category === 'general')
+        ? 'Web search'
+        : `${category.charAt(0).toUpperCase() + category.slice(1)} search`,
+    }
+  }
+
+  return null
+}
+
+// App navigation action card data
+export type AppActionCardData = {
+  action: string
+  label: string
+  details?: Record<string, unknown>
+}
+
+const summarizeFilterUpdates = (updates: Record<string, unknown>): string => {
+  const filters = updates.filters as Record<string, unknown> | undefined
+  const parts: string[] = []
+
+  if (filters) {
+    if (filters.clear) parts.push('Cleared filters')
+    const set = filters.set as Array<{ category: string; value: string }> | undefined
+    if (set?.length) parts.push(`Set ${set.length} filter${set.length !== 1 ? 's' : ''}: ${set.map(f => `${f.category}=${f.value}`).join(', ')}`)
+    const add = filters.add as Array<{ category: string; value: string }> | undefined
+    if (add?.length) parts.push(`Added ${add.length} filter${add.length !== 1 ? 's' : ''}`)
+    const remove = filters.remove as Array<{ category: string; value: string }> | undefined
+    if (remove?.length) parts.push(`Removed ${remove.length} filter${remove.length !== 1 ? 's' : ''}`)
+  }
+
+  if (updates.sort) {
+    const sort = updates.sort as { field: string; dir: string }
+    parts.push(`Sorted by ${sort.field} ${sort.dir}`)
+  }
+
+  if (updates.search !== undefined) {
+    parts.push(updates.search ? `Searching "${updates.search}"` : 'Cleared search')
+  }
+
+  const columns = updates.columns as Record<string, unknown> | undefined
+  if (columns) {
+    const set = columns.set as string[] | undefined
+    if (set) parts.push(`Set ${set.length} column${set.length !== 1 ? 's' : ''}`)
+    const add = columns.add as string[] | undefined
+    if (add?.length) parts.push(`Added ${add.length} column${add.length !== 1 ? 's' : ''}`)
+    const remove = columns.remove as string[] | undefined
+    if (remove?.length) parts.push(`Removed ${remove.length} column${remove.length !== 1 ? 's' : ''}`)
+  }
+
+  return parts.length > 0 ? parts.join(', ') : 'Updated view'
+}
+
+export const getAppActionCardData = (tool: ToolCall): AppActionCardData | null => {
+  if (tool.name !== 'app-navigation') return null
+  const result = tool.result as Record<string, unknown> | undefined
+
+  // While pending/running, derive label from input
+  if (!result || !result.success) {
+    const input = normalizeToolInput(tool.input) as Record<string, unknown> | undefined
+    if (!input) return null
+    const action = input.action as string
+    switch (action) {
+      case 'open-note': return { action, label: `Opening ${(input.path as string || '').split('/').pop()?.replace(/\.md$/, '') || 'note'}...` }
+      case 'open-view': return { action, label: `Opening ${input.view} view...` }
+      case 'update-base-view': return { action, label: 'Updating view...' }
+      case 'create-base': return { action, label: `Creating "${input.name}"...` }
+      case 'get-base-state': return null // renders as normal tool block
+      default: return null
+    }
+  }
+
+  switch (result.action) {
+    case 'open-note': {
+      const filePath = result.path as string || ''
+      const name = filePath.split('/').pop()?.replace(/\.md$/, '') || 'note'
+      return { action: 'open-note', label: `Opened ${name}` }
+    }
+    case 'open-view':
+      return { action: 'open-view', label: `Opened ${result.view} view` }
+    case 'update-base-view':
+      return {
+        action: 'update-base-view',
+        label: summarizeFilterUpdates(result.updates as Record<string, unknown> || {}),
+        details: result.updates as Record<string, unknown>,
+      }
+    case 'create-base':
+      return { action: 'create-base', label: `Created base "${result.name}"` }
+    default:
+      return null // get-base-state renders as normal tool block
+  }
+}
+
+// Parse attached files from message content and return clean message + file paths.
+export const parseAttachedFiles = (content: string): { message: string; files: string[] } => {
+  const attachedFilesRegex = /<attached-files>\s*([\s\S]*?)\s*<\/attached-files>/
+  const match = content.match(attachedFilesRegex)
+
+  if (!match) {
+    return { message: content, files: [] }
+  }
+
+  const filesXml = match[1]
+  const filePathRegex = /<file path="([^"]+)">/g
+  const files: string[] = []
+  let fileMatch
+  while ((fileMatch = filePathRegex.exec(filesXml)) !== null) {
+    files.push(fileMatch[1])
+  }
+
+  let cleanMessage = content.replace(attachedFilesRegex, '').trim()
+  for (const filePath of files) {
+    const fileName = filePath.split('/').pop()?.replace(/\.md$/i, '') || ''
+    if (!fileName) continue
+    const mentionRegex = new RegExp(`@${fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'gi')
+    cleanMessage = cleanMessage.replace(mentionRegex, '')
+  }
+
+  return { message: cleanMessage.trim(), files }
+}
+
+export const inferRunTitleFromMessage = (content: string): string | undefined => {
+  const { message } = parseAttachedFiles(content)
+  const normalized = message.replace(/\s+/g, ' ').trim()
+  if (!normalized) return undefined
+  return normalized.length > 100 ? normalized.substring(0, 100) : normalized
+}

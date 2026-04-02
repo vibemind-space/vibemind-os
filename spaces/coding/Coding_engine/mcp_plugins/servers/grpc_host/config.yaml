@@ -1,0 +1,105 @@
+# EventFixTeam Konfiguration
+
+server:
+  host: localhost
+  port: 50051
+  max_workers: 10
+  timeout: 300  # Sekunden
+
+# Agent-Konfiguration
+agents:
+  code:
+    count: 2
+    capabilities:
+      - file_write
+    timeout: 120
+    retry_count: 3
+  
+  fix:
+    count: 2
+    capabilities:
+      - docker
+      - redis
+      - postgres
+    timeout: 300
+    retry_count: 2
+  
+  debug:
+    count: 1
+    capabilities:
+      - docker
+      - redis
+      - postgres
+    timeout: 180
+    retry_count: 1
+  
+  test:
+    count: 1
+    capabilities:
+      - playwright
+    timeout: 240
+    retry_count: 2
+
+# Tool-Konfiguration
+tools:
+  file_write:
+    enabled: true
+    max_file_size: 10485760  # 10MB
+    allowed_extensions:
+      - .py
+      - .js
+      - .ts
+      - .json
+      - .yaml
+      - .yml
+      - .md
+      - .txt
+      - .html
+      - .css
+  
+  docker:
+    enabled: true
+    max_containers: 10
+    default_timeout: 300
+  
+  redis:
+    enabled: true
+    host: localhost
+    port: 6379
+    db: 0
+    max_connections: 10
+  
+  postgres:
+    enabled: true
+    host: localhost
+    port: 5432
+    database: eventfix
+    max_connections: 10
+  
+  playwright:
+    enabled: true
+    headless: true
+    timeout: 30000  # Millisekunden
+    screenshot_on_failure: true
+
+# Logging-Konfiguration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: logs/eventfix.log
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# Task-Konfiguration
+tasks:
+  max_queue_size: 100
+  max_retries: 3
+  retry_delay: 5  # Sekunden
+  cleanup_interval: 3600  # Sekunden (1 Stunde)
+  task_retention: 86400  # Sekunden (24 Stunden)
+
+# Monitoring-Konfiguration
+monitoring:
+  enabled: true
+  metrics_port: 9090
+  health_check_interval: 30  # Sekunden

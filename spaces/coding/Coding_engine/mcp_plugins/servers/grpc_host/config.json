@@ -1,0 +1,38 @@
+{
+  "agents": [
+    {
+      "id": "code_writer_1",
+      "type": "code_writer",
+      "config": {
+        "max_concurrent_tasks": 3,
+        "task_timeout": 300
+      }
+    },
+    {
+      "id": "debugger_1",
+      "type": "debugger",
+      "config": {
+        "max_concurrent_tasks": 2,
+        "task_timeout": 600,
+        "log_sources": ["docker", "redis", "postgres"]
+      }
+    },
+    {
+      "id": "tester_1",
+      "type": "tester",
+      "config": {
+        "max_concurrent_tasks": 2,
+        "task_timeout": 900,
+        "test_framework": "playwright"
+      }
+    }
+  ],
+  "server": {
+    "address": "localhost:50051",
+    "max_workers": 10
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}

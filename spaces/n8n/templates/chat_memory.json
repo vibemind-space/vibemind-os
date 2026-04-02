@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "description": "Buffer Window Memory — gives the AI Agent conversation memory",
+    "placeholders": ["window_size"]
+  },
+  "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+  "typeVersion": 1.3,
+  "name": "Window Buffer Memory",
+  "position": [600, 500],
+  "parameters": {
+    "contextWindowLength": 10
+  }
+}

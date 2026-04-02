@@ -1,0 +1,91 @@
+# HybridPipeline Step Configuration
+# Defines default MCP servers, enrichment questions, and step behavior.
+
+# --- Default MCP Servers (always available, no API key needed) ---
+default_mcp_servers:
+  - name: "context7"
+    description: "Library documentation lookup (AutoGen 0.4, FastAPI, Pydantic, etc.)"
+    requires_key: false
+    use_cases:
+      - "CoderAgent: aktuelle API-Docs beim Code-Generieren"
+      - "SwarmManager: Framework-Capabilities prüfen"
+
+  - name: "web_fetch"
+    description: "Fetch and read web pages (URLs, APIs, docs)"
+    requires_key: false
+    use_cases:
+      - "SwarmManager: Use-Case recherchieren"
+      - "CoderAgent: externe API-Docs lesen"
+
+  - name: "filesystem"
+    description: "Read/write local files in sandbox"
+    requires_key: false
+    use_cases:
+      - "ValidatorAgent: Output schreiben"
+      - "ExportAgent: Git-Repo erstellen"
+
+# --- Optional MCP Servers (need API key or Docker) ---
+optional_mcp_servers:
+  - name: "brave-search"
+    description: "Web search via Brave API"
+    requires_key: true
+    key_name: "BRAVE_API_KEY"
+    docker_secret: "brave_api_key"
+
+  - name: "postgres"
+    description: "PostgreSQL database access"
+    requires_key: true
+    key_name: "POSTGRES_URL"
+    docker_secret: "postgres_url"
+
+  - name: "github"
+    description: "GitHub API (repos, issues, PRs)"
+    requires_key: true
+    key_name: "GITHUB_TOKEN"
+    docker_secret: "github_token"
+
+  - name: "tavily"
+    description: "AI-powered web search"
+    requires_key: true
+    key_name: "TAVILY_API_KEY"
+    docker_secret: "tavily_api_key"
+
+  - name: "supabase"
+    description: "Supabase database + auth"
+    requires_key: true
+    key_name: "SUPABASE_URL"
+    docker_secret: "supabase_url"
+
+# --- Enrichment (Pre-Pipeline Voice Dialog) ---
+enrichment:
+  enabled: true
+  min_words: 8          # Tasks shorter than this trigger enrichment
+  min_details: 3        # Need 3+ detail keywords to skip enrichment
+  questions:
+    - id: "data_sources"
+      de: "Was fuer Datenquellen soll das Team nutzen? Z.B. API, Datenbank, CSV, Web-Scraping?"
+      en: "What data sources? API, database, CSV, web scraping?"
+      skip_keywords: ["datenquelle", "datenbank", "api", "csv", "scrape", "web"]
+
+    - id: "output_format"
+      de: "Was soll der Output sein? Report, Email, Dashboard, JSON-API?"
+      en: "What output? Report, email, dashboard, JSON API?"
+      skip_keywords: ["report", "email", "dashboard", "json", "pdf", "bericht"]
+
+    - id: "mcp_servers"
+      de: "Sollen spezielle Tools aktiviert werden? brave-search, postgres, context7? Oder automatisch?"
+      en: "Any specific tools? brave-search, postgres, context7? Or auto-select?"
+      skip_keywords: ["brave", "postgres", "mcp", "tool", "server"]
+
+# --- Docker Secrets ---
+secrets:
+  backend: "docker"     # "docker" (Swarm secrets) or "env" (.env file)
+  mount_path: "/run/secrets"
+  # Keys stored as Docker Secrets:
+  managed_keys:
+    - OPENAI_API_KEY
+    - BRAVE_API_KEY
+    - GITHUB_TOKEN
+    - POSTGRES_URL
+    - TAVILY_API_KEY
+    - SUPABASE_URL

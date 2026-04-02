@@ -1,0 +1,60 @@
+{
+  "name": "coding-engine-dashboard",
+  "version": "1.0.0",
+  "description": "Electron Dashboard for Coding Engine - Project Management with Live Preview",
+  "main": "out/main/main.js",
+  "scripts": {
+    "dev": "ELECTRON_RENDERER_URL=http://localhost:5173 electron-vite dev",
+    "dev:web": "cd ../web-app/front && npm run dev",
+    "dev:electron": "electron-vite build && node start-electron.js",
+    "build:renderer": "cd ../web-app/front && npm run build",
+    "build:electron": "electron-vite build",
+    "build": "npm run build:renderer && npm run build:electron",
+    "build:web": "vite build",
+    "build:embedded": "vite build --config vite.embedded.config.ts",
+    "preview": "electron-vite preview",
+    "start": "electron-vite build && node start-electron.js",
+    "postinstall": "electron-builder install-app-deps",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "electron": "^28.3.3",
+    "lucide-react": "^0.294.0",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "electron-builder": "^24.9.1",
+    "electron-vite": "^2.0.0",
+    "postcss": "^8.4.32",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.7"
+  },
+  "build": {
+    "appId": "com.coding-engine.dashboard",
+    "productName": "Coding Engine Dashboard",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

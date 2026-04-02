@@ -1,0 +1,431 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: colonies.colony.codingengine.io
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: crd
+spec:
+  group: colony.codingengine.io
+  names:
+    plural: colonies
+    singular: colony
+    kind: Colony
+    shortNames:
+      - col
+    categories:
+      - colony
+      - all
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              properties:
+                maxCells:
+                  type: integer
+                  description: "Maximum number of cells in this colony"
+                  default: 50
+                  minimum: 1
+                  maximum: 500
+                minHealthRatio:
+                  type: number
+                  description: "Minimum healthy cells ratio before rebalancing"
+                  default: 0.8
+                  minimum: 0.0
+                  maximum: 1.0
+                healthCheckInterval:
+                  type: integer
+                  description: "Seconds between colony-wide health checks"
+                  default: 30
+                  minimum: 5
+                  maximum: 300
+                autoScaling:
+                  type: object
+                  description: "Auto-scaling configuration"
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: true
+                    minReplicas:
+                      type: integer
+                      default: 1
+                      minimum: 0
+                    maxReplicas:
+                      type: integer
+                      default: 10
+                      minimum: 1
+                    targetCPUUtilization:
+                      type: integer
+                      description: "Target CPU utilization percentage"
+                      default: 70
+                      minimum: 1
+                      maximum: 100
+                    targetMemoryUtilization:
+                      type: integer
+                      description: "Target memory utilization percentage"
+                      default: 80
+                      minimum: 1
+                      maximum: 100
+                    scaleDownStabilizationSeconds:
+                      type: integer
+                      description: "Seconds to wait before scaling down"
+                      default: 300
+                      minimum: 0
+                mutationPolicy:
+                  type: object
+                  description: "Policy for handling mutations"
+                  properties:
+                    autoApproveLevel:
+                      type: string
+                      description: "Maximum severity for auto-approval"
+                      enum:
+                        - low
+                        - medium
+                        - high
+                        - none
+                      default: "medium"
+                    requireApprovalFor:
+                      type: array
+                      description: "Mutation types requiring approval"
+                      items:
+                        type: string
+                        enum:
+                          - critical
+                          - high
+                          - security
+                          - api_change
+                          - schema_migration
+                      default:
+                        - critical
+                        - high
+                    approvalTimeoutMinutes:
+                      type: integer
+                      description: "Minutes to wait for approval before auto-reject"
+                      default: 60
+                      minimum: 1
+                    maxConsecutiveMutations:
+                      type: integer
+                      description: "Max mutations before requiring cooldown"
+                      default: 5
+                      minimum: 1
+                    mutationCooldownMinutes:
+                      type: integer
+                      description: "Cooldown period after max mutations"
+                      default: 10
+                      minimum: 0
+                recoveryPolicy:
+                  type: object
+                  description: "Policy for cell recovery"
+                  properties:
+                    maxRecoveryAttempts:
+                      type: integer
+                      description: "Max recovery attempts before autophagy"
+                      default: 3
+                      minimum: 1
+                    recoveryBackoffSeconds:
+                      type: integer
+                      description: "Initial backoff between recovery attempts"
+                      default: 30
+                      minimum: 5
+                    recoveryBackoffMultiplier:
+                      type: number
+                      description: "Backoff multiplier for each attempt"
+                      default: 2.0
+                      minimum: 1.0
+                    autoRestart:
+                      type: boolean
+                      description: "Automatically restart failed cells"
+                      default: true
+                    replaceOnAutophagy:
+                      type: boolean
+                      description: "Spawn replacement cell on autophagy"
+                      default: true
+                securityPolicy:
+                  type: object
+                  description: "Security configuration"
+                  properties:
+                    enforceNetworkPolicies:
+                      type: boolean
+                      default: true
+                    enforceResourceQuotas:
+                      type: boolean
+                      default: true
+                    requireImageScanning:
+                      type: boolean
+                      description: "Require vulnerability scanning before deploy"
+                      default: true
+                    allowExternalEgress:
+                      type: boolean
+                      description: "Allow cells to access external networks"
+                      default: false
+                    vaultIntegration:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                          default: false
+                        vaultAddress:
+                          type: string
+                        secretPath:
+                          type: string
+                          default: "secret/data/colony"
+                    allowedRegistries:
+                      type: array
+                      description: "Allowed container registries"
+                      items:
+                        type: string
+                      default:
+                        - "docker.io"
+                        - "ghcr.io"
+                resourceQuotas:
+                  type: object
+                  description: "Resource quotas for the colony"
+                  properties:
+                    maxTotalCPU:
+                      type: string
+                      description: "Maximum total CPU for all cells"
+                      default: "10"
+                    maxTotalMemory:
+                      type: string
+                      description: "Maximum total memory for all cells"
+                      default: "20Gi"
+                    maxTotalStorage:
+                      type: string
+                      description: "Maximum total ephemeral storage"
+                      default: "50Gi"
+                    maxPodsPerCell:
+                      type: integer
+                      default: 5
+                      minimum: 1
+                observability:
+                  type: object
+                  description: "Observability configuration"
+                  properties:
+                    metricsEnabled:
+                      type: boolean
+                      default: true
+                    metricsPort:
+                      type: integer
+                      default: 9090
+                      minimum: 1
+                      maximum: 65535
+                    tracingEnabled:
+                      type: boolean
+                      default: false
+                    logLevel:
+                      type: string
+                      enum:
+                        - debug
+                        - info
+                        - warning
+                        - error
+                      default: "info"
+                    eventRetentionDays:
+                      type: integer
+                      description: "Days to retain colony events"
+                      default: 7
+                      minimum: 1
+                tenantId:
+                  type: string
+                  description: "Tenant ID for multi-tenancy isolation"
+                selector:
+                  type: object
+                  description: "Label selector for cells in this colony"
+                  properties:
+                    matchLabels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    matchExpressions:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - key
+                          - operator
+                        properties:
+                          key:
+                            type: string
+                          operator:
+                            type: string
+                            enum:
+                              - In
+                              - NotIn
+                              - Exists
+                              - DoesNotExist
+                          values:
+                            type: array
+                            items:
+                              type: string
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  description: "Current colony phase"
+                  enum:
+                    - initializing
+                    - running
+                    - rebalancing
+                    - degraded
+                    - critical
+                    - terminating
+                    - terminated
+                totalCells:
+                  type: integer
+                  description: "Total number of cells"
+                  default: 0
+                healthyCells:
+                  type: integer
+                  description: "Number of healthy cells"
+                  default: 0
+                degradedCells:
+                  type: integer
+                  description: "Number of degraded cells"
+                  default: 0
+                failedCells:
+                  type: integer
+                  description: "Number of failed/terminated cells"
+                  default: 0
+                cellsInRecovery:
+                  type: integer
+                  description: "Number of cells currently recovering"
+                  default: 0
+                cellsInMutation:
+                  type: integer
+                  description: "Number of cells currently mutating"
+                  default: 0
+                healthRatio:
+                  type: number
+                  description: "Ratio of healthy cells"
+                  minimum: 0.0
+                  maximum: 1.0
+                convergenceStatus:
+                  type: string
+                  description: "Current convergence status"
+                  enum:
+                    - converged
+                    - converging
+                    - rebalancing
+                    - recovering
+                    - stalled
+                lastRebalance:
+                  type: string
+                  format: date-time
+                  description: "Timestamp of last rebalance"
+                lastHealthCheck:
+                  type: string
+                  format: date-time
+                  description: "Timestamp of last colony-wide health check"
+                totalMutations:
+                  type: integer
+                  description: "Total mutations across all cells"
+                  default: 0
+                successfulMutations:
+                  type: integer
+                  description: "Successful mutations count"
+                  default: 0
+                failedMutations:
+                  type: integer
+                  description: "Failed mutations count"
+                  default: 0
+                autophagyCount:
+                  type: integer
+                  description: "Number of cells terminated via autophagy"
+                  default: 0
+                pendingApprovals:
+                  type: integer
+                  description: "Number of mutations waiting for approval"
+                  default: 0
+                resourceUsage:
+                  type: object
+                  description: "Current resource usage"
+                  properties:
+                    totalCPU:
+                      type: string
+                    totalMemory:
+                      type: string
+                    totalStorage:
+                      type: string
+                cells:
+                  type: array
+                  description: "List of cell references in this colony"
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      uid:
+                        type: string
+                      status:
+                        type: string
+                      healthScore:
+                        type: number
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - Ready
+                          - Healthy
+                          - Rebalancing
+                          - QuotaExceeded
+                          - Available
+                      status:
+                        type: string
+                        enum:
+                          - "True"
+                          - "False"
+                          - "Unknown"
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                observedGeneration:
+                  type: integer
+                  description: "Last observed generation"
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Status
+          type: string
+          jsonPath: .status.phase
+        - name: Cells
+          type: integer
+          jsonPath: .status.totalCells
+        - name: Healthy
+          type: integer
+          jsonPath: .status.healthyCells
+        - name: Degraded
+          type: integer
+          jsonPath: .status.degradedCells
+        - name: Health%
+          type: number
+          jsonPath: .status.healthRatio
+          format: float
+        - name: Convergence
+          type: string
+          jsonPath: .status.convergenceStatus
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

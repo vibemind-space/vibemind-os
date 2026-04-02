@@ -1,0 +1,8 @@
+{
+  "apiProvider": "openai",
+  "openAiApiKey": "env:OPENAI_API_KEY",
+  "openAiModelId": "gpt-5.4",
+  "autoApprove": true,
+  "maxConcurrentRequests": 4,
+  "telemetryEnabled": false
+}

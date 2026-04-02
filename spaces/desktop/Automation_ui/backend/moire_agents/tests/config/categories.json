@@ -1,0 +1,70 @@
+{
+  "version": "1.0.0",
+  "created": "2025-12-12T08:28:36.064078",
+  "lastUpdated": "2025-12-12T08:28:36.064078",
+  "settings": {
+    "autoApproveThreshold": 3,
+    "enableHierarchy": true,
+    "maxPendingCategories": 50
+  },
+  "categories": {
+    "button": {
+      "description": "Clickable UI element that triggers an action",
+      "examples": [],
+      "parent": null,
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2025-12-12T08:28:36.064078"
+    },
+    "icon": {
+      "description": "Small graphical symbol",
+      "examples": [],
+      "parent": null,
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2025-12-12T08:28:36.064078"
+    },
+    "input": {
+      "description": "Text input field or form control",
+      "examples": [],
+      "parent": null,
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2025-12-12T08:28:36.064078"
+    },
+    "text": {
+      "description": "Static text or label",
+      "examples": [],
+      "parent": null,
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2025-12-12T08:28:36.064078"
+    },
+    "link": {
+      "description": "Clickable link element",
+      "examples": [],
+      "parent": null,
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2025-12-12T08:28:36.064078"
+    },
+    "container": {
+      "description": "Layout container grouping elements",
+      "examples": [],
+      "parent": null,
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2025-12-12T08:28:36.064078"
+    },
+    "unknown": {
+      "description": "Unidentified UI element",
+      "examples": [],
+      "parent": null,
+      "usageCount": 0,
+      "createdByLlm": false,
+      "createdAt": "2025-12-12T08:28:36.064078"
+    }
+  },
+  "pendingCategories": [],
+  "categoryHistory": []
+}

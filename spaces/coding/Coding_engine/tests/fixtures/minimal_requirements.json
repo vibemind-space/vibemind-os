@@ -1,0 +1,25 @@
+{
+  "requirements": [
+    {
+      "id": "REQ-E2E-001",
+      "name": "Create simple button component",
+      "description": "A basic React button component for E2E testing",
+      "priority": "high",
+      "category": "functional"
+    },
+    {
+      "id": "REQ-E2E-002", 
+      "name": "Create REST API endpoint",
+      "description": "A simple GET endpoint returning JSON data",
+      "priority": "high",
+      "category": "functional"
+    },
+    {
+      "id": "REQ-E2E-003",
+      "name": "Add user authentication",
+      "description": "JWT-based authentication system",
+      "priority": "medium",
+      "category": "security"
+    }
+  ]
+}

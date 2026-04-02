@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* === STRICT MODE MIGRATION (Phase 1) === */
+    /* Aktivierte Optionen für bessere Typsicherheit */
+    "strict": false,                         // Phase 3: Nach Behebung aller Typ-Probleme
+    "strictNullChecks": true,               // AKTIVIERT: Verhindert null/undefined Fehler
+    "strictFunctionTypes": true,            // AKTIVIERT: Strenge Funktionstyp-Prüfung
+    "strictBindCallApply": true,            // AKTIVIERT: Strenge bind/call/apply Prüfung
+    "noImplicitThis": true,                 // AKTIVIERT: Kein implizites this
+
+    /* === PHASE 2: Nach Behebung der any-Typen === */
+    "noImplicitAny": false,                 // TODO: Nach Behebung der 76 any-Typen aktivieren
+    "strictPropertyInitialization": false,  // TODO: Nach Klassen-Cleanup aktivieren
+
+    /* === UNUSED CODE DETECTION === */
+    "noUnusedLocals": false,                // TODO: Nach Code-Cleanup aktivieren
+    "noUnusedParameters": false,            // TODO: Nach Code-Cleanup aktivieren
+
+    /* === SWITCH/CATCH SAFETY === */
+    "noFallthroughCasesInSwitch": true,     // AKTIVIERT: Switch-Case Sicherheit
+    "useUnknownInCatchVariables": true,     // AKTIVIERT: catch(e) ist unknown statt any
+
+    /* === PATH ALIASES === */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}

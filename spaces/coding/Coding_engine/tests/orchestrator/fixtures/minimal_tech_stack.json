@@ -1,0 +1,10 @@
+{
+  "tech_stack": {
+    "id": "01-web-app",
+    "name": "Simple Web App",
+    "framework": "vanilla",
+    "language": "typescript",
+    "build_tool": "vite",
+    "test_framework": "vitest"
+  }
+}

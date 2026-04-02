@@ -1,0 +1,368 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: cells.colony.codingengine.io
+  annotations:
+    description: "Cell represents an autonomous microservice unit in the Cell Colony system"
+spec:
+  group: colony.codingengine.io
+  names:
+    plural: cells
+    singular: cell
+    kind: Cell
+    shortNames:
+      - cel
+    categories:
+      - colony
+      - all
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Status
+          type: string
+          jsonPath: .status.phase
+        - name: Health
+          type: number
+          jsonPath: .status.healthScore
+        - name: Version
+          type: string
+          jsonPath: .status.version
+        - name: Mutations
+          type: integer
+          jsonPath: .status.mutationCount
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - spec
+          properties:
+            spec:
+              type: object
+              required:
+                - name
+                - sourceType
+                - sourceRef
+              properties:
+                name:
+                  type: string
+                  description: "Human-readable name for the cell"
+                  minLength: 1
+                  maxLength: 63
+                  pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+
+                sourceType:
+                  type: string
+                  description: "How the cell's code is obtained"
+                  enum:
+                    - llm_generated
+                    - repo_clone
+                    - template
+                    - marketplace
+
+                sourceRef:
+                  type: string
+                  description: "Reference to source (prompt, repo URL, template name, or marketplace namespace)"
+                  minLength: 1
+
+                workingDir:
+                  type: string
+                  description: "Local path to cell's code"
+
+                image:
+                  type: string
+                  description: "Docker image name (without tag)"
+
+                imageTag:
+                  type: string
+                  description: "Docker image tag"
+                  default: "latest"
+
+                resources:
+                  type: object
+                  description: "Resource limits and requests"
+                  properties:
+                    cpuRequest:
+                      type: string
+                      default: "100m"
+                    cpuLimit:
+                      type: string
+                      default: "500m"
+                    memoryRequest:
+                      type: string
+                      default: "128Mi"
+                    memoryLimit:
+                      type: string
+                      default: "512Mi"
+                    gpuRequest:
+                      type: string
+                    gpuLimit:
+                      type: string
+                    ephemeralStorageLimit:
+                      type: string
+                      default: "1Gi"
+
+                healthCheck:
+                  type: object
+                  description: "Health check configuration"
+                  properties:
+                    path:
+                      type: string
+                      default: "/health"
+                    port:
+                      type: integer
+                      default: 8080
+                      minimum: 1
+                      maximum: 65535
+                    initialDelaySeconds:
+                      type: integer
+                      default: 30
+                      minimum: 0
+                    periodSeconds:
+                      type: integer
+                      default: 10
+                      minimum: 1
+                    timeoutSeconds:
+                      type: integer
+                      default: 5
+                      minimum: 1
+                    failureThreshold:
+                      type: integer
+                      default: 3
+                      minimum: 1
+                    successThreshold:
+                      type: integer
+                      default: 1
+                      minimum: 1
+
+                ports:
+                  type: array
+                  description: "Ports exposed by the cell"
+                  items:
+                    type: integer
+                    minimum: 1
+                    maximum: 65535
+                  default:
+                    - 8080
+
+                envVars:
+                  type: object
+                  description: "Environment variables for the cell"
+                  additionalProperties:
+                    type: string
+
+                envFrom:
+                  type: array
+                  description: "Environment sources (ConfigMaps, Secrets)"
+                  items:
+                    type: object
+                    properties:
+                      configMapRef:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                      secretRef:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+
+                dependsOn:
+                  type: array
+                  description: "Cell IDs this cell depends on"
+                  items:
+                    type: string
+
+                mutationPolicy:
+                  type: object
+                  description: "Mutation approval policy"
+                  properties:
+                    autoApproveLevel:
+                      type: string
+                      description: "Max severity level for auto-approval"
+                      enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                        - none
+                      default: "medium"
+                    maxMutations:
+                      type: integer
+                      description: "Max mutations before autophagy"
+                      default: 10
+                      minimum: 1
+                    approvalTimeoutSeconds:
+                      type: integer
+                      description: "Timeout for mutation approval"
+                      default: 300
+                      minimum: 60
+
+                ownerTenantId:
+                  type: string
+                  description: "Tenant ID for multi-tenancy"
+
+                labels:
+                  type: object
+                  description: "Custom labels"
+                  additionalProperties:
+                    type: string
+
+                annotations:
+                  type: object
+                  description: "Custom annotations"
+                  additionalProperties:
+                    type: string
+
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  description: "Current lifecycle phase"
+                  enum:
+                    - Pending
+                    - Initializing
+                    - Building
+                    - Deploying
+                    - Healthy
+                    - Degraded
+                    - Recovering
+                    - Mutating
+                    - Terminating
+                    - Terminated
+                  default: "Pending"
+
+                healthScore:
+                  type: number
+                  description: "Health score 0.0-1.0"
+                  minimum: 0
+                  maximum: 1
+                  default: 1.0
+
+                lastHealthCheck:
+                  type: string
+                  format: date-time
+                  description: "Timestamp of last health check"
+
+                consecutiveFailures:
+                  type: integer
+                  description: "Number of consecutive health check failures"
+                  default: 0
+
+                consecutiveSuccesses:
+                  type: integer
+                  description: "Number of consecutive health check successes"
+                  default: 0
+
+                version:
+                  type: string
+                  description: "Current semantic version"
+                  default: "1.0.0"
+
+                gitCommit:
+                  type: string
+                  description: "Current git commit hash"
+
+                previousVersions:
+                  type: array
+                  description: "List of previous versions"
+                  items:
+                    type: string
+
+                mutationCount:
+                  type: integer
+                  description: "Total mutations applied"
+                  default: 0
+
+                lastMutation:
+                  type: string
+                  format: date-time
+                  description: "Timestamp of last mutation"
+
+                pendingMutation:
+                  type: object
+                  description: "Details of pending mutation awaiting approval"
+                  properties:
+                    severity:
+                      type: string
+                      enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    triggerEvent:
+                      type: string
+                    requestedAt:
+                      type: string
+                      format: date-time
+                    expiresAt:
+                      type: string
+                      format: date-time
+
+                deploymentName:
+                  type: string
+                  description: "K8s Deployment name"
+
+                serviceName:
+                  type: string
+                  description: "K8s Service name"
+
+                podName:
+                  type: string
+                  description: "Current pod name"
+
+                podIP:
+                  type: string
+                  description: "Current pod IP"
+
+                startedAt:
+                  type: string
+                  format: date-time
+                  description: "When the cell started running"
+
+                terminatedAt:
+                  type: string
+                  format: date-time
+                  description: "When the cell was terminated"
+
+                conditions:
+                  type: array
+                  description: "Current conditions"
+                  items:
+                    type: object
+                    required:
+                      - type
+                      - status
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - "True"
+                          - "False"
+                          - "Unknown"
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+
+                message:
+                  type: string
+                  description: "Human-readable status message"
+
+                observedGeneration:
+                  type: integer
+                  description: "Generation observed by controller"

@@ -1,0 +1,7 @@
+gateway:
+  bind: lan
+  port: 18789
+  auth:
+    mode: none
+  controlUi:
+    dangerouslyAllowHostHeaderOriginFallback: true

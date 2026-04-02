@@ -1,0 +1,57 @@
+{
+  "enabled": true,
+  "gateway": {
+    "port": 18789,
+    "host": "127.0.0.1"
+  },
+  "backend": {
+    "url": "http://localhost:8007",
+    "websocket_url": "ws://localhost:8007/ws/clawdbot",
+    "api_prefix": "/api/clawdbot"
+  },
+  "platforms": {
+    "whatsapp": {
+      "enabled": true,
+      "dm_policy": "pairing"
+    },
+    "telegram": {
+      "enabled": true,
+      "dm_policy": "open"
+    },
+    "discord": {
+      "enabled": true,
+      "dm_policy": "pairing"
+    },
+    "slack": {
+      "enabled": true,
+      "dm_policy": "pairing"
+    },
+    "signal": {
+      "enabled": true,
+      "dm_policy": "pairing"
+    },
+    "imessage": {
+      "enabled": false,
+      "dm_policy": "pairing"
+    }
+  },
+  "security": {
+    "allowed_users": [],
+    "blocked_users": [],
+    "rate_limit": {
+      "commands_per_minute": 10,
+      "screenshots_per_minute": 5
+    },
+    "dangerous_commands_blocked": true
+  },
+  "notifications": {
+    "on_task_complete": true,
+    "on_error": true,
+    "on_screenshot": false
+  },
+  "logging": {
+    "level": "INFO",
+    "log_commands": true,
+    "log_results": true
+  }
+}

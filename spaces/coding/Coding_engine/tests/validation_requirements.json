@@ -1,0 +1,80 @@
+{
+  "project": {
+    "name": "electron-validation-test",
+    "description": "Simple Electron counter app for system validation",
+    "type": "electron",
+    "version": "1.0.0"
+  },
+  "architecture": {
+    "frontend": "electron",
+    "renderer": "vanilla-html-css-js",
+    "framework": "electron-vite",
+    "styling": "css"
+  },
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "title": "Main Window Display",
+      "description": "Application displays a main window with title 'Counter App'",
+      "priority": "high",
+      "acceptance_criteria": [
+        "Window opens on startup",
+        "Window has title 'Counter App'",
+        "Window is 800x600 pixels"
+      ]
+    },
+    {
+      "id": "REQ-002",
+      "title": "Counter Display",
+      "description": "A large counter number is displayed in the center of the window",
+      "priority": "high",
+      "acceptance_criteria": [
+        "Counter displays '0' initially",
+        "Counter is centered on screen",
+        "Counter uses large, readable font"
+      ]
+    },
+    {
+      "id": "REQ-003",
+      "title": "Increment Button",
+      "description": "A button labeled '+' increments the counter when clicked",
+      "priority": "high",
+      "acceptance_criteria": [
+        "Button is visible below counter",
+        "Clicking button increases counter by 1",
+        "Button has hover state"
+      ]
+    },
+    {
+      "id": "REQ-004",
+      "title": "Decrement Button",
+      "description": "A button labeled '-' decrements the counter when clicked",
+      "priority": "high",
+      "acceptance_criteria": [
+        "Button is visible below counter",
+        "Clicking button decreases counter by 1",
+        "Counter can go negative"
+      ]
+    },
+    {
+      "id": "REQ-005",
+      "title": "Reset Button",
+      "description": "A button labeled 'Reset' resets the counter to zero",
+      "priority": "medium",
+      "acceptance_criteria": [
+        "Button is visible",
+        "Clicking resets counter to 0"
+      ]
+    }
+  ],
+  "technical_constraints": [
+    "Use electron-vite for build tooling",
+    "No external dependencies beyond Electron",
+    "Single window application"
+  ],
+  "testing": {
+    "unit_tests": true,
+    "e2e_tests": false,
+    "test_framework": "vitest"
+  }
+}

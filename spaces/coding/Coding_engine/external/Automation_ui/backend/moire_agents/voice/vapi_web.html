@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moire Voice Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        /* ============================================
+           Split Layout: Stream Left | Controls Right
+           ============================================ */
+        .split-layout {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Left: Live Desktop Stream */
+        .stream-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            min-width: 0;
+        }
+        .stream-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        .stream-header .title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #00d9ff;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .stream-header .stream-status {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            border: 1px solid;
+        }
+        .stream-status.connected { color: #4ade80; border-color: #4ade80; background: rgba(74,222,128,0.15); }
+        .stream-status.connecting { color: #ffc864; border-color: #ffc864; background: rgba(255,200,100,0.15); }
+        .stream-status.disconnected { color: #ff6464; border-color: #ff6464; background: rgba(255,100,100,0.15); }
+
+        /* Capture toggle button */
+        .capture-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #fff;
+            background: transparent;
+        }
+        .capture-toggle.off { border-color: #4ade80; color: #4ade80; }
+        .capture-toggle.off:hover { background: rgba(74,222,128,0.2); }
+        .capture-toggle.on { border-color: #ff6464; color: #ff6464; }
+        .capture-toggle.on:hover { background: rgba(255,100,100,0.2); }
+        .capture-toggle.loading { border-color: #ffc864; color: #ffc864; opacity: 0.7; pointer-events: none; }
+        .capture-toggle .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .capture-toggle.off .dot { background: #4ade80; }
+        .capture-toggle.on .dot { background: #ff6464; animation: capturePulse 1s infinite; }
+        .capture-toggle.loading .dot { background: #ffc864; }
+        @keyframes capturePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .stream-viewport {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a1a;
+            overflow: hidden;
+        }
+        .stream-viewport img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        /* Side-by-side dual monitor display */
+        .stream-monitors {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 2px;
+        }
+        .monitor-frame {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            background: #0a0a1a;
+        }
+        .monitor-frame img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .monitor-label {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.4);
+            background: rgba(0,0,0,0.5);
+            padding: 1px 6px;
+            border-radius: 3px;
+            z-index: 2;
+        }
+        .stream-placeholder {
+            color: #444;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .stream-placeholder svg {
+            width: 48px;
+            height: 48px;
+            fill: #333;
+            margin-bottom: 0.5rem;
+        }
+        .stream-fps {
+            position: absolute;
+            top: 0.4rem;
+            right: 0.4rem;
+            font-size: 0.65rem;
+            color: #4ade80;
+            background: rgba(0,0,0,0.6);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+        /* Action overlay (click marker) */
+        .action-overlay {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ff6464;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: clickPulse 0.8s ease-out forwards;
+        }
+        @keyframes clickPulse {
+            0% { box-shadow: 0 0 0 0 rgba(255,100,100,0.6); opacity: 1; }
+            70% { box-shadow: 0 0 0 20px rgba(255,100,100,0); }
+            100% { opacity: 0; }
+        }
+
+        /* Right: Voice Controls */
+        .controls-panel {
+            width: 360px;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .controls-header {
+            padding: 0.75rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .controls-header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 0.15rem;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .controls-header .subtitle {
+            color: #666;
+            font-size: 0.75rem;
+        }
+        .controls-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* Status */
+        .status {
+            padding: 0.6rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .status.ready { background: rgba(100, 255, 100, 0.2); border: 1px solid #64ff64; }
+        .status.listening { background: rgba(100, 200, 255, 0.2); border: 1px solid #64c8ff; }
+        .status.processing { background: rgba(255, 200, 100, 0.2); border: 1px solid #ffc864; }
+        .status.error { background: rgba(255, 100, 100, 0.2); border: 1px solid #ff6464; }
+
+        /* Mic Button */
+        .mic-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0.5rem auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 217, 255, 0.3);
+            flex-shrink: 0;
+        }
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(0, 217, 255, 0.5);
+        }
+        .mic-button.active {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(135deg, #ff6464, #ff8c64);
+        }
+        .mic-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .mic-button svg { width: 36px; height: 36px; fill: #1a1a2e; }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 100, 100, 0.5); }
+            50% { box-shadow: 0 0 0 15px rgba(255, 100, 100, 0); }
+        }
+
+        /* Transcript */
+        .transcript {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.75rem;
+            flex: 1;
+            min-height: 120px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        .transcript-label { font-size: 0.7rem; color: #666; margin-bottom: 0.3rem; }
+        .message { margin-bottom: 0.5rem; padding: 0.4rem; border-radius: 6px; font-size: 0.8rem; }
+        .message.user { background: rgba(0, 217, 255, 0.1); border-left: 3px solid #00d9ff; }
+        .message.system { background: rgba(0, 255, 136, 0.1); border-left: 3px solid #00ff88; }
+        .message.error { background: rgba(255, 100, 100, 0.1); border-left: 3px solid #ff6464; }
+        .message.warning { background: rgba(255, 200, 100, 0.15); border-left: 3px solid #ffc864; }
+        .message-label { font-size: 0.65rem; color: #666; margin-bottom: 0.15rem; }
+
+        /* Input Row */
+        .input-row {
+            display: flex;
+            gap: 0.4rem;
+            flex-shrink: 0;
+        }
+        .input-row input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+        .input-row input::placeholder { color: #666; }
+        .input-row button {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        /* Quick Commands */
+        .commands {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .command-chip {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            color: #fff;
+        }
+        .command-chip:hover { background: rgba(0, 217, 255, 0.3); }
+
+        .browser-warning {
+            background: rgba(255, 200, 100, 0.2);
+            border: 1px solid #ffc864;
+            padding: 0.75rem;
+            border-radius: 6px;
+            display: none;
+            font-size: 0.8rem;
+        }
+
+        /* Task List */
+        .task-list {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 6px;
+            padding: 0.5rem;
+            text-align: left;
+            display: none;
+            flex-shrink: 0;
+        }
+        .task-list.visible { display: block; }
+        .task-list-title { font-size: 0.7rem; color: #00d9ff; margin-bottom: 0.3rem; font-weight: bold; }
+        .task-item { padding: 0.2rem 0.4rem; margin-bottom: 0.15rem; border-radius: 4px; font-size: 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
+        .task-item.pending { color: #888; }
+        .task-item.in_progress { color: #ffc864; background: rgba(255, 200, 100, 0.1); }
+        .task-item.done { color: #64ff64; }
+        .task-item.failed { color: #ff6464; text-decoration: line-through; }
+        .task-icon { width: 1em; text-align: center; }
+
+        /* Intervention Controls */
+        .intervention-bar { display: none; gap: 0.4rem; justify-content: center; flex-wrap: wrap; flex-shrink: 0; }
+        .intervention-bar.visible { display: flex; }
+        .intervention-btn {
+            padding: 0.3rem 0.7rem;
+            border-radius: 5px;
+            border: 1px solid;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: #fff;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .intervention-btn.pause { border-color: #ffc864; }
+        .intervention-btn.pause:hover { background: rgba(255, 200, 100, 0.3); }
+        .intervention-btn.cancel { border-color: #ff6464; }
+        .intervention-btn.cancel:hover { background: rgba(255, 100, 100, 0.3); }
+        .intervention-btn.feedback { border-color: #00d9ff; }
+        .intervention-btn.feedback:hover { background: rgba(0, 217, 255, 0.3); }
+
+        /* Approval Bar */
+        .approval-bar {
+            display: none; flex-direction: column; gap: 0.4rem; padding: 0.6rem;
+            border: 1px solid #ffc864; border-radius: 6px; background: rgba(255, 200, 100, 0.1); flex-shrink: 0;
+        }
+        .approval-bar.visible { display: flex; }
+        .approval-bar .approval-title { font-weight: bold; color: #ffc864; font-size: 0.8rem; }
+        .approval-bar .approval-detail { color: #ccc; font-size: 0.75rem; word-break: break-all; }
+        .approval-bar .approval-buttons { display: flex; gap: 0.4rem; margin-top: 0.2rem; }
+        .approval-btn {
+            padding: 0.35rem 1rem; border-radius: 5px; border: 1px solid; cursor: pointer;
+            font-size: 0.8rem; font-weight: bold; color: #fff; transition: all 0.2s;
+        }
+        .approval-btn.approve { border-color: #4ade80; background: rgba(74, 222, 128, 0.2); }
+        .approval-btn.approve:hover { background: rgba(74, 222, 128, 0.4); }
+        .approval-btn.deny { border-color: #ff6464; background: rgba(255, 100, 100, 0.2); }
+        .approval-btn.deny:hover { background: rgba(255, 100, 100, 0.4); }
+
+        .click-confirm-bar {
+            display: none; flex-direction: column; gap: 0.4rem; padding: 0.6rem;
+            border: 1px solid #64b5f6; border-radius: 6px; background: rgba(100, 181, 246, 0.1); flex-shrink: 0;
+        }
+        .click-confirm-bar.visible { display: flex; }
+        .click-confirm-bar .confirm-title { font-weight: bold; color: #64b5f6; font-size: 0.8rem; }
+        .click-confirm-bar .confirm-detail { color: #ccc; font-size: 0.75rem; }
+        .click-confirm-bar .confirm-buttons { display: flex; gap: 0.4rem; margin-top: 0.2rem; }
+        .confirm-btn { padding: 0.35rem 1rem; border-radius: 5px; border: 1px solid; color: #fff; cursor: pointer; font-size: 0.8rem; }
+        .confirm-btn.correct { border-color: #4ade80; background: rgba(74, 222, 128, 0.2); }
+        .confirm-btn.wrong { border-color: #ff6464; background: rgba(255, 100, 100, 0.2); }
+
+        .feedback-input { display: none; gap: 0.4rem; flex-shrink: 0; }
+        .feedback-input.visible { display: flex; }
+
+        /* Live Typing Indicator */
+        .typing-indicator {
+            display: none; background: rgba(0, 217, 255, 0.08); border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 6px; padding: 0.5rem 0.75rem; font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.75rem; position: relative; overflow: hidden; flex-shrink: 0;
+        }
+        .typing-indicator.visible { display: block; }
+        .typing-indicator .typing-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; font-size: 0.65rem; color: #00d9ff; }
+        .typing-indicator .typing-progress-bar { height: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-bottom: 0.3rem; overflow: hidden; }
+        .typing-indicator .typing-progress-fill { height: 100%; background: linear-gradient(90deg, #00d9ff, #00ff88); border-radius: 2px; transition: width 0.15s ease; width: 0%; }
+        .typing-indicator .typing-text { color: #e0e0e0; white-space: pre-wrap; word-break: break-word; max-height: 80px; overflow-y: auto; line-height: 1.4; }
+        .typing-indicator .typing-cursor { display: inline-block; width: 2px; height: 1em; background: #00d9ff; margin-left: 1px; animation: blink 0.7s infinite; vertical-align: text-bottom; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Toggle row */
+        .toggle-row {
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-shrink: 0;
+        }
+        .toggle-row label { font-size: 0.7rem; color: #888; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
+
+        /* eyeTerm Camera PiP */
+        .eyeterm-pip {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            width: 200px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(0, 217, 255, 0.4);
+            background: #000;
+            z-index: 10;
+            cursor: move;
+            transition: border-color 0.3s;
+            display: none;
+        }
+        .eyeterm-pip.active { display: block; }
+        .eyeterm-pip:hover { border-color: rgba(0, 217, 255, 0.8); }
+        .eyeterm-pip img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .eyeterm-pip .pip-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px 6px;
+            background: rgba(0, 0, 0, 0.7);
+            font-size: 0.55rem;
+            color: #00d9ff;
+            z-index: 1;
+        }
+        .eyeterm-pip .pip-state {
+            font-size: 0.5rem;
+            padding: 1px 4px;
+            border-radius: 3px;
+            background: rgba(0, 217, 255, 0.2);
+            border: 1px solid rgba(0, 217, 255, 0.4);
+        }
+        .eyeterm-pip .pip-state.cursor-on { color: #4ade80; border-color: #4ade80; background: rgba(74, 222, 128, 0.2); }
+
+        /* Gaze dot overlay on desktop streams */
+        .gaze-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #00ff88;
+            background: rgba(0, 255, 136, 0.25);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 5;
+            transition: left 0.05s linear, top 0.05s linear;
+            display: none;
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.5);
+        }
+        .gaze-dot.active { display: block; }
+        .gaze-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #00ff88;
+            transform: translate(-50%, -50%);
+        }
+        .eyeterm-pip .pip-close {
+            cursor: pointer;
+            color: #ff6464;
+            font-size: 0.7rem;
+            line-height: 1;
+        }
+        .eyeterm-pip .pip-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            color: #444;
+            font-size: 0.7rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="split-layout">
+        <!-- ============================================
+             LEFT: Live Desktop Stream
+             ============================================ -->
+        <div class="stream-panel">
+            <div class="stream-header">
+                <div class="title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>
+                    Live Desktop
+                </div>
+                <button id="captureToggle" class="capture-toggle off" onclick="toggleCapture()">
+                    <span class="dot"></span>
+                    <span id="captureLabel">Stream starten</span>
+                </button>
+                <span id="streamStatus" class="stream-status disconnected">Getrennt</span>
+            </div>
+            <div class="stream-viewport" id="streamViewport">
+                <div class="stream-placeholder" id="streamPlaceholder">
+                    <svg viewBox="0 0 24 24"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>
+                    <div>Kein Desktop Stream</div>
+                    <div style="font-size:0.75rem; margin-top:0.3rem; color:#555;">Klicke "Stream starten" oben links</div>
+                </div>
+                <div class="stream-monitors" id="streamMonitors" style="display:none;">
+                    <div class="monitor-frame" id="monitorFrame0">
+                        <div class="monitor-label">Monitor 1</div>
+                        <img id="streamImage0" alt="Monitor 1">
+                    </div>
+                    <div class="monitor-frame" id="monitorFrame1">
+                        <div class="monitor-label">Monitor 2</div>
+                        <img id="streamImage1" alt="Monitor 2">
+                    </div>
+                </div>
+                <div class="stream-fps" id="streamFps" style="display:none;">0 FPS</div>
+                <!-- Gaze dot overlay -->
+                <div class="gaze-dot" id="gazeDot"></div>
+                <!-- eyeTerm Camera PiP -->
+                <div class="eyeterm-pip" id="eyetermPip">
+                    <div class="pip-header">
+                        <span>eyeTerm</span>
+                        <span class="pip-state" id="eyetermState">idle</span>
+                        <span class="pip-close" onclick="toggleEyeterm(true)">&times;</span>
+                    </div>
+                    <img id="eyetermFeed" alt="eyeTerm Camera">
+                    <div class="pip-placeholder" id="eyetermPlaceholder">Kamera nicht verbunden</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             RIGHT: Voice Controls
+             ============================================ -->
+        <div class="controls-panel">
+            <div class="controls-header">
+                <h1>Moire Voice</h1>
+                <p class="subtitle">Sprachgesteuerte Desktop-Automatisierung</p>
+            </div>
+
+            <div class="controls-body">
+                <div id="browserWarning" class="browser-warning">
+                    Browser unterstuetzt keine Spracherkennung. Chrome oder Edge verwenden.
+                </div>
+
+                <div id="status" class="status ready">
+                    Bereit - Mikrofon klicken oder Befehl tippen
+                </div>
+
+                <div id="taskList" class="task-list">
+                    <div class="task-list-title">Aufgaben:</div>
+                    <div id="taskItems"></div>
+                </div>
+
+                <div id="interventionBar" class="intervention-bar">
+                    <button class="intervention-btn pause" onclick="togglePause()" id="pauseBtn">Pause</button>
+                    <button class="intervention-btn cancel" onclick="cancelExecution()">Abbrechen</button>
+                    <button class="intervention-btn feedback" onclick="showFeedback()">Eingreifen</button>
+                </div>
+                <div id="approvalBar" class="approval-bar">
+                    <div class="approval-title" id="approvalTitle">Tool braucht Genehmigung</div>
+                    <div class="approval-detail" id="approvalDetail"></div>
+                    <div class="approval-buttons">
+                        <button class="approval-btn approve" onclick="handleToolApproval(true)">Genehmigen</button>
+                        <button class="approval-btn deny" onclick="handleToolApproval(false)">Ablehnen</button>
+                    </div>
+                </div>
+
+                <div id="clickConfirmBar" class="click-confirm-bar">
+                    <div class="confirm-title" id="confirmTitle">Klick richtig?</div>
+                    <div class="confirm-detail" id="confirmDetail"></div>
+                    <div class="confirm-buttons">
+                        <button class="confirm-btn correct" onclick="handleClickConfirm(true)">Richtig</button>
+                        <button class="confirm-btn wrong" onclick="handleClickConfirm(false)">Falsch</button>
+                    </div>
+                </div>
+
+                <div id="feedbackInput" class="feedback-input">
+                    <input type="text" id="feedbackText" placeholder="Anweisung an den Agent..."
+                           onkeypress="if(event.key==='Enter') sendFeedback()"
+                           style="flex:1; background: rgba(255,255,255,0.1); border: 1px solid rgba(0,217,255,0.3); border-radius: 5px; padding: 0.4rem; color: #fff; font-size: 0.8rem;">
+                    <button onclick="sendFeedback()" style="background: rgba(0,217,255,0.3); border: 1px solid #00d9ff; color: #fff; padding: 0.4rem 0.7rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">Senden</button>
+                </div>
+
+                <button id="micButton" class="mic-button" onclick="toggleListening()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.03 2.47 5.5 5.5 5.5S17 11.03 17 8h2c0 4.08-3.06 7.44-7 7.93V19h4v2H8v-2h4v-3.07z"/>
+                    </svg>
+                </button>
+
+                <div id="typingIndicator" class="typing-indicator">
+                    <div class="typing-header">
+                        <span>Tippe Text...</span>
+                        <span id="typingProgress">0%</span>
+                    </div>
+                    <div class="typing-progress-bar">
+                        <div id="typingProgressFill" class="typing-progress-fill"></div>
+                    </div>
+                    <div class="typing-text" id="typingText"><span class="typing-cursor"></span></div>
+                </div>
+
+                <div class="transcript">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="transcript-label">Verlauf: <span id="memoryIndicator" style="color: #00ff88; font-size: 0.65rem;"></span></div>
+                        <button onclick="newConversation()" style="background: rgba(255,100,100,0.3); border: 1px solid #ff6464; color: #fff; padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.65rem; cursor: pointer;">Neu</button>
+                    </div>
+                    <div id="messages"></div>
+                </div>
+
+                <div class="input-row">
+                    <input type="text" id="textInput" placeholder="Befehl eingeben..."
+                           onkeypress="if(event.key==='Enter') sendTextCommand()">
+                    <button onclick="sendTextCommand()">Senden</button>
+                </div>
+
+                <div class="commands">
+                    <button class="command-chip" onclick="sendCommand('Was ist auf meinem Bildschirm?')">Was sehe ich?</button>
+                    <button class="command-chip" onclick="sendCommand('Oeffne Notepad und schreib Hello World')">Notepad</button>
+                    <button class="command-chip" onclick="sendCommand('Oeffne den Rechner und rechne 42 mal 17')">Rechner</button>
+                    <button class="command-chip" onclick="sendCommand('Scrolle nach unten')">Scroll</button>
+                </div>
+
+                <div class="toggle-row">
+                    <label>
+                        <input type="checkbox" id="videoAgentToggle" style="accent-color: #00d9ff;" checked>
+                        Video Agent
+                    </label>
+                    <label>
+                        <input type="checkbox" id="eyetermToggle" style="accent-color: #00d9ff;" onchange="toggleEyeterm()" checked>
+                        eyeTerm
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // Desktop Capture Client Toggle (Start/Stop)
+        // ============================================
+        const CLIENT_API = 'http://localhost:8007/api/client';
+        let captureRunning = false;
+
+        async function toggleCapture() {
+            const btn = document.getElementById('captureToggle');
+            const label = document.getElementById('captureLabel');
+            btn.className = 'capture-toggle loading';
+            label.textContent = captureRunning ? 'Stoppe...' : 'Starte...';
+
+            const wasRunning = captureRunning;
+            try {
+                const endpoint = captureRunning ? '/stop' : '/start';
+                const resp = await fetch(CLIENT_API + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(captureRunning ? { force: false } : { auto_restart: true })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    captureRunning = !captureRunning;
+                } else {
+                    console.warn('Capture toggle failed:', data.error || data.detail);
+                }
+            } catch (e) {
+                console.error('Capture toggle error:', e);
+            }
+            updateCaptureButton();
+
+            // After starting capture, wait for the client to connect then re-subscribe
+            // so we receive frames from the newly connected desktop capture client
+            if (!wasRunning && captureRunning) {
+                setTimeout(resubscribeStream, 3000);
+                setTimeout(resubscribeStream, 6000);
+            }
+        }
+
+        function updateCaptureButton() {
+            const btn = document.getElementById('captureToggle');
+            const label = document.getElementById('captureLabel');
+            if (captureRunning) {
+                btn.className = 'capture-toggle on';
+                label.textContent = 'Stream stoppen';
+            } else {
+                btn.className = 'capture-toggle off';
+                label.textContent = 'Stream starten';
+            }
+        }
+
+        // Check initial capture client status
+        async function checkCaptureStatus() {
+            try {
+                const resp = await fetch(CLIENT_API + '/status', { signal: AbortSignal.timeout(2000) });
+                const data = await resp.json();
+                captureRunning = data.is_running || false;
+                updateCaptureButton();
+            } catch (e) {
+                // Backend not ready yet
+            }
+        }
+        checkCaptureStatus();
+
+        // ============================================
+        // Live Desktop Stream (WebSocket)
+        // ============================================
+        const WS_URL = 'ws://localhost:8007/ws/live-desktop';
+        const streamImage0 = document.getElementById('streamImage0');
+        const streamImage1 = document.getElementById('streamImage1');
+        const streamMonitors = document.getElementById('streamMonitors');
+        const streamPlaceholder = document.getElementById('streamPlaceholder');
+        const streamStatusEl = document.getElementById('streamStatus');
+        const streamFpsEl = document.getElementById('streamFps');
+        const streamViewport = document.getElementById('streamViewport');
+
+        let streamWs = null;
+        let streamClientId = 'vapi_viewer_' + Date.now();
+        let frameCount = 0;
+        let lastFpsTime = Date.now();
+        let currentFps = 0;
+        // Track real desktop resolution for action_visual overlay mapping
+        let realDesktopWidth = 1920;
+        let realDesktopHeight = 1080;
+
+        function setStreamStatus(status, text) {
+            streamStatusEl.className = 'stream-status ' + status;
+            streamStatusEl.textContent = text;
+        }
+
+        function connectStream() {
+            if (streamWs && streamWs.readyState <= 1) return;
+            setStreamStatus('connecting', 'Verbinde...');
+
+            try {
+                streamWs = new WebSocket(WS_URL);
+            } catch (e) {
+                setStreamStatus('disconnected', 'Getrennt');
+                setTimeout(connectStream, 5000);
+                return;
+            }
+
+            streamWs.onopen = () => {
+                // Send handshake
+                streamWs.send(JSON.stringify({
+                    type: 'handshake',
+                    clientInfo: {
+                        clientId: streamClientId,
+                        clientType: 'web_viewer',
+                        capabilities: ['view_stream']
+                    }
+                }));
+            };
+
+            streamWs.onmessage = (evt) => {
+                try {
+                    const msg = JSON.parse(evt.data);
+                    handleStreamMessage(msg);
+                } catch (e) {
+                    // Binary or unparseable - ignore
+                }
+            };
+
+            streamWs.onclose = () => {
+                setStreamStatus('disconnected', 'Getrennt');
+                streamFpsEl.style.display = 'none';
+                // Auto-reconnect
+                setTimeout(connectStream, 3000);
+            };
+
+            streamWs.onerror = () => {
+                // onclose will fire after this
+            };
+        }
+
+        // Re-subscribe to desktop streams (needed when capture client connects after viewer)
+        function resubscribeStream() {
+            if (streamWs && streamWs.readyState === WebSocket.OPEN) {
+                console.log('[Stream] Re-subscribing to desktop streams...');
+                streamWs.send(JSON.stringify({ type: 'subscribe_desktop_stream' }));
+            }
+        }
+
+        function handleStreamMessage(msg) {
+            switch (msg.type) {
+                case 'handshake_ack':
+                    setStreamStatus('connected', 'Verbunden');
+                    // Subscribe to all desktop streams
+                    streamWs.send(JSON.stringify({ type: 'subscribe_desktop_stream' }));
+                    break;
+
+                case 'desktop_stream_subscribed':
+                    console.log('[Stream] Subscribed to:', msg.desktopClientId || 'all', 'streams:', msg.availableStreams);
+                    // If no streams available yet (capture client not connected), retry later
+                    if (msg.availableStreams && msg.availableStreams.length === 0) {
+                        console.log('[Stream] No capture clients yet, will retry subscribe in 5s...');
+                        setTimeout(resubscribeStream, 5000);
+                    }
+                    break;
+
+                case 'frame_data':
+                    displayFrame(msg);
+                    break;
+
+                case 'desktop_frame':
+                    displayFrame(msg);
+                    break;
+
+                case 'pong':
+                    break;
+
+                default:
+                    // Other message types - ignore
+                    break;
+            }
+        }
+
+        function displayFrame(msg) {
+            const frameData = msg.frameData || msg.data;
+            if (!frameData) return;
+
+            // Route frame to the correct monitor image element
+            const monitorId = msg.monitorId || 'monitor_0';
+            const targetImg = monitorId === 'monitor_1' ? streamImage1 : streamImage0;
+
+            // Track resolution for primary monitor (used by action overlay)
+            if (monitorId === 'monitor_0') {
+                const meta = msg.metadata || {};
+                if (meta.width) realDesktopWidth = meta.width;
+                else if (msg.width) realDesktopWidth = msg.width;
+                if (meta.height) realDesktopHeight = meta.height;
+                else if (msg.height) realDesktopHeight = msg.height;
+            }
+
+            // Show image on the correct monitor panel
+            targetImg.src = 'data:image/jpeg;base64,' + frameData;
+            streamMonitors.style.display = 'flex';
+            streamPlaceholder.style.display = 'none';
+
+            // FPS counter (counts all frames from both monitors)
+            frameCount++;
+            const now = Date.now();
+            if (now - lastFpsTime >= 1000) {
+                currentFps = frameCount;
+                frameCount = 0;
+                lastFpsTime = now;
+                streamFpsEl.textContent = Math.round(currentFps / 2) + ' FPS';
+                streamFpsEl.style.display = 'block';
+            }
+        }
+
+        // Show action overlay (click marker) on primary monitor stream
+        function showActionOverlay(x, y) {
+            const img = streamImage0;
+            if (!img || !img.src) return;
+
+            const monitorFrame = document.getElementById('monitorFrame0');
+            if (!monitorFrame) return;
+
+            const rect = img.getBoundingClientRect();
+            const frameRect = monitorFrame.getBoundingClientRect();
+            const scaleX = rect.width / realDesktopWidth;
+            const scaleY = rect.height / realDesktopHeight;
+            const pixelX = (rect.left - frameRect.left) + x * scaleX;
+            const pixelY = (rect.top - frameRect.top) + y * scaleY;
+
+            const marker = document.createElement('div');
+            marker.className = 'action-overlay';
+            marker.style.left = pixelX + 'px';
+            marker.style.top = pixelY + 'px';
+            monitorFrame.appendChild(marker);
+            setTimeout(() => marker.remove(), 900);
+        }
+
+        // Keep-alive ping
+        setInterval(() => {
+            if (streamWs && streamWs.readyState === 1) {
+                streamWs.send(JSON.stringify({ type: 'ping', timestamp: new Date().toISOString() }));
+            }
+        }, 15000);
+
+        // Connect on load
+        connectStream();
+
+        // ============================================
+        // Voice Control (SSE + Speech Recognition)
+        // ============================================
+        const API_URL = 'http://localhost:8007/api/llm/intent/stream';
+        let conversationId = 'voice_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isListening = false;
+
+        let silenceTimer = null;
+        let silenceCountdown = null;
+        let collectedTranscript = '';
+        const SILENCE_TIMEOUT = 6000;
+
+        const SESSION_ROTATION_MS = 25000;
+        let sessionRotationTimer = null;
+        let isRotating = false;
+        let preservedTranscript = '';
+
+        const statusEl = document.getElementById('status');
+        const micButton = document.getElementById('micButton');
+        const messagesEl = document.getElementById('messages');
+        const textInput = document.getElementById('textInput');
+        const browserWarning = document.getElementById('browserWarning');
+
+        const typingIndicator = document.getElementById('typingIndicator');
+        const typingText = document.getElementById('typingText');
+        const typingProgressFill = document.getElementById('typingProgressFill');
+        const typingProgressLabel = document.getElementById('typingProgress');
+
+        function showTypingIndicator(show) {
+            typingIndicator.classList.toggle('visible', show);
+            if (!show) {
+                typingText.innerHTML = '<span class="typing-cursor"></span>';
+                typingProgressFill.style.width = '0%';
+                typingProgressLabel.textContent = '0%';
+            }
+        }
+
+        function updateTypingStream(event) {
+            showTypingIndicator(true);
+            const pct = Math.round((event.progress || 0) * 100);
+            typingProgressFill.style.width = pct + '%';
+            typingProgressLabel.textContent = pct + '%';
+            const escaped = (event.typed_so_far || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            typingText.innerHTML = escaped + '<span class="typing-cursor"></span>';
+            typingText.scrollTop = typingText.scrollHeight;
+        }
+
+        // Intervention system
+        const INTERVENE_URL = 'http://localhost:8007/api/llm/intent/intervene';
+        const interventionBar = document.getElementById('interventionBar');
+        const feedbackInputEl = document.getElementById('feedbackInput');
+        let isPaused = false;
+        let isExecuting = false;
+
+        function showInterventionBar(show) {
+            isExecuting = show;
+            interventionBar.classList.toggle('visible', show);
+            if (!show) {
+                feedbackInputEl.classList.remove('visible');
+                isPaused = false;
+                document.getElementById('pauseBtn').textContent = 'Pause';
+            }
+        }
+
+        async function sendIntervention(action, data = {}) {
+            try {
+                await fetch(INTERVENE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversation_id: conversationId, action, data })
+                });
+            } catch (e) { console.error('Intervention failed:', e); }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            sendIntervention(isPaused ? 'pause' : 'resume');
+            document.getElementById('pauseBtn').textContent = isPaused ? 'Weiter' : 'Pause';
+            if (isPaused) setStatus('processing', 'PAUSIERT');
+        }
+
+        function cancelExecution() {
+            sendIntervention('cancel');
+            addMessage('warning', 'Ausfuehrung abgebrochen');
+            showInterventionBar(false);
+        }
+
+        function showFeedback() {
+            feedbackInputEl.classList.toggle('visible');
+            document.getElementById('feedbackText').focus();
+        }
+
+        function sendFeedback() {
+            const text = document.getElementById('feedbackText').value.trim();
+            if (!text) return;
+            sendIntervention('feedback', { message: text });
+            addMessage('user', '[Eingriff] ' + text);
+            document.getElementById('feedbackText').value = '';
+            feedbackInputEl.classList.remove('visible');
+        }
+
+        // Tool Approval
+        let pendingApprovalTool = null;
+
+        function showApprovalBar(toolName, params, message) {
+            pendingApprovalTool = toolName;
+            document.getElementById('approvalTitle').textContent = `"${toolName}" braucht Genehmigung`;
+            const paramStr = params ? Object.entries(params).map(([k,v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`).join(', ') : '';
+            document.getElementById('approvalDetail').textContent = paramStr || message || '';
+            document.getElementById('approvalBar').classList.add('visible');
+        }
+
+        function hideApprovalBar() {
+            pendingApprovalTool = null;
+            document.getElementById('approvalBar').classList.remove('visible');
+        }
+
+        async function handleToolApproval(approved) {
+            const action = approved ? 'approve_tool' : 'deny_tool';
+            addMessage(approved ? 'system' : 'warning',
+                `[${approved ? 'GENEHMIGT' : 'ABGELEHNT'}] ${pendingApprovalTool}`);
+            hideApprovalBar();
+            await sendIntervention(action);
+        }
+
+        // Click Confirmation
+        let pendingClickElement = null;
+
+        function showClickConfirmBar(element, x, y, confirmed, threshold) {
+            pendingClickElement = element;
+            document.getElementById('confirmTitle').textContent = `Klick auf "${element}" bei (${x}, ${y}) richtig?`;
+            document.getElementById('confirmDetail').textContent = `Bestaetigungen: ${confirmed}/${threshold}`;
+            document.getElementById('clickConfirmBar').classList.add('visible');
+        }
+
+        function hideClickConfirmBar() {
+            pendingClickElement = null;
+            document.getElementById('clickConfirmBar').classList.remove('visible');
+        }
+
+        async function handleClickConfirm(correct) {
+            const action = correct ? 'confirm_click' : 'deny_click';
+            addMessage(correct ? 'system' : 'warning',
+                `[${correct ? 'RICHTIG' : 'FALSCH'}] Klick auf "${pendingClickElement}"`);
+            hideClickConfirmBar();
+            await sendIntervention(action);
+        }
+
+        function startSilenceTimer() {
+            clearSilenceTimer();
+            let remaining = SILENCE_TIMEOUT / 1000;
+            silenceCountdown = setInterval(() => {
+                remaining -= 1;
+                if (remaining > 0 && collectedTranscript.trim()) {
+                    setStatus('listening', `"${collectedTranscript.trim()}" — ${remaining}s...`);
+                }
+            }, 1000);
+            silenceTimer = setTimeout(() => {
+                clearSilenceTimer();
+                clearSessionRotation();
+                if (collectedTranscript.trim()) {
+                    const cmd = collectedTranscript.trim();
+                    collectedTranscript = '';
+                    preservedTranscript = '';
+                    isListening = false;
+                    micButton.classList.remove('active');
+                    try { recognition.stop(); } catch(e) {}
+                    sendCommand(cmd);
+                }
+            }, SILENCE_TIMEOUT);
+        }
+
+        function startSessionRotation() {
+            clearSessionRotation();
+            sessionRotationTimer = setTimeout(() => {
+                if (!isListening) return;
+                preservedTranscript = collectedTranscript;
+                isRotating = true;
+                try { recognition.stop(); } catch(e) {}
+            }, SESSION_ROTATION_MS);
+        }
+
+        function clearSessionRotation() {
+            if (sessionRotationTimer) { clearTimeout(sessionRotationTimer); sessionRotationTimer = null; }
+        }
+
+        function clearSilenceTimer() {
+            if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+            if (silenceCountdown) { clearInterval(silenceCountdown); silenceCountdown = null; }
+        }
+
+        // Speech Recognition setup
+        if (!SpeechRecognition) {
+            browserWarning.style.display = 'block';
+            micButton.disabled = true;
+        } else {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'de-DE';
+
+            recognition.onstart = () => {
+                isListening = true;
+                if (isRotating) {
+                    isRotating = false;
+                } else {
+                    collectedTranscript = '';
+                    preservedTranscript = '';
+                }
+                clearSilenceTimer();
+                micButton.classList.add('active');
+                if (preservedTranscript) {
+                    setStatus('listening', `Erkannt: "${preservedTranscript}"`);
+                } else {
+                    setStatus('listening', 'Ich hoere zu...');
+                }
+                startSessionRotation();
+            };
+
+            recognition.onend = () => {
+                clearSessionRotation();
+                if (isListening) {
+                    if (isRotating) {
+                        try { recognition.start(); } catch(e) { isRotating = false; }
+                    } else {
+                        try { recognition.start(); } catch(e) {}
+                    }
+                    return;
+                }
+                micButton.classList.remove('active');
+                if (!silenceTimer) setStatus('ready', 'Bereit');
+            };
+
+            recognition.onresult = (event) => {
+                let sessionTranscript = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    sessionTranscript += event.results[i][0].transcript;
+                }
+                collectedTranscript = preservedTranscript
+                    ? preservedTranscript + ' ' + sessionTranscript
+                    : sessionTranscript;
+                setStatus('listening', `Erkannt: "${collectedTranscript}"`);
+                startSilenceTimer();
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech') {
+                    if (!collectedTranscript.trim()) setStatus('listening', 'Ich hoere zu...');
+                    return;
+                }
+                if (event.error === 'network' || event.error === 'aborted') {
+                    clearSessionRotation();
+                    if (collectedTranscript.trim()) {
+                        clearSilenceTimer();
+                        sendCommand(collectedTranscript.trim());
+                        collectedTranscript = '';
+                        preservedTranscript = '';
+                    }
+                    if (isListening) {
+                        setStatus('listening', 'Verbindung neu...');
+                        setTimeout(() => { try { recognition.start(); } catch(e) {} }, 300);
+                        return;
+                    }
+                }
+                isListening = false;
+                clearSilenceTimer();
+                micButton.classList.remove('active');
+                if (event.error === 'not-allowed') {
+                    setStatus('error', 'Mikrofon-Zugriff verweigert.');
+                } else {
+                    setStatus('error', `Fehler: ${event.error}`);
+                }
+            };
+        }
+
+        function toggleListening() {
+            if (!recognition) return;
+            if (isListening) {
+                clearSilenceTimer();
+                clearSessionRotation();
+                collectedTranscript = '';
+                preservedTranscript = '';
+                isRotating = false;
+                isListening = false;
+                micButton.classList.remove('active');
+                setStatus('ready', 'Bereit');
+                try { recognition.stop(); } catch(e) { console.warn('recognition.stop error:', e); }
+            } else {
+                try { recognition.start(); } catch(e) { console.error('recognition.start error:', e); }
+            }
+        }
+
+        function sendTextCommand() {
+            const text = textInput.value.trim();
+            if (text) { sendCommand(text); textInput.value = ''; }
+        }
+
+        async function sendCommand(command) {
+            addMessage('user', command);
+            setStatus('processing', 'Verarbeite...');
+            showInterventionBar(true);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: command,
+                        conversation_id: conversationId,
+                        video_agent: document.getElementById('videoAgentToggle').checked
+                    })
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        try {
+                            const event = JSON.parse(line.substring(6));
+                            handleSSEEvent(event);
+                        } catch (e) {}
+                    }
+                }
+            } catch (error) {
+                console.error('API error:', error);
+                addMessage('error', `Backend nicht erreichbar (${error.message})`);
+                setStatus('error', 'Backend nicht erreichbar');
+                showInterventionBar(false);
+                showTypingIndicator(false);
+            }
+        }
+
+        const taskListEl = document.getElementById('taskList');
+        const taskItemsEl = document.getElementById('taskItems');
+
+        function renderTasks(tasks) {
+            taskItemsEl.innerHTML = '';
+            if (!tasks || tasks.length === 0) { taskListEl.classList.remove('visible'); return; }
+            taskListEl.classList.add('visible');
+            const icons = { pending: '○', in_progress: '◉', done: '●', failed: '✗' };
+            tasks.forEach(t => {
+                const item = document.createElement('div');
+                item.className = 'task-item ' + (t.status || 'pending');
+                const icon = document.createElement('span');
+                icon.className = 'task-icon';
+                icon.textContent = icons[t.status] || '○';
+                const title = document.createElement('span');
+                title.textContent = t.title || '';
+                item.appendChild(icon);
+                item.appendChild(title);
+                taskItemsEl.appendChild(item);
+            });
+        }
+
+        function handleSSEEvent(event) {
+            switch (event.type) {
+                case 'thinking':
+                    setStatus('processing', event.content ? `Denke: ${event.content}` : 'Denke...');
+                    break;
+                case 'tool_start':
+                    setStatus('processing', `Tool: ${event.tool}...`);
+                    if (event.tool !== 'update_tasks') addMessage('system', `[${event.tool}] ${JSON.stringify(event.params || {})}`);
+                    break;
+                case 'tool_result': {
+                    if (event.tool === 'update_tasks') break;
+                    const icon = event.success ? '+' : 'x';
+                    const resultStr = event.result ? JSON.stringify(event.result) : '';
+                    addMessage('system', `[${icon}] ${event.tool} = ${event.success ? 'OK' : 'Fehler'}${resultStr && resultStr !== '{}' ? '\n' + resultStr : ''}`);
+                    break;
+                }
+                case 'task_update':
+                    renderTasks(event.tasks || []);
+                    break;
+                case 'click_warning':
+                    addMessage('warning', `Klick bei (${event.x},${event.y}) ohne Wirkung - ${event.message}`);
+                    break;
+                case 'typing_stream':
+                    updateTypingStream(event);
+                    setStatus('processing', `Tippe... ${Math.round((event.progress || 0) * 100)}%`);
+                    break;
+                case 'approval_required':
+                    showApprovalBar(event.tool, event.params, event.message);
+                    setStatus('processing', `GENEHMIGUNG: ${event.tool}`);
+                    addMessage('warning', `GENEHMIGUNG: ${event.tool}\n${event.message || ''}`);
+                    break;
+                case 'waiting_approval':
+                    setStatus('processing', `Warte: ${event.tool}...`);
+                    break;
+                case 'tool_approved':
+                    hideApprovalBar();
+                    setStatus('processing', `${event.tool} genehmigt`);
+                    break;
+                case 'tool_denied':
+                    hideApprovalBar();
+                    addMessage('warning', `${event.tool} abgelehnt`);
+                    break;
+                case 'click_confirm':
+                    showClickConfirmBar(event.element, event.x, event.y, event.user_confirmed || 0, event.threshold || 3);
+                    setStatus('processing', `Klick "${event.element}" richtig?`);
+                    break;
+                case 'waiting_click_confirm':
+                    setStatus('processing', `Warte: ${event.element}...`);
+                    break;
+                case 'click_confirmed':
+                    hideClickConfirmBar();
+                    addMessage('system', `Klick bestaetigt: "${event.element}"${event.trusted ? ' (Auto)' : ''}`);
+                    break;
+                case 'click_denied':
+                    hideClickConfirmBar();
+                    addMessage('warning', `Klick verworfen: "${event.element}"`);
+                    break;
+                case 'typing_done':
+                    showTypingIndicator(false);
+                    break;
+                case 'paused':
+                    setStatus('processing', 'PAUSIERT');
+                    break;
+                case 'resumed':
+                    setStatus('processing', 'Fortgesetzt...');
+                    break;
+                case 'cancelled':
+                    addMessage('warning', 'Abgebrochen');
+                    showInterventionBar(false);
+                    setStatus('ready', 'Abgebrochen');
+                    break;
+                case 'user_feedback':
+                    addMessage('system', `Feedback: "${event.message}"`);
+                    break;
+                case 'task_skipped':
+                    addMessage('system', `Task ${event.task_id} uebersprungen`);
+                    break;
+                case 'action_visual':
+                    // Show click overlay on live stream
+                    showActionOverlay(event.x, event.y);
+                    if (window.parent !== window) {
+                        window.parent.postMessage({ type: 'action_visual', x: event.x, y: event.y, action: event.action || event.tool }, '*');
+                    }
+                    break;
+                case 'video_analysis': {
+                    const vaIcon = event.verified ? '+' : '!';
+                    const vaConf = Math.round((event.confidence || 0) * 100);
+                    addMessage('system', `[${vaIcon} Video] ${event.screen_state} (${vaConf}%)`);
+                    break;
+                }
+                case 'training_saved':
+                    addMessage('system', `Training gespeichert: ${event.file}`);
+                    break;
+                case 'summary':
+                    addMessage('system', event.content || 'Erledigt');
+                    break;
+                case 'error':
+                    addMessage('error', event.message || 'Unbekannter Fehler');
+                    break;
+                case 'done': {
+                    const dur = event.duration_ms ? `${(event.duration_ms / 1000).toFixed(1)}s` : '';
+                    const steps = event.total_steps || 0;
+                    const turn = event.turn_count || '';
+                    setStatus('ready', `Fertig (${steps} Steps, ${dur})${turn ? ` | Turn ${turn}` : ''}`);
+                    showInterventionBar(false);
+                    showTypingIndicator(false);
+                    setTimeout(() => { taskListEl.classList.remove('visible'); }, 8000);
+                    break;
+                }
+            }
+        }
+
+        function setStatus(state, text) {
+            statusEl.className = 'status ' + state;
+            statusEl.textContent = text;
+        }
+
+        function addMessage(type, text) {
+            const msg = document.createElement('div');
+            msg.className = 'message ' + type;
+            const label = document.createElement('div');
+            label.className = 'message-label';
+            const labels = { user: 'Du', system: 'System', error: 'Fehler', warning: 'Warnung' };
+            label.textContent = labels[type] || type;
+            const content = document.createElement('div');
+            content.textContent = text;
+            msg.appendChild(label);
+            msg.appendChild(content);
+            messagesEl.appendChild(msg);
+            messagesEl.parentElement.scrollTop = messagesEl.parentElement.scrollHeight;
+        }
+
+        let turnCount = 0;
+        const memoryIndicator = document.getElementById('memoryIndicator');
+
+        function updateMemoryIndicator() {
+            memoryIndicator.textContent = turnCount > 0 ? `(Turn ${turnCount})` : '';
+        }
+
+        const _origAddMessage = addMessage;
+        addMessage = function(type, text) {
+            _origAddMessage(type, text);
+            if (type === 'user') { turnCount++; updateMemoryIndicator(); }
+        };
+
+        function newConversation() {
+            conversationId = 'voice_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            messagesEl.innerHTML = '';
+            taskListEl.classList.remove('visible');
+            taskItemsEl.innerHTML = '';
+            showInterventionBar(false);
+            showTypingIndicator(false);
+            hideApprovalBar();
+            hideClickConfirmBar();
+            turnCount = 0;
+            updateMemoryIndicator();
+            addMessage('system', 'Neues Gespraech gestartet.');
+            setStatus('ready', 'Neues Gespraech - Bereit');
+        }
+
+        addMessage('system', 'Willkommen! Mikrofon klicken oder Befehl tippen.');
+
+        // ============================================
+        // eyeTerm Camera PiP Integration
+        // ============================================
+        const EYETERM_STREAM_URL = 'http://127.0.0.1:8099/stream';
+        const EYETERM_STATUS_URL = 'http://127.0.0.1:8099/status';
+        const EYETERM_API = 'http://localhost:8007/api/eyeterm';
+        const eyetermPip = document.getElementById('eyetermPip');
+        const eyetermFeed = document.getElementById('eyetermFeed');
+        const eyetermPlaceholder = document.getElementById('eyetermPlaceholder');
+        const eyetermState = document.getElementById('eyetermState');
+        const eyetermToggle = document.getElementById('eyetermToggle');
+        let eyetermActive = eyetermToggle.checked;  // Sync JS state with DOM
+        let eyetermPollTimer = null;
+        let gazeTimer = null;
+        let eyetermOnline = false;  // True once /status responds — gates gaze polling
+
+        console.log('[eyeTerm] Init: checkbox.checked =', eyetermToggle.checked, '| eyetermActive =', eyetermActive);
+        console.log('[eyeTerm] STREAM_URL =', EYETERM_STREAM_URL);
+        console.log('[eyeTerm] STATUS_URL =', EYETERM_STATUS_URL);
+
+        // Auto-init if checkbox is checked on page load
+        if (eyetermActive) {
+            console.log('[eyeTerm] Auto-init: activating PiP + feed (gaze starts when server online)');
+            eyetermPip.classList.add('active');
+            connectEyetermFeed();   // Has built-in 3s retry on onerror
+            startEyetermPoll();     // Gaze tracking auto-starts when status responds OK
+        } else {
+            console.log('[eyeTerm] Auto-init skipped: checkbox not checked');
+        }
+
+        function toggleEyeterm(forceOff) {
+            // Called from checkbox (onchange) or PiP close button (onclick)
+            if (forceOff === true) {
+                eyetermActive = false;
+                eyetermToggle.checked = false;
+            } else {
+                eyetermActive = eyetermToggle.checked;
+            }
+            if (eyetermActive) {
+                eyetermPip.classList.add('active');
+                connectEyetermFeed();
+                startEyetermPoll();  // Gaze tracking auto-starts when status responds OK
+            } else {
+                eyetermOnline = false;
+                eyetermPip.classList.remove('active');
+                eyetermFeed.src = '';
+                stopEyetermPoll();
+                stopGazeTracking();
+            }
+        }
+
+        function connectEyetermFeed() {
+            console.log('[eyeTerm] connectEyetermFeed: setting src to', EYETERM_STREAM_URL);
+            eyetermFeed.onerror = () => {
+                console.log('[eyeTerm] Feed img onerror — stream not available, retry in 3s');
+                eyetermFeed.style.display = 'none';
+                eyetermPlaceholder.style.display = 'flex';
+                // Retry after 3s
+                if (eyetermActive) setTimeout(connectEyetermFeed, 3000);
+            };
+            eyetermFeed.onload = () => {
+                console.log('[eyeTerm] Feed img onload — stream connected!');
+                eyetermFeed.style.display = 'block';
+                eyetermPlaceholder.style.display = 'none';
+            };
+            eyetermFeed.src = EYETERM_STREAM_URL;
+        }
+
+        function startEyetermPoll() {
+            stopEyetermPoll();
+            eyetermPollTimer = setInterval(pollEyetermStatus, 2000);
+            pollEyetermStatus();
+        }
+
+        function stopEyetermPoll() {
+            if (eyetermPollTimer) { clearInterval(eyetermPollTimer); eyetermPollTimer = null; }
+        }
+
+        async function pollEyetermStatus() {
+            try {
+                // Poll MJPEG server directly (port 8099) — FastAPI proxy on 8007 has stale state
+                const resp = await fetch(EYETERM_STATUS_URL, { signal: AbortSignal.timeout(2000) });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    eyetermState.textContent = data.state || 'idle';
+                    eyetermState.className = 'pip-state' + (data.cursor_enabled ? ' cursor-on' : '');
+                    if (!eyetermOnline) {
+                        eyetermOnline = true;
+                        console.log('[eyeTerm] Server online — starting gaze tracking');
+                        startGazeTracking();
+                    }
+                }
+            } catch (e) {
+                eyetermState.textContent = 'offline';
+                if (eyetermOnline) {
+                    eyetermOnline = false;
+                    stopGazeTracking();
+                }
+            }
+        }
+
+        // Make PiP draggable
+        (function() {
+            let isDragging = false, startX, startY, startLeft, startBottom;
+            eyetermPip.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('pip-close')) return;
+                isDragging = true;
+                startX = e.clientX; startY = e.clientY;
+                const rect = eyetermPip.getBoundingClientRect();
+                const parent = eyetermPip.parentElement.getBoundingClientRect();
+                startLeft = rect.left - parent.left;
+                startBottom = parent.bottom - rect.bottom;
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX, dy = e.clientY - startY;
+                eyetermPip.style.left = (startLeft + dx) + 'px';
+                eyetermPip.style.bottom = (startBottom - dy) + 'px';
+            });
+            document.addEventListener('mouseup', () => { isDragging = false; });
+        })();
+
+        // ============================================
+        // Gaze Dot Overlay on Desktop Streams
+        // ============================================
+        const EYETERM_GAZE_URL = 'http://127.0.0.1:8099/gaze';
+        const gazeDot = document.getElementById('gazeDot');
+        // gazeTimer already declared above (before auto-init block)
+
+        function startGazeTracking() {
+            if (gazeTimer) return;
+            gazeTimer = setInterval(pollGaze, 50); // 20 FPS gaze updates
+        }
+
+        function stopGazeTracking() {
+            if (gazeTimer) { clearInterval(gazeTimer); gazeTimer = null; }
+            gazeDot.classList.remove('active');
+        }
+
+        async function pollGaze() {
+            try {
+                const resp = await fetch(EYETERM_GAZE_URL, { signal: AbortSignal.timeout(100) });
+                if (!resp.ok) return;
+                const g = await resp.json();
+                if (!g.valid) {
+                    gazeDot.classList.remove('active');
+                    return;
+                }
+
+                // Map gaze screen coordinates to stream viewport position
+                // g.x, g.y = absolute screen pixel coords
+                // g.sw, g.sh = screen resolution
+                const viewport = streamViewport.getBoundingClientRect();
+                if (viewport.width === 0 || viewport.height === 0) return;
+
+                // Normalize gaze to 0..1 range
+                const nx = g.x / g.sw;
+                const ny = g.y / g.sh;
+
+                // Map to viewport pixel position
+                const dotX = nx * viewport.width;
+                const dotY = ny * viewport.height;
+
+                gazeDot.style.left = dotX + 'px';
+                gazeDot.style.top = dotY + 'px';
+                gazeDot.classList.add('active');
+            } catch (e) {
+                // eyeTerm not responding — hide dot
+                gazeDot.classList.remove('active');
+            }
+        }
+
+        // Auto-init handled above (eyetermActive synced from checkbox checked state).
+        // connectEyetermFeed() retries automatically every 3s on img onerror.
+    </script>
+</body>
+</html>

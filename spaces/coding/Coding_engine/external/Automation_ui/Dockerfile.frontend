@@ -1,0 +1,94 @@
+# =============================================================================
+# TRAE Frontend - Docker Build
+# =============================================================================
+# Multi-stage build für optimierte Produktions-Images
+# Für Entwicklung: docker-compose up (mit Volume-Mounts für Hot-Reload)
+# =============================================================================
+
+# ============================================
+# Stage 1: Dependencies Installation
+# ============================================
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Installiere nur benötigte Build-Tools
+RUN apk add --no-cache libc6-compat
+
+# Kopiere Package-Dateien
+COPY package.json package-lock.json* ./
+
+# Installiere Dependencies (cached layer)
+RUN npm ci --frozen-lockfile
+
+# ============================================
+# Stage 2: Development Server
+# ============================================
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+# Kopiere Dependencies von deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Kopiere Source-Code
+COPY . .
+
+# Exponiere Vite Dev Server Port
+EXPOSE 5173
+
+# Vite Dev Server mit Host-Binding für Docker
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+# ============================================
+# Stage 3: Build für Production
+# ============================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Kopiere Dependencies
+COPY --from=deps /app/node_modules ./node_modules
+
+# Kopiere alle Dateien
+COPY . .
+
+# Build-Zeit Umgebungsvariablen
+ARG VITE_BACKEND_URL
+ARG VITE_WS_URL
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
+ENV VITE_WS_URL=${VITE_WS_URL}
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+
+# TypeScript Build
+RUN npm run build
+
+# ============================================
+# Stage 4: Production Server
+# ============================================
+FROM nginx:alpine AS production
+
+# Nginx Konfiguration für SPA
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Kopiere gebautes Frontend
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Exponiere HTTP Port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -q --spider http://localhost:80/ || exit 1
+
+# Nginx starten
+CMD ["nginx", "-g", "daemon off;"]
+
+# ============================================
+# Default: Development Stage
+# ============================================
+FROM development

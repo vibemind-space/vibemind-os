@@ -1,0 +1,39 @@
+{
+  "id": "automation-ui",
+  "name": "Automation UI",
+  "version": "1.0.0",
+  "description": "Desktop automation via Automation_ui backend - control your desktop via WhatsApp, Telegram, and more",
+  "author": "Automation_ui",
+  "entry": "index.ts",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "backendUrl": {
+        "type": "string",
+        "default": "http://localhost:8007",
+        "description": "URL of the Automation_ui FastAPI backend"
+      },
+      "wsUrl": {
+        "type": "string",
+        "default": "ws://localhost:8007/ws/clawdbot",
+        "description": "WebSocket URL for real-time communication"
+      },
+      "timeout": {
+        "type": "number",
+        "default": 30000,
+        "description": "Request timeout in milliseconds"
+      }
+    }
+  },
+  "skills": [
+    "desktop-automation"
+  ],
+  "tools": [
+    "desktop_automation"
+  ],
+  "commands": [
+    "screenshot",
+    "automation-status",
+    "read-screen"
+  ]
+}

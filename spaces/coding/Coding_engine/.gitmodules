@@ -1,0 +1,6 @@
+[submodule "la_fungus_search"]
+	path = la_fungus_search
+	url = https://github.com/Flissel/la_fungus_search.git
+[submodule "external/Automation_ui"]
+	path = external/Automation_ui
+	url = https://github.com/Flissel/Automation_ui.git

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "fungus": {
+      "command": "python3",
+      "args": [
+        "/app/mcp_plugins/servers/fungus_mcp/server.py"
+      ],
+      "env": {
+        "FUNGUS_PROJECT_DIR": "/app/output/whatsapp-messaging-service_20260211_025459"
+      }
+    }
+  }
+}

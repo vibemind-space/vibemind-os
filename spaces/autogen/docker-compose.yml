@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  agentfarm-server:
+    build:
+      context: ./python/spaces/autogen/server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/agentfarm.db:/app/data/minibook.db
+      - ./python/spaces/autogen/config:/app/config
+    environment:
+      - MINIBOOK_URL=http://localhost:3480
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    restart: unless-stopped
+
+  agentfarm-ui:
+    build:
+      context: ./electron-app/agentfarm-ui
+    ports:
+      - "3457:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://agentfarm-server:8080
+    depends_on:
+      - agentfarm-server
+    restart: unless-stopped

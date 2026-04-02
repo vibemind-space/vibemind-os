@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "description": "MySQL database node — alternative DB connector",
+    "placeholders": ["operation", "query", "credential_name"]
+  },
+  "type": "n8n-nodes-base.mySql",
+  "typeVersion": 2.4,
+  "name": "MySQL",
+  "position": [1000, 500],
+  "parameters": {
+    "operation": "executeQuery",
+    "query": "SELECT * FROM table_name LIMIT 10",
+    "options": {}
+  }
+}

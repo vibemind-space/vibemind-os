@@ -1,0 +1,639 @@
+import { useState, useEffect, useRef } from 'react';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import {
+  PanelLeftClose,
+  PanelLeft,
+  Zap,
+  FileText,
+} from 'lucide-react';
+import { useProject } from '@/hooks/useProjects';
+import { useUpdateFile } from '@/hooks/useFiles';
+import { useQueryClient } from '@tanstack/react-query';
+import { API_URL } from '@/services/api';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { FileExplorer } from '@/components/editor/FileExplorer';
+import { CodeEditor } from '@/components/editor/CodeEditor';
+import { ChatPanel } from '@/components/editor/ChatPanel';
+import { PreviewPanel, PreviewPanelRef, SelectedElementData } from '@/components/editor/PreviewPanelWithWebContainer';
+import { EditorTabs } from '@/components/editor/EditorTabs';
+import { GitHistoryModal } from '@/components/editor/GitHistoryModal';
+import { GitConfigModal } from '@/components/editor/GitConfigModal';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
+
+const Editor = () => {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: project, isLoading: projectLoading } = useProject(Number(projectId));
+  const updateFileMutation = useUpdateFile();
+
+  const [selectedFile, setSelectedFile] = useState<{ name: string; id: number; content: string; filepath: string } | null>(null);
+  const [editedContent, setEditedContent] = useState<string>('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [activeView, setActiveView] = useState<'code' | 'preview' | 'split'>('preview');
+  const [showExplorer, setShowExplorer] = useState(true);
+  const [showChat, setShowChat] = useState(true);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
+  const [tabs, setTabs] = useState<Array<{ id: string; name: string; isActive: boolean; fileId?: number }>>([]);
+  const [showGitHistory, setShowGitHistory] = useState(false);
+  const [showGitConfig, setShowGitConfig] = useState(false);
+  const [currentBranch, setCurrentBranch] = useState('main');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [isVisualMode, setIsVisualMode] = useState(false);
+  const [selectedElement, setSelectedElement] = useState<SelectedElementData | undefined>(undefined);
+  const [initialMessageSent, setInitialMessageSent] = useState(false);
+
+  const chatPanelRef = useRef<{ sendMessage: (message: string) => void }>(null);
+  const previewPanelRef = useRef<PreviewPanelRef>(null);
+
+  useEffect(() => {
+    if (!projectId || isNaN(Number(projectId))) {
+      navigate('/projects');
+    }
+  }, [projectId, navigate]);
+
+  // Log when project files are updated (for debugging file sync timing)
+  useEffect(() => {
+    if (project?.files) {
+       console.log('[Editor] 🔄 Project files updated:', project.files.length, 'files');
+      console.log('[Editor] 🔄 File list:', project.files.map(f => f.filename).join(', '));
+    }
+  }, [project?.files]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPreviewLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch current branch on mount
+  useEffect(() => {
+    const fetchBranch = async () => {
+      if (!projectId) return;
+      try {
+        const response = await fetch(`${API_URL}/projects/${projectId}/git/branch`);
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentBranch(data.branch);
+        }
+      } catch (error) {
+        console.error('Error fetching branch:', error);
+      }
+    };
+    fetchBranch();
+  }, [projectId]);
+
+  // Auto-select App.tsx when project loads
+  useEffect(() => {
+    if (project?.files && project.files.length > 0 && !selectedFile) {
+      // Try to find App.tsx in src/ folder first
+      const appTsx = project.files.find(file =>
+        file.filepath === 'src/App.tsx' || file.filename === 'App.tsx'
+      );
+
+      if (appTsx) {
+        handleFileSelect({
+          name: appTsx.filename,
+          id: appTsx.id,
+          content: appTsx.content || '',
+          filepath: appTsx.filepath
+        });
+      }
+    }
+  }, [project?.files, selectedFile]);
+
+  // Auto-send initial message if provided from homepage (ONE-TIME ONLY)
+  useEffect(() => {
+    const state = location.state as { initialMessage?: string; attachments?: any[] };
+    const initialMessage = state?.initialMessage;
+    const attachments = state?.attachments;
+
+    if (initialMessage && !initialMessageSent) {
+
+      // Wait for chat panel to be fully ready
+      const timer = setTimeout(() => {
+        if (chatPanelRef.current) {
+          chatPanelRef.current.sendMessage(initialMessage, attachments);
+          setInitialMessageSent(true);
+
+          // IMPORTANT: Clear location state to prevent re-sending on page reload
+          window.history.replaceState({}, document.title);
+        } else {
+          console.warn('[Editor] Chat panel ref not ready yet');
+        }
+      }, 1500); // Increased delay to ensure chat panel is ready
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.state, initialMessageSent]);
+
+  // Keyboard shortcut for saving (Ctrl+S)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (hasUnsavedChanges && selectedFile) {
+          handleSaveFile();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasUnsavedChanges, selectedFile, editedContent]);
+
+  const handleFileSelect = (file: { name: string; id: number; content: string; filepath: string }) => {
+    setSelectedFile(file);
+    setEditedContent(file.content);
+    setHasUnsavedChanges(false);
+    const existingTab = tabs.find(t => t.fileId === file.id);
+    if (!existingTab) {
+      setTabs(prev => [
+        ...prev.map(t => ({ ...t, isActive: false })),
+        { id: file.id.toString(), name: file.name, isActive: true, fileId: file.id }
+      ]);
+    } else {
+      setTabs(prev => prev.map(t => ({ ...t, isActive: t.fileId === file.id })));
+    }
+  };
+
+  const handleContentChange = (newContent: string) => {
+    setEditedContent(newContent);
+    setHasUnsavedChanges(newContent !== selectedFile?.content);
+  };
+
+  const handleSaveFile = async () => {
+    if (!selectedFile || !hasUnsavedChanges) return;
+
+    try {
+      await updateFileMutation.mutateAsync({
+        projectId: Number(projectId),
+        fileId: selectedFile.id,
+        data: {
+          content: editedContent,
+          filepath: selectedFile.filepath
+        }
+      });
+
+      setSelectedFile({ ...selectedFile, content: editedContent });
+      setHasUnsavedChanges(false);
+
+      // Reload WebContainer to reflect manual changes
+      if (previewPanelRef.current) {
+        previewPanelRef.current.handleRefresh();
+      }
+
+      toast({
+        title: "File saved",
+        description: `${selectedFile.name} has been saved successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error saving file",
+        description: "There was an error saving the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTabClose = (id: string) => {
+    setTabs(prev => {
+      const filtered = prev.filter(t => t.id !== id);
+      if (filtered.length === 0) {
+        setSelectedFile(null);
+        return [];
+      }
+      if (prev.find(t => t.id === id)?.isActive && selectedFile) {
+        filtered[filtered.length - 1].isActive = true;
+      }
+      return filtered;
+    });
+  };
+
+  const handleTabSelect = (id: string) => {
+    setTabs(prev => prev.map(t => ({ ...t, isActive: t.id === id })));
+  };
+
+  const handleCodeChange = () => {
+    setIsPreviewLoading(true);
+    setTimeout(() => {
+      setIsPreviewLoading(false);
+    }, 1000);
+
+    // Refetch files to update the file explorer
+    if (projectId) {
+      queryClient.invalidateQueries({ queryKey: ['project', Number(projectId)] });
+    }
+  };
+
+  const handleReportError = (errorMessage: string) => {
+    if (chatPanelRef.current) {
+      chatPanelRef.current.sendMessage(errorMessage);
+    }
+  };
+
+  const handleRunProject = () => {
+    // Just refresh the preview - no need to save if nothing changed
+    if (previewPanelRef.current) {
+      previewPanelRef.current.handleRefresh();
+    }
+    toast({
+      title: "Running project",
+      description: "Reloading preview to run the latest code...",
+    });
+  };
+
+  const handleShowGitHistory = () => {
+    setShowGitHistory(true);
+  };
+
+  const handleGitSync = async () => {
+    if (!projectId) return;
+
+    setIsSyncing(true);
+    try {
+      const response = await fetch(`${API_URL}/projects/${projectId}/git/sync`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) throw new Error('Sync failed');
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "✅ Sync completed",
+          description: (
+            <div className="text-xs space-y-1">
+              <div>{data.fetch}</div>
+              <div>{data.pull}</div>
+              <div>{data.commit}</div>
+              <div>{data.push}</div>
+            </div>
+          ),
+          duration: 5000,
+        });
+      } else {
+        toast({
+          title: "⚠️ Sync incomplete",
+          description: data.message,
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error syncing",
+        description: "Failed to sync with remote repository",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleGitConfig = () => {
+    setShowGitConfig(true);
+  };
+
+  const handlePreviewReady = (url: string) => {
+    setPreviewUrl(url);
+  };
+
+  // Screenshot is now handled automatically by PreviewPanelWithWebContainer
+  // using postMessage communication with the iframe
+  const handleManualScreenshot = () => {
+    toast({
+      title: "Auto-capture enabled",
+      description: "Screenshots are captured automatically when the preview loads",
+      duration: 3000,
+    });
+  };
+
+  const handleDownloadProject = async () => {
+    try {
+      const response = await fetch(`${API_URL}/projects/${projectId}/download`);
+
+      if (!response.ok) {
+        throw new Error('Failed to download project');
+      }
+
+      // Get the filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'project.zip';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create blob from response
+      const blob = await response.blob();
+
+      // Create download link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download started",
+        description: `${filename} is being downloaded`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('[Download] Failed:', error);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading the project. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReloadPreview = (data: { message: string }) => {
+
+    // Refetch files to update the file explorer
+    if (projectId) {
+      queryClient.invalidateQueries({ queryKey: ['project', Number(projectId)] });
+    }
+
+    // Use reload() to properly reinitialize WebContainer and re-apply visual mode
+    if (previewPanelRef.current) {
+      previewPanelRef.current.reload();
+    }
+  };
+
+  const handleVisualModeChange = (isVisual: boolean) => {
+    setIsVisualMode(isVisual);
+    if (!isVisual) {
+      setSelectedElement(undefined);
+    }
+  };
+
+  const handleElementSelected = (data: SelectedElementData) => {
+    setSelectedElement(data);
+  };
+
+  const handleStyleUpdate = (property: string, value: string) => {
+    if (previewPanelRef.current) {
+      previewPanelRef.current.updateStyle(property, value);
+    }
+  };
+
+  const handleFileUpdate = (files: Array<{ path: string, content: string }>) => {
+    if (previewPanelRef.current) {
+      previewPanelRef.current.applyFileUpdates(files);
+    }
+  };
+
+  const handleGitCommit = async (data: { success: boolean; error?: string; message?: string; commit_count?: number }) => {
+    // Capture screenshot on first user commit (commit_count == 2)
+    // commit_count == 1 is the initial "Project created" commit
+    // commit_count == 2 is the first actual code commit
+    if (data.success && data.commit_count === 2) {
+      toast({
+        title: "📸 Capturing project thumbnail",
+        description: "Taking a screenshot of your project...",
+        duration: 3000,
+      });
+
+      // Wait a moment for the preview to be fully rendered after commit
+      setTimeout(async () => {
+        if (previewPanelRef.current) {
+          const success = await previewPanelRef.current.captureAndSendScreenshot();
+          if (success) {
+            toast({
+              title: "✅ Thumbnail saved",
+              description: "Project thumbnail has been updated",
+              duration: 3000,
+            });
+          } else {
+            console.warn('[Editor] Failed to capture screenshot');
+          }
+        }
+      }, 2000); // Wait 2 seconds after commit to ensure preview is updated
+    }
+  };
+
+  if (projectLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading project...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-2">Project not found</p>
+          <Link to="/projects" className="text-primary hover:underline">
+            Back to projects
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      {/* Main Content with Resizable Panels */}
+      <ResizablePanelGroup id="main-panel-group" direction="horizontal" className="flex-1" autoSaveId="main-layout">
+        {/* Chat Panel */}
+        {showChat && (
+          <>
+            <ResizablePanel id="chat-panel" defaultSize={35} minSize={20} maxSize={35} order={1}>
+              <div className="h-full relative">
+                <ChatPanel
+                  ref={chatPanelRef}
+                  projectId={Number(projectId)}
+                  onCodeChange={handleCodeChange}
+                  onGitCommit={handleGitCommit}
+                  onReloadPreview={handleReloadPreview}
+                  onVisualModeChange={handleVisualModeChange}
+                  onStyleUpdate={handleStyleUpdate}
+                  selectedElement={selectedElement}
+                  onFileUpdate={handleFileUpdate}
+                />
+                {/* Toggle Chat Button - positioned at right edge of chat panel */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full z-10">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setShowChat(false)}
+                        className="p-1.5 bg-background border border-border/50 rounded-r-lg hover:bg-muted/20 transition-colors shadow-sm"
+                      >
+                        <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      Hide chat
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+          </>
+        )}
+
+        {/* File Explorer + Editor + Preview */}
+        <ResizablePanel id="main-content-panel" defaultSize={showChat ? 75 : 100} order={2}>
+          <div className="h-full flex flex-col">
+            {/* Toggle Chat Button - Show when chat is hidden */}
+            {!showChat && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setShowChat(true)}
+                      className="p-1.5 bg-background border border-border/50 rounded-r-lg hover:bg-muted/20 transition-colors shadow-sm"
+                    >
+                      <PanelLeft className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Show chat
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            )}
+
+            <ResizablePanelGroup id="explorer-editor-panel-group" direction="horizontal" className="flex-1" autoSaveId="explorer-editor-layout">
+              {/* File Explorer */}
+              {showExplorer && activeView !== 'preview' && (
+                <>
+                  <ResizablePanel id="explorer-panel" defaultSize={18} minSize={15} maxSize={30} order={1}>
+                    <FileExplorer
+                      projectId={Number(projectId)}
+                      selectedFile={selectedFile?.name || ''}
+                      onSelectFile={handleFileSelect}
+                      hasUnsavedChanges={hasUnsavedChanges}
+                      onSaveFile={handleSaveFile}
+                      isSaving={updateFileMutation.isPending}
+                    />
+                  </ResizablePanel>
+                  <ResizableHandle />
+                </>
+              )}
+
+              {/* Editor & Preview Area */}
+              <ResizablePanel id="editor-preview-container-panel" defaultSize={showExplorer && activeView !== 'preview' ? 82 : 100} order={2}>
+                <div className="h-full flex flex-col">
+                  <EditorTabs
+                    activeView={activeView}
+                    onViewChange={setActiveView}
+                    tabs={tabs}
+                    onTabClose={handleTabClose}
+                    onTabSelect={handleTabSelect}
+                    onRunProject={handleRunProject}
+                    onShowGitHistory={handleShowGitHistory}
+                    currentBranch={currentBranch}
+                    onGitSync={handleGitSync}
+                    onGitConfig={handleGitConfig}
+                    isSyncing={isSyncing}
+                    onManualScreenshot={handleManualScreenshot}
+                    onDownloadProject={handleDownloadProject}
+                  />
+
+                  <ResizablePanelGroup id="code-preview-panel-group" direction="horizontal" className="flex-1" autoSaveId="editor-preview-layout">
+                    {/* Code Editor */}
+                    {(activeView === 'code' || activeView === 'split') && (
+                      <ResizablePanel id="code-editor-panel" defaultSize={activeView === 'split' ? 50 : 100} order={1}>
+                        <CodeEditor
+                          selectedFile={selectedFile ? { ...selectedFile, content: editedContent } : null}
+                          isTyping={isTyping}
+                          onContentChange={handleContentChange}
+                          onAskAgent={(data) => {
+                            if (chatPanelRef.current) {
+                              const contextMessage = `I have a question about the file \`${data.filepath}\` (lines ${data.startLine}-${data.endLine}):\n\n\`\`\`${selectedFile?.name.split('.').pop() || ''}\n${data.content}\n\`\`\`\n\nQ: ${data.message}`;
+                              chatPanelRef.current.sendMessage(contextMessage);
+                              if (!showChat) setShowChat(true);
+                            }
+                          }}
+                        />
+                      </ResizablePanel>
+                    )}
+
+                    {activeView === 'split' && <ResizableHandle withHandle />}
+
+                    {/* Preview */}
+                    {(activeView === 'preview' || activeView === 'split') && (
+                      <ResizablePanel id="preview-panel" defaultSize={activeView === 'split' ? 50 : 100} order={2}>
+                        <PreviewPanel
+                          ref={previewPanelRef}
+                          projectId={Number(projectId)}
+                          isLoading={isPreviewLoading}
+                          onReload={handleCodeChange}
+                          onReportError={handleReportError}
+                          onPreviewReady={handlePreviewReady}
+                          isVisualMode={isVisualMode}
+                          onElementSelected={handleElementSelected}
+                        />
+                      </ResizablePanel>
+                    )}
+                  </ResizablePanelGroup>
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      {/* Status Bar */}
+      <footer className="h-6 flex items-center justify-between px-4 border-t border-border/50 bg-background/80 text-xs text-muted-foreground shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <Zap className="w-3 h-3 text-yellow-500" />
+            <span>WebContainer Ready</span>
+          </div>
+          <span className="text-muted-foreground/60">|</span>
+          <span>TypeScript</span>
+          <span>UTF-8</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span>Ln 24, Col 12</span>
+          <span>Spaces: 2</span>
+        </div>
+      </footer>
+
+      {/* Git History Modal */}
+      <GitHistoryModal
+        projectId={Number(projectId)}
+        isOpen={showGitHistory}
+        onClose={() => setShowGitHistory(false)}
+      />
+
+      {/* Git Config Modal */}
+      <GitConfigModal
+        projectId={Number(projectId)}
+        isOpen={showGitConfig}
+        onClose={() => setShowGitConfig(false)}
+      />
+    </div>
+  );
+};
+
+export default Editor;

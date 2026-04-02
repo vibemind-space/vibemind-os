@@ -1,0 +1,287 @@
+syntax = "proto3";
+
+package eventfixteam;
+
+// ============================================
+// EventFixTeam gRPC Service Definition
+// ============================================
+
+// Haupt-Service für das EventFixTeam
+service EventFixTeam {
+    // Allgemeine Task-Ausführung
+    rpc ExecuteTask(TaskRequest) returns (TaskResponse);
+    
+    // Status-Abfragen
+    rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse);
+    rpc GetTeamStatus(TeamStatusRequest) returns (TeamStatusResponse);
+    
+    // Health Check
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// ============================================
+// Task-Definitionen
+// ============================================
+
+// Allgemeine Task-Anfrage
+message TaskRequest {
+    string task_id = 1;
+    string agent_type = 2;  // "code", "fix", "migrate", "test"
+    string priority = 3;    // "low", "medium", "high", "critical"
+    map<string, string> metadata = 4;
+    oneof payload {
+        CodeTaskPayload code_payload = 5;
+        FixTaskPayload fix_payload = 6;
+        MigrateTaskPayload migrate_payload = 7;
+        TestTaskPayload test_payload = 8;
+    }
+}
+
+// Task-Antwort
+message TaskResponse {
+    string task_id = 1;
+    bool success = 2;
+    string message = 3;
+    map<string, string> metadata = 4;
+    oneof result {
+        CodeTaskResult code_result = 5;
+        FixTaskResult fix_result = 6;
+        MigrateTaskResult migrate_result = 7;
+        TestTaskResult test_result = 8;
+    }
+    string error = 9;
+}
+
+// ============================================
+// Code-Task Definitionen
+// ============================================
+
+message CodeTaskPayload {
+    string file_path = 1;
+    string content = 2;
+    string language = 3;
+    string type = 4;  // "function", "class", "module", "config"
+    string description = 5;
+    repeated string dependencies = 6;
+    repeated string imports = 7;
+}
+
+message CodeTaskResult {
+    string task_id = 1;
+    string file_path = 2;
+    string language = 3;
+    int32 lines_written = 4;
+    repeated string warnings = 5;
+}
+
+// ============================================
+// Fix-Task Definitionen
+// ============================================
+
+message FixTaskPayload {
+    ErrorInfo error_info = 1;
+    repeated string logs = 2;
+    map<string, string> context = 3;
+    repeated string affected_files = 4;
+}
+
+message ErrorInfo {
+    string type = 1;
+    string message = 2;
+    string stack_trace = 3;
+    string timestamp = 4;
+    string severity = 5;  // "low", "medium", "high", "critical"
+}
+
+message FixTaskResult {
+    string task_id = 1;
+    DebugResult debug_result = 2;
+    FixResult fix_result = 3;
+}
+
+message DebugResult {
+    string error_type = 1;
+    string error_message = 2;
+    string root_cause = 3;
+    string suggested_fix = 4;
+    DockerStatus docker_status = 5;
+    RedisStatus redis_status = 6;
+    PostgresStatus postgres_status = 7;
+    LogAnalysis log_analysis = 8;
+}
+
+message DockerStatus {
+    string status = 1;
+    int32 containers = 2;
+    bool healthy = 3;
+}
+
+message RedisStatus {
+    string status = 1;
+    string memory_usage = 2;
+    int32 keys = 3;
+}
+
+message PostgresStatus {
+    string status = 1;
+    string database = 2;
+    int32 connections = 3;
+}
+
+message LogAnalysis {
+    int32 total_logs = 1;
+    int32 error_count = 2;
+    int32 warning_count = 3;
+    repeated string patterns = 4;
+}
+
+message FixResult {
+    string type = 1;
+    string description = 2;
+    repeated string files_to_modify = 3;
+    repeated FixChange changes = 4;
+    bool test_required = 5;
+}
+
+message FixChange {
+    string file = 1;
+    string action = 2;
+    string value = 3;
+}
+
+// ============================================
+// Migrate-Task Definitionen
+// ============================================
+
+message MigrateTaskPayload {
+    string source_version = 1;
+    string target_version = 2;
+    repeated string files = 3;
+    repeated string logs = 4;
+    map<string, string> options = 5;
+}
+
+message MigrateTaskResult {
+    string task_id = 1;
+    string source_version = 2;
+    string target_version = 3;
+    repeated FileMigration files_migrated = 4;
+    repeated LogMigration logs_migrated = 5;
+    repeated string changes = 6;
+    repeated string warnings = 7;
+}
+
+message FileMigration {
+    string file = 1;
+    string status = 2;
+    repeated string changes = 3;
+}
+
+message LogMigration {
+    string log = 1;
+    string status = 2;
+    int32 entries = 3;
+}
+
+// ============================================
+// Test-Task Definitionen
+// ============================================
+
+message TestTaskPayload {
+    string test_type = 1;  // "e2e", "unit", "integration"
+    repeated TestCase test_cases = 2;
+    string url = 3;
+    map<string, string> options = 4;
+}
+
+message TestCase {
+    string name = 1;
+    string description = 2;
+    repeated TestStep steps = 3;
+    map<string, string> expected_results = 4;
+}
+
+message TestStep {
+    string action = 1;
+    string selector = 2;
+    string value = 3;
+    int32 timeout = 4;
+}
+
+message TestTaskResult {
+    string task_id = 1;
+    string test_type = 2;
+    string url = 3;
+    int32 total = 4;
+    int32 passed = 5;
+    int32 failed = 6;
+    int32 skipped = 7;
+    double duration = 8;
+    repeated TestCaseResult cases = 9;
+}
+
+message TestCaseResult {
+    string name = 1;
+    string status = 2;  // "passed", "failed", "skipped"
+    double duration = 3;
+    int32 steps = 4;
+    repeated string errors = 5;
+    repeated string screenshots = 6;
+}
+
+// ============================================
+// Status-Definitionen
+// ============================================
+
+message AgentStatusRequest {
+    string agent_name = 1;
+}
+
+message AgentStatusResponse {
+    string agent_name = 1;
+    string status = 2;  // "idle", "busy", "error"
+    string current_task = 3;
+    int32 tasks_completed = 4;
+    double last_activity = 5;
+    map<string, string> metrics = 6;
+}
+
+message TeamStatusRequest {
+    // Keine Parameter erforderlich
+}
+
+message TeamStatusResponse {
+    repeated AgentInfo agents = 1;
+    int32 total_tasks_completed = 2;
+    int32 active_tasks = 3;
+    string overall_status = 4;
+}
+
+message AgentInfo {
+    string name = 1;
+    string type = 2;
+    string status = 3;
+    int32 tasks_completed = 4;
+}
+
+// ============================================
+// Health Check Definitionen
+// ============================================
+
+message HealthCheckRequest {
+    // Keine Parameter erforderlich
+}
+
+message HealthCheckResponse {
+    bool healthy = 1;
+    string status = 2;
+    string version = 3;
+    int64 uptime = 4;
+    repeated ServiceHealth services = 5;
+}
+
+message ServiceHealth {
+    string name = 1;
+    string status = 2;
+    string message = 3;
+}

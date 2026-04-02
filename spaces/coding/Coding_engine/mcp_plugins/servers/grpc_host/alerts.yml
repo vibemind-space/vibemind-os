@@ -1,0 +1,140 @@
+# Alerting-Regeln für EventFix Team
+
+groups:
+  - name: eventfix_alerts
+    interval: 30s
+    rules:
+      # gRPC Server Alerts
+      - alert: GrpcServerDown
+        expr: up{job="grpc-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: grpc-server
+        annotations:
+          summary: "gRPC Server ist nicht erreichbar"
+          description: "Der gRPC Server ist seit mehr als 1 Minute nicht erreichbar."
+
+      - alert: GrpcHighLatency
+        expr: histogram_quantile(0.95, rate(grpc_server_latency_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: grpc-server
+        annotations:
+          summary: "gRPC Server hat hohe Latenz"
+          description: "95. Perzentil der gRPC Latenz ist über 1 Sekunde."
+
+      - alert: GrpcHighErrorRate
+        expr: rate(grpc_server_errors_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: grpc-server
+        annotations:
+          summary: "gRPC Server hat hohe Fehlerquote"
+          description: "gRPC Server Fehlerquote ist über 10%."
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis ist nicht erreichbar"
+          description: "Redis ist seit mehr als 1 Minute nicht erreichbar."
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis hat hohen Speicherverbrauch"
+          description: "Redis Speicherverbrauch ist über 90%."
+
+      # PostgreSQL Alerts
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: postgres
+        annotations:
+          summary: "PostgreSQL ist nicht erreichbar"
+          description: "PostgreSQL ist seit mehr als 1 Minute nicht erreichbar."
+
+      - alert: PostgresHighConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: postgres
+        annotations:
+          summary: "PostgreSQL hat viele Verbindungen"
+          description: "PostgreSQL Verbindungen sind über 80% des Maximums."
+
+      - alert: PostgresSlowQueries
+        expr: rate(pg_stat_statements_mean_exec_time_ms[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: postgres
+        annotations:
+          summary: "PostgreSQL hat langsame Queries"
+          description: "PostgreSQL hat langsame Queries mit über 1 Sekunde Ausführungszeit."
+
+      # Agent Alerts
+      - alert: AgentTaskQueueBacklog
+        expr: agent_task_queue_length > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: agents
+        annotations:
+          summary: "Agent Task Queue hat Rückstand"
+          description: "Agent Task Queue hat über 100 ausstehende Tasks."
+
+      - alert: AgentHighFailureRate
+        expr: rate(agent_task_failures_total[5m]) / rate(agent_task_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: agents
+        annotations:
+          summary: "Agent hat hohe Fehlerrate"
+          description: "Agent Fehlerrate ist über 10%."
+
+      # System Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Hohe CPU-Auslastung"
+          description: "CPU-Auslastung ist über 80%."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Hoher Speicherverbrauch"
+          description: "Speicherverbrauch ist über 90%."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Wenig Festplattenspeicher"
+          description: "Festplattenspeicher ist unter 10% verfügbar."

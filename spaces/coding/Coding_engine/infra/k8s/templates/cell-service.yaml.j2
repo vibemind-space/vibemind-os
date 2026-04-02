@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ cell.k8s_service_name }}
+  namespace: {{ cell.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+    app.kubernetes.io/managed-by: cell-colony
+    colony.codingengine.io/cell-id: {{ cell.id }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "{{ cell.ports[0] }}"
+spec:
+  type: {{ service_type | default("ClusterIP") }}
+  selector:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+  ports:
+    {% for port in cell.ports %}
+    - name: http{% if loop.index > 1 %}-{{ loop.index }}{% endif %}
+      protocol: TCP
+      port: {{ port }}
+      targetPort: {{ port }}
+    {% endfor %}
+  sessionAffinity: None
+---
+# Headless service for direct pod access
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ cell.k8s_service_name }}-headless
+  namespace: {{ cell.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+    app.kubernetes.io/managed-by: cell-colony
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+  ports:
+    {% for port in cell.ports %}
+    - name: http{% if loop.index > 1 %}-{{ loop.index }}{% endif %}
+      protocol: TCP
+      port: {{ port }}
+      targetPort: {{ port }}
+    {% endfor %}

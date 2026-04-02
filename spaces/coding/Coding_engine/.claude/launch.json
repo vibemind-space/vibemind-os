@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-app-frontend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js", "dev", "--host", "--port", "8081"],
+      "port": 8081,
+      "cwd": "web-app/front"
+    }
+  ]
+}

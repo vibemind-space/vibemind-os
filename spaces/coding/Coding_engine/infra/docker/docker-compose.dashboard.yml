@@ -1,0 +1,164 @@
+# Coding Engine Dashboard - Full Stack Configuration
+#
+# This compose file orchestrates the complete Coding Engine environment:
+# - PostgreSQL for persistence
+# - Redis for caching/messaging
+# - Coding Engine API (FastAPI + WebSocket)
+#
+# Usage:
+#   docker-compose -f infra/docker/docker-compose.dashboard.yml up -d
+#
+# Or via Python launcher:
+#   python run_dashboard.py
+
+services:
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: coding-engine-postgres
+    environment:
+      POSTGRES_USER: engine
+      POSTGRES_PASSWORD: engine_secret
+      POSTGRES_DB: coding_engine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U engine -d coding_engine"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - engine-net
+    restart: unless-stopped
+
+  # ===========================================
+  # Redis Cache/Message Broker
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: coding-engine-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - engine-net
+    restart: unless-stopped
+
+  # ===========================================
+  # Coding Engine API
+  # ===========================================
+  coding-engine:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: coding-engine-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Docker socket for container management
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Engine data directory
+      - engine-data:/data
+      # Projects directory (host mount for easy access)
+      - ${PROJECTS_DIR:-../../output}:/data/projects
+      # Source code for development (optional)
+      - ../../src:/app/src:ro
+    environment:
+      # Database
+      - DATABASE_URL=postgresql+asyncpg://engine:engine_secret@postgres:5432/coding_engine
+      # Redis
+      - REDIS_URL=redis://redis:6379
+      # API Configuration
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - LOG_LEVEL=INFO
+      # Claude API (must be provided via .env or environment)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Docker-in-Docker mode
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      # VNC Port Range for projects
+      - VNC_PORT_START=6081
+      - VNC_PORT_END=6099
+      # App Port Range for projects
+      - APP_PORT_START=3001
+      - APP_PORT_END=3099
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - engine-net
+    restart: unless-stopped
+
+  # ===========================================
+  # Coding Engine Worker(s)
+  # ===========================================
+  coding-engine-worker:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: coding-engine-worker
+    command: python run_workers.py --workers 2
+    volumes:
+      # Docker socket for container management
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Engine data directory
+      - engine-data:/data
+      # Projects directory
+      - ${PROJECTS_DIR:-../../output}:/data/projects
+    environment:
+      # Database
+      - DATABASE_URL=postgresql+asyncpg://engine:engine_secret@postgres:5432/coding_engine
+      # Redis
+      - REDIS_URL=redis://redis:6379
+      # Claude API
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Docker-in-Docker mode
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      coding-engine:
+        condition: service_healthy
+    networks:
+      - engine-net
+    restart: unless-stopped
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  engine-net:
+    driver: bridge
+    name: coding-engine-network
+
+# ===========================================
+# Volumes
+# ===========================================
+volumes:
+  postgres-data:
+    name: coding-engine-postgres
+  redis-data:
+    name: coding-engine-redis
+  engine-data:
+    name: coding-engine-data

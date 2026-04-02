@@ -1,0 +1,57 @@
+# Free Models Configuration (OpenRouter)
+# Updated: 2026-01-18 - Verified against OpenRouter API
+
+coding:
+  primary: "mistralai/devstral-2512:free"           # 262K - Best for code
+  fallback:
+    - "qwen/qwen3-coder:free"                       # 262K - Qwen Coder
+    - "deepseek/deepseek-r1-0528:free"              # 164K - DeepSeek R1
+
+reasoning:
+  primary: "xiaomi/mimo-v2-flash:free"              # 262K - Fast reasoning
+  fallback:
+    - "nvidia/nemotron-3-nano-30b-a3b:free"         # 256K
+    - "deepseek/deepseek-r1-0528:free"              # 164K
+
+vision:
+  primary: "nvidia/nemotron-nano-12b-v2-vl:free"    # 128K - Vision-Language
+  fallback:
+    - "qwen/qwen-2.5-vl-7b-instruct:free"           # 32K
+    - "allenai/molmo-2-8b:free"                     # 36K
+
+general:
+  primary: "meta-llama/llama-3.3-70b-instruct:free" # 131K - Llama 3.3 70B
+  fallback:
+    - "google/gemini-2.0-flash-exp:free"            # 1M+ context!
+    - "meta-llama/llama-3.1-405b-instruct:free"     # 131K - Largest
+
+# Model selection by task type
+task_mapping:
+  code_generation: "coding"
+  code_review: "coding"
+  debugging: "coding"
+  test_generation: "coding"
+
+  architecture_planning: "reasoning"
+  requirement_analysis: "reasoning"
+  error_diagnosis: "reasoning"
+
+  ui_analysis: "vision"
+  screenshot_review: "vision"
+  ux_feedback: "vision"
+
+  documentation: "general"
+  summarization: "general"
+  default: "general"
+
+# Context limits (tokens)
+context_limits:
+  "mistralai/devstral-2512:free": 262144
+  "qwen/qwen3-coder:free": 262000
+  "xiaomi/mimo-v2-flash:free": 262144
+  "nvidia/nemotron-3-nano-30b-a3b:free": 256000
+  "nvidia/nemotron-nano-12b-v2-vl:free": 128000
+  "meta-llama/llama-3.3-70b-instruct:free": 131072
+  "google/gemini-2.0-flash-exp:free": 1048576
+  "meta-llama/llama-3.1-405b-instruct:free": 131072
+  "deepseek/deepseek-r1-0528:free": 163840

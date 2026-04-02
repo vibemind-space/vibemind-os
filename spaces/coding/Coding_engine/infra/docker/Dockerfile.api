@@ -1,0 +1,85 @@
+# Dockerfile.api - Coding Engine API Server
+#
+# Runs the FastAPI server with WebSocket support for real-time dashboard communication.
+# Supports Docker-in-Docker for container management.
+#
+# Build:
+#   docker build -t coding-engine-api -f infra/docker/Dockerfile.api .
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install system dependencies including Docker CLI + GitHub CLI
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    docker.io \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+       -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+       > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update && apt-get install -y --no-install-recommends gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 22 LTS (for Kilo CLI + Claude CLI)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install docker-compose for migration tasks
+RUN curl -sL 'https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64' -o /usr/local/bin/docker-compose \
+    && chmod +x /usr/local/bin/docker-compose
+
+# Install Kilo CLI + Claude CLI (always latest version on build)
+RUN npm install -g @kilocode/cli@latest @anthropic-ai/claude-code@latest \
+    && npm cache clean --force
+
+# Pre-install MCP server packages globally (avoids npx download on every spawn)
+RUN npm install -g \
+    @playwright/mcp@latest \
+    @modelcontextprotocol/server-filesystem \
+    @modelcontextprotocol/server-memory \
+    @modelcontextprotocol/server-sequential-thinking \
+    @modelcontextprotocol/server-redis \
+    @upstash/context7-mcp@latest \
+    && npm cache clean --force
+
+# Install Playwright browsers (chromium only to keep image small)
+RUN npx playwright install --with-deps chromium 2>/dev/null || true
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code, plugins, config and entry scripts
+COPY src/ ./src/
+COPY mcp_plugins/ ./mcp_plugins/
+COPY config/ ./config/
+COPY run_engine.py ./
+COPY run_pipeline.py ./
+COPY run_clean.py ./
+COPY run_generation.py ./
+
+# Create data directories
+RUN mkdir -p /data/projects /data/logs
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV API_HOST=0.0.0.0
+ENV API_PORT=8000
+
+# Note: Running as root for Docker socket access
+# In production, consider using rootless Docker or socket proxy
+
+# Expose port
+EXPOSE 8000
+
+# Health check (python is faster than curl inside the container)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=5 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)" || exit 1
+
+# Run API server
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

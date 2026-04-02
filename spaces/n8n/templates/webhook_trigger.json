@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "Webhook trigger node — entry point for HTTP-triggered workflows",
+    "placeholders": ["webhook_path", "http_method"]
+  },
+  "type": "n8n-nodes-base.webhook",
+  "typeVersion": 2,
+  "name": "Webhook",
+  "position": [200, 300],
+  "webhookId": "",
+  "parameters": {
+    "path": "webhook",
+    "httpMethod": "POST",
+    "responseMode": "lastNode",
+    "options": {}
+  }
+}

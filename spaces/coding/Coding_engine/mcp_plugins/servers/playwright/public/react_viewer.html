@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MCP React Viewer</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background:#0b0f12; color:#e6edf3; }
+    header { padding: 12px 16px; background:#11181f; border-bottom:1px solid #26313a; display:flex; align-items:center; gap:10px; }
+    .row { display:flex; gap:12px; padding:12px; }
+    .col { flex:1; background:#0f1419; border:1px solid #26313a; border-radius:8px; overflow:auto; min-height: 60vh; max-height: 80vh; }
+    .col h3 { margin: 0; padding:10px 12px; border-bottom:1px solid #26313a; background:#0b1116; position:sticky; top:0; font-size: 14px; }
+    pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; padding:10px 12px; }
+    .badge { display:inline-block; padding:2px 8px; font-size:12px; border-radius:999px; border:1px solid #26313a; background:#0b1116; color:#9fb3c8; }
+    .badge-ok { color:#0fd88f; border-color:#155e42; background:#0b1512; }
+    .badge-warn { color:#e0b400; border-color:#5a4a00; background:#141107; }
+    .badge-err { color:#ff7b72; border-color:#5a1e1b; background:#190e0d; }
+    .badge-info { color:#91a7ff; border-color:#2b3f63; background:#0b1116; }
+    img.preview { max-width:100%; height:auto; display:block; border-radius:6px; border:1px solid #26313a; background:#0b1116; }
+    .stream-line { padding: 8px 12px; border-bottom: 1px solid #1a2229; line-height: 1.6; font-size: 13px; }
+    .stream-line:hover { background: #131a21; }
+    .event-item { padding: 8px 12px; border-left: 3px solid #26313a; margin: 4px 8px; background: #0b1116; border-radius: 4px; font-size: 12px; line-height: 1.5; }
+    .event-item code { background: #1a2229; padding: 2px 6px; border-radius: 3px; font-size: 11px; }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+  <header>
+    <strong>MCP React Viewer</strong>
+    <span class="badge badge-info">Server: Playwright</span>
+    <span id="conn" class="badge badge-warn">Connecting…</span>
+    <span id="meta" class="badge badge-info"></span>
+  </header>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    function parseSessionIdFromPath(){
+      try{
+        const parts = (window.location.pathname || '').split('/').filter(Boolean);
+        const i = parts.indexOf('session');
+        if(i >= 0 && parts[i+1]) return parts[i+1];
+        const j = parts.indexOf('playwright');
+        if(j >= 0 && parts[j+1] && parts[j+1] !== 'public') return parts[j+1];
+      }catch(_e){}
+      return null;
+    }
+
+    function usePlaywrightSessionViewer(sessionIdProp){
+      const [state, setState] = useState({
+        sessionId: sessionIdProp || parseSessionIdFromPath(),
+        sessionName: null,
+        connected: false,
+        mode: 'idle',
+        stream: [],
+        events: [],
+        previewUrl: null,
+        since: 0,
+        noSession: false,
+      });
+
+      useEffect(() => {
+        if(!state.sessionId){
+          setState(s => ({...s, noSession: true}));
+          return;
+        }
+        // Resolve name from /api/sessions
+        fetch('/api/sessions').then(r => r.json()).then(data => {
+          const s = (data.sessions||[]).find(x => x.session_id === state.sessionId);
+          setState(prev => ({...prev, sessionName: s ? s.name : null}));
+        }).catch(()=>{});
+
+        // Poll JSON events using session-scoped relative path
+        let cancelled = false;
+        let pollTimer = null;
+        function loop(){
+          const url = `./events.json?since=${state.since}`;
+          fetch(url).then(r => r.json()).then(body => {
+            if(cancelled) return;
+            const items = body.items || [];
+            let since = body.since || state.since;
+            const next = { stream: [], events: [], previewUrl: null };
+            items.forEach(item => {
+              const kind = item.kind || item.type || '';
+              const payload = item.text ?? item.payload ?? item.value ?? item;
+              if(kind === 'chunk' || kind === 'content') next.stream.push(payload);
+              else if(kind === 'browser' || (typeof kind === 'string' && kind.indexOf('browser') === 0)){
+                if(payload?.data_uri) next.previewUrl = payload.data_uri;
+                else if(payload?.url) next.previewUrl = payload.url;
+                else if(payload?.data) next.previewUrl = 'data:image/png;base64,' + String(payload.data);
+                if(payload?.text) next.events.push(payload.text);
+              } else {
+                next.events.push(typeof payload === 'string' ? payload : JSON.stringify(payload));
+              }
+              if(typeof item.seq === 'number') since = item.seq;
+              else if(typeof item.id === 'number') since = item.id;
+              else if(typeof item.since === 'number') since = item.since;
+            });
+            setState(prev => ({
+              ...prev,
+              since,
+              connected: true,
+              mode: 'poll',
+              stream: prev.stream.concat(next.stream),
+              events: prev.events.concat(next.events),
+              previewUrl: next.previewUrl ?? prev.previewUrl,
+            }));
+            if(!cancelled) pollTimer = setTimeout(loop, 2000);
+          }).catch(() => {
+            if(!cancelled) pollTimer = setTimeout(loop, 3000);
+          });
+        }
+        loop();
+        return () => {
+          cancelled = true;
+          if(pollTimer) clearTimeout(pollTimer);
+        };
+      }, [state.sessionId]);
+
+      return state;
+    }
+
+    function HeaderMeta({connected, mode, sessionId, sessionName}){
+      useEffect(() => {
+        const conn = document.getElementById('conn');
+        const meta = document.getElementById('meta');
+        if(conn){
+          conn.className = 'badge ' + (connected ? 'badge-ok' : 'badge-warn');
+          conn.textContent = connected ? `Connected (${mode||'poll'})` : 'Connecting…';
+        }
+        if(meta){
+          const text = [sessionId ? `id: ${sessionId}` : null, sessionName ? `name: ${sessionName}` : null].filter(Boolean).join('  ');
+          meta.textContent = text;
+          meta.style.display = text ? 'inline-block' : 'none';
+        }
+      }, [connected, mode, sessionId, sessionName]);
+      return null;
+    }
+
+    function ModelStream({items}){
+      return (
+        <div className="col">
+          <h3>Model Stream</h3>
+          <div>
+            {items.length === 0 ? (
+              <div style={{padding:'12px', color:'#9fb3c8', fontStyle:'italic'}}>No messages yet...</div>
+            ) : (
+              items.map((line, i) => (
+                <div key={i} className="stream-line">{line}</div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+    function ToolEvents({items}){
+      const parseEvent = (item) => {
+        try {
+          const parsed = typeof item === 'string' ? JSON.parse(item) : item;
+          return parsed;
+        } catch {
+          return { text: item };
+        }
+      };
+
+      return (
+        <div className="col">
+          <h3>Tool Events</h3>
+          <div>
+            {items.length === 0 ? (
+              <div style={{padding:'12px', color:'#9fb3c8', fontStyle:'italic'}}>No events yet...</div>
+            ) : (
+              items.map((item, i) => {
+                const evt = parseEvent(item);
+                const isJson = typeof evt === 'object' && evt !== null;
+                return (
+                  <div key={i} className="event-item">
+                    {isJson ? (
+                      <>
+                        {evt.type && <div style={{color:'#91a7ff', marginBottom:'4px', fontWeight:'600'}}>{evt.type}</div>}
+                        {evt.text && <div style={{marginBottom:'4px'}}>{evt.text}</div>}
+                        {Object.keys(evt).filter(k => k !== 'type' && k !== 'text').length > 0 && (
+                          <details style={{marginTop:'4px'}}>
+                            <summary style={{cursor:'pointer', color:'#9fb3c8', fontSize:'11px'}}>Details</summary>
+                            <pre style={{fontSize:'10px', margin:'4px 0', padding:'4px', background:'#0b0f12', borderRadius:'3px', overflow:'auto'}}>{JSON.stringify(evt, null, 2)}</pre>
+                          </details>
+                        )}
+                      </>
+                    ) : (
+                      <div>{String(item)}</div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      );
+    }
+    function BrowserPreview({src}){
+      return (
+        <div className="col"><h3>Browser Preview</h3><div style={{padding:'10px 12px'}}>{src ? <img className="preview" src={src} alt="Live browser preview"/> : <span style={{color:'#9fb3c8'}}>No preview yet</span>}</div></div>
+      );
+    }
+
+    function App(){
+      const state = usePlaywrightSessionViewer();
+      if(state.noSession){
+        return (
+          <div style={{padding:'12px'}}>No session context. Open via <code>/mcp/playwright/session/&lt;id&gt;/react_viewer.html</code>.</div>
+        );
+      }
+      return (
+        <>
+          <HeaderMeta connected={state.connected} mode={state.mode} sessionId={state.sessionId} sessionName={state.sessionName} />
+          <div className="row">
+            <ModelStream items={state.stream} />
+            <ToolEvents items={state.events} />
+            <BrowserPreview src={state.previewUrl} />
+          </div>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

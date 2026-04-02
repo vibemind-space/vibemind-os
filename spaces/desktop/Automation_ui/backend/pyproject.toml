@@ -1,0 +1,156 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "trae-backend"
+version = "1.0.0"
+description = "TRAE Backend Service - Unity AI Platform"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Unity AI Team", email = "team@unityai.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    # Core framework
+    "fastapi==0.104.1",
+    "uvicorn[standard]==0.24.0",
+    "python-multipart==0.0.6",
+    
+    # WebSocket support
+    "websockets==12.0",
+    
+    # Data handling
+    "pydantic==2.5.0",
+    "pydantic-settings==2.1.0",
+    
+    # Async utilities
+    "asyncio-mqtt==0.16.1",
+    
+    # Desktop automation and screenshots
+    "pyautogui==0.9.54",
+    "Pillow==10.1.0",
+    
+    # OCR (Optical Character Recognition)
+    "pytesseract==0.3.10",
+    "opencv-python==4.8.1.78",
+    
+    # File system monitoring
+    "watchdog==3.0.0",
+    
+    # Image processing
+    "numpy==1.24.4",
+    
+    # HTTP client
+    "httpx==0.25.2",
+    "requests==2.31.0",
+    "aiohttp==3.9.1",
+    
+    # Utilities
+    "python-dotenv==1.0.0",
+    "typing-extensions==4.8.0",
+    
+    # ASGI server and middleware
+    "starlette==0.27.0",
+    
+    # System monitoring
+    "psutil==5.9.6",
+    
+    # CORS middleware
+    "fastapi-cors==0.0.6",
+    
+    # JSON handling
+    "orjson==3.9.10",
+    
+    # Date and time utilities
+    "python-dateutil==2.8.2",
+    
+    # Logging
+    "loguru==0.7.2",
+    
+    # Additional dependencies
+    "redis==5.0.1",
+    "psycopg2-binary==2.9.9",
+    "sqlalchemy==2.0.23",
+    "alembic==1.13.1",
+    "jinja2==3.1.2",
+    
+    # Retry logic
+    "backoff==2.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.3",
+    "pytest-asyncio==0.21.1",
+    "pytest-cov==4.0.0",
+    "pytest-timeout==2.1.0",
+    "pytest-mock==3.10.0",
+    "pytest-xdist==3.2.1",
+    "black",
+    "flake8",
+    "mypy",
+    "watchfiles",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.3",
+    "pytest-asyncio>=0.21.1",
+    "pytest-cov>=4.0.0",
+    "pytest-timeout>=2.1.0",
+    "pytest-mock>=3.10.0",
+    "pytest-xdist>=3.2.1",
+    "black",
+    "flake8",
+    "mypy",
+    "watchfiles",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+python_classes = [
+    "Test*",
+]
+python_functions = [
+    "test_*",
+]

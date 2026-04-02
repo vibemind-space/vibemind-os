@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "description": "Chat Trigger node — conversational entry point for AI agent workflows with embedded chat widget",
+    "n8n_version": "1.70+",
+    "placeholders": ["webhook_path"]
+  },
+  "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+  "typeVersion": 1.1,
+  "name": "Chat Trigger",
+  "position": [200, 300],
+  "webhookId": "",
+  "parameters": {
+    "options": {}
+  }
+}

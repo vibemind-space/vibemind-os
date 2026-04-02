@@ -1,0 +1,54 @@
+# electron-builder Configuration for TRAE Desktop Streaming
+# Build with: npm run build (from electron-app directory)
+
+appId: com.trae.desktop-streaming
+productName: TRAE Desktop Streaming
+copyright: Copyright 2024
+
+# Directories
+directories:
+  buildResources: assets
+  output: dist
+
+# Files to include
+files:
+  - "main.js"
+  - "preload.js"
+  - "screenCapture.js"
+  - "assets/**/*"
+  - "package.json"
+
+# Windows settings
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/icon.png
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: TRAE Desktop
+
+# macOS settings
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  category: public.app-category.utilities
+  icon: assets/icon.png
+
+# Linux settings
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  category: Utility
+  icon: assets/icon.png

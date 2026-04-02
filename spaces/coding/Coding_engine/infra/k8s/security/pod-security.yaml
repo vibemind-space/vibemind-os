@@ -1,0 +1,232 @@
+# Cell Colony Pod Security Configuration
+# Implements security contexts for all cell pods
+
+---
+# ResourceQuota for cell-colony namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: cell-colony-quota
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: resource-management
+spec:
+  hard:
+    # Limit total resources
+    requests.cpu: "100"
+    requests.memory: 200Gi
+    limits.cpu: "200"
+    limits.memory: 400Gi
+    # Limit number of objects
+    pods: "500"
+    services: "200"
+    configmaps: "500"
+    secrets: "200"
+    persistentvolumeclaims: "100"
+    # Count of cells
+    count/cells.colony.codingengine.io: "200"
+
+---
+# LimitRange for cell pods
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cell-limits
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: resource-management
+spec:
+  limits:
+    # Default container limits
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "4"
+        memory: 8Gi
+      min:
+        cpu: 10m
+        memory: 32Mi
+    # Pod-level limits
+    - type: Pod
+      max:
+        cpu: "8"
+        memory: 16Gi
+
+---
+# Default security context for cell deployments
+# Apply via Kyverno/OPA Gatekeeper or use as template
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cell-security-context-template
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: security
+data:
+  pod-security-context.yaml: |
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+      supplementalGroups:
+        - 1000
+
+  container-security-context.yaml: |
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+      runAsNonRoot: true
+      runAsUser: 1000
+
+  restricted-security-context.yaml: |
+    # Most restrictive settings for sensitive cells
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+      runAsNonRoot: true
+      runAsUser: 65534  # nobody user
+      seccompProfile:
+        type: RuntimeDefault
+
+---
+# Kyverno ClusterPolicy for enforcing pod security (if using Kyverno)
+# Uncomment if Kyverno is installed
+# apiVersion: kyverno.io/v1
+# kind: ClusterPolicy
+# metadata:
+#   name: cell-pod-security
+#   labels:
+#     app.kubernetes.io/name: cell-colony
+#     app.kubernetes.io/component: security
+# spec:
+#   validationFailureAction: enforce
+#   background: true
+#   rules:
+#     - name: require-run-as-non-root
+#       match:
+#         resources:
+#           kinds:
+#             - Pod
+#           namespaces:
+#             - cell-colony
+#           selector:
+#             matchLabels:
+#               app.kubernetes.io/managed-by: cell-colony
+#       validate:
+#         message: "Pods must run as non-root"
+#         pattern:
+#           spec:
+#             securityContext:
+#               runAsNonRoot: true
+#             containers:
+#               - securityContext:
+#                   allowPrivilegeEscalation: false
+#
+#     - name: drop-all-capabilities
+#       match:
+#         resources:
+#           kinds:
+#             - Pod
+#           namespaces:
+#             - cell-colony
+#       validate:
+#         message: "Containers must drop all capabilities"
+#         pattern:
+#           spec:
+#             containers:
+#               - securityContext:
+#                   capabilities:
+#                     drop:
+#                       - ALL
+
+---
+# OPA Gatekeeper ConstraintTemplate (if using Gatekeeper)
+# Uncomment if Gatekeeper is installed
+# apiVersion: templates.gatekeeper.sh/v1
+# kind: ConstraintTemplate
+# metadata:
+#   name: cellpodsecurity
+#   labels:
+#     app.kubernetes.io/name: cell-colony
+#     app.kubernetes.io/component: security
+# spec:
+#   crd:
+#     spec:
+#       names:
+#         kind: CellPodSecurity
+#   targets:
+#     - target: admission.k8s.gatekeeper.sh
+#       rego: |
+#         package cellpodsecurity
+#
+#         violation[{"msg": msg}] {
+#           input.review.object.metadata.labels["app.kubernetes.io/managed-by"] == "cell-colony"
+#           container := input.review.object.spec.containers[_]
+#           not container.securityContext.runAsNonRoot
+#           msg := "Cell containers must set runAsNonRoot: true"
+#         }
+#
+#         violation[{"msg": msg}] {
+#           input.review.object.metadata.labels["app.kubernetes.io/managed-by"] == "cell-colony"
+#           container := input.review.object.spec.containers[_]
+#           container.securityContext.allowPrivilegeEscalation
+#           msg := "Cell containers must not allow privilege escalation"
+#         }
+
+---
+# PriorityClass for system components
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: cell-colony-system
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: scheduling
+value: 1000000
+globalDefault: false
+description: "Priority class for Cell Colony system components"
+
+---
+# PriorityClass for regular cells
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: cell-colony-cell
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: scheduling
+value: 100000
+globalDefault: false
+description: "Priority class for Cell Colony cells"
+preemptionPolicy: PreemptLowerPriority
+
+---
+# PriorityClass for batch/build jobs
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: cell-colony-batch
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: scheduling
+value: 10000
+globalDefault: false
+description: "Priority class for Cell Colony batch jobs"
+preemptionPolicy: Never

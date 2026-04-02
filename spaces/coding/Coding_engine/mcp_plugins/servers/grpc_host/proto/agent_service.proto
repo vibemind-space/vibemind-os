@@ -1,0 +1,597 @@
+syntax = "proto3";
+
+package agent_service;
+
+// Haupt-Service für alle Agent-Operationen
+service AgentService {
+  // Allgemeine Agent-Operationen
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc GetStats(GetStatsRequest) returns (GetStatsResponse);
+  rpc GetOperationsLog(GetOperationsLogRequest) returns (GetOperationsLogResponse);
+  
+  // FileWriteAgent-Operationen
+  rpc FileWrite(FileWriteRequest) returns (FileWriteResponse);
+  rpc FileRead(FileReadRequest) returns (FileReadResponse);
+  rpc FileDelete(FileDeleteRequest) returns (FileDeleteResponse);
+  rpc FileList(FileListRequest) returns (FileListResponse);
+  
+  // DockerAgent-Operationen
+  rpc DockerStart(DockerStartRequest) returns (DockerStartResponse);
+  rpc DockerStop(DockerStopRequest) returns (DockerStopResponse);
+  rpc DockerRestart(DockerRestartRequest) returns (DockerRestartResponse);
+  rpc DockerStatus(DockerStatusRequest) returns (DockerStatusResponse);
+  rpc DockerLogs(DockerLogsRequest) returns (DockerLogsResponse);
+  rpc DockerExec(DockerExecRequest) returns (DockerExecResponse);
+  rpc DockerBuild(DockerBuildRequest) returns (DockerBuildResponse);
+  rpc DockerComposeUp(DockerComposeUpRequest) returns (DockerComposeUpResponse);
+  rpc DockerComposeDown(DockerComposeDownRequest) returns (DockerComposeDownResponse);
+  rpc DockerComposeLogs(DockerComposeLogsRequest) returns (DockerComposeLogsResponse);
+  
+  // RedisAgent-Operationen
+  rpc RedisSet(RedisSetRequest) returns (RedisSetResponse);
+  rpc RedisGet(RedisGetRequest) returns (RedisGetResponse);
+  rpc RedisDelete(RedisDeleteRequest) returns (RedisDeleteResponse);
+  rpc RedisExists(RedisExistsRequest) returns (RedisExistsResponse);
+  rpc RedisKeys(RedisKeysRequest) returns (RedisKeysResponse);
+  rpc RedisFlushAll(RedisFlushAllRequest) returns (RedisFlushAllResponse);
+  rpc RedisInfo(RedisInfoRequest) returns (RedisInfoResponse);
+  rpc RedisMonitor(RedisMonitorRequest) returns (RedisMonitorResponse);
+  
+  // PostgresAgent-Operationen
+  rpc PostgresQuery(PostgresQueryRequest) returns (PostgresQueryResponse);
+  rpc PostgresExecute(PostgresExecuteRequest) returns (PostgresExecuteResponse);
+  rpc PostgresGetSchema(PostgresGetSchemaRequest) returns (PostgresGetSchemaResponse);
+  rpc PostgresGetTables(PostgresGetTablesRequest) returns (PostgresGetTablesResponse);
+  rpc PostgresGetTableInfo(PostgresGetTableInfoRequest) returns (PostgresGetTableInfoResponse);
+  rpc PostgresBackup(PostgresBackupRequest) returns (PostgresBackupResponse);
+  rpc PostgresRestore(PostgresRestoreRequest) returns (PostgresRestoreResponse);
+  rpc PostgresLogs(PostgresLogsRequest) returns (PostgresLogsResponse);
+  
+  // PlaywrightAgent-Operationen
+  rpc PlaywrightStart(PlaywrightStartRequest) returns (PlaywrightStartResponse);
+  rpc PlaywrightStop(PlaywrightStopRequest) returns (PlaywrightStopResponse);
+  rpc PlaywrightGoto(PlaywrightGotoRequest) returns (PlaywrightGotoResponse);
+  rpc PlaywrightClick(PlaywrightClickRequest) returns (PlaywrightClickResponse);
+  rpc PlaywrightFill(PlaywrightFillRequest) returns (PlaywrightFillResponse);
+  rpc PlaywrightGetText(PlaywrightGetTextRequest) returns (PlaywrightGetTextResponse);
+  rpc PlaywrightScreenshot(PlaywrightScreenshotRequest) returns (PlaywrightScreenshotResponse);
+  rpc PlaywrightWaitForSelector(PlaywrightWaitForSelectorRequest) returns (PlaywrightWaitForSelectorResponse);
+  rpc PlaywrightWaitForTimeout(PlaywrightWaitForTimeoutRequest) returns (PlaywrightWaitForTimeoutResponse);
+  rpc PlaywrightEvaluate(PlaywrightEvaluateRequest) returns (PlaywrightEvaluateResponse);
+  rpc PlaywrightGetUrl(PlaywrightGetUrlRequest) returns (PlaywrightGetUrlResponse);
+  rpc PlaywrightGetTitle(PlaywrightGetTitleRequest) returns (PlaywrightGetTitleResponse);
+  rpc PlaywrightGetConsoleLogs(PlaywrightGetConsoleLogsRequest) returns (PlaywrightGetConsoleLogsResponse);
+  rpc PlaywrightGetNetworkLogs(PlaywrightGetNetworkLogsRequest) returns (PlaywrightGetNetworkLogsResponse);
+  rpc PlaywrightRunTest(PlaywrightRunTestRequest) returns (PlaywrightRunTestResponse);
+}
+
+// Allgemeine Nachrichten
+message HealthCheckRequest {
+  string agent_type = 1;
+}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string message = 2;
+}
+
+message GetStatsRequest {
+  string agent_type = 1;
+}
+
+message GetStatsResponse {
+  bool success = 1;
+  map<string, string> stats = 2;
+}
+
+message GetOperationsLogRequest {
+  string agent_type = 1;
+  int32 limit = 2;
+}
+
+message GetOperationsLogResponse {
+  bool success = 1;
+  repeated OperationLogEntry operations = 2;
+}
+
+message OperationLogEntry {
+  string timestamp = 1;
+  string operation = 2;
+  map<string, string> details = 3;
+}
+
+// FileWriteAgent-Nachrichten
+message FileWriteRequest {
+  string path = 1;
+  string content = 2;
+  bool overwrite = 3;
+}
+
+message FileWriteResponse {
+  bool success = 1;
+  string message = 2;
+  string path = 3;
+}
+
+message FileReadRequest {
+  string path = 1;
+}
+
+message FileReadResponse {
+  bool success = 1;
+  string content = 2;
+  string error = 3;
+}
+
+message FileDeleteRequest {
+  string path = 1;
+}
+
+message FileDeleteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message FileListRequest {
+  string path = 1;
+  bool recursive = 2;
+}
+
+message FileListResponse {
+  bool success = 1;
+  repeated string files = 2;
+  string error = 3;
+}
+
+// DockerAgent-Nachrichten
+message DockerStartRequest {
+  string container_name = 1;
+  map<string, string> env_vars = 2;
+  repeated string ports = 3;
+  repeated string volumes = 4;
+}
+
+message DockerStartResponse {
+  bool success = 1;
+  string message = 2;
+  string container_id = 3;
+}
+
+message DockerStopRequest {
+  string container_name = 1;
+}
+
+message DockerStopResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message DockerRestartRequest {
+  string container_name = 1;
+}
+
+message DockerRestartResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message DockerStatusRequest {
+  string container_name = 1;
+}
+
+message DockerStatusResponse {
+  bool success = 1;
+  string status = 2;
+  map<string, string> details = 3;
+}
+
+message DockerLogsRequest {
+  string container_name = 1;
+  int32 tail = 2;
+  bool follow = 3;
+}
+
+message DockerLogsResponse {
+  bool success = 1;
+  repeated string logs = 2;
+  string error = 3;
+}
+
+message DockerExecRequest {
+  string container_name = 1;
+  string command = 2;
+}
+
+message DockerExecResponse {
+  bool success = 1;
+  string output = 2;
+  string error = 3;
+}
+
+message DockerBuildRequest {
+  string context_path = 1;
+  string dockerfile_path = 2;
+  string tag = 3;
+  map<string, string> build_args = 4;
+}
+
+message DockerBuildResponse {
+  bool success = 1;
+  string message = 2;
+  string image_id = 3;
+}
+
+message DockerComposeUpRequest {
+  string compose_file = 1;
+  bool detached = 2;
+  map<string, string> env_vars = 3;
+}
+
+message DockerComposeUpResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message DockerComposeDownRequest {
+  string compose_file = 1;
+  bool remove_volumes = 2;
+}
+
+message DockerComposeDownResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message DockerComposeLogsRequest {
+  string compose_file = 1;
+  string service = 2;
+  int32 tail = 3;
+  bool follow = 4;
+}
+
+message DockerComposeLogsResponse {
+  bool success = 1;
+  repeated string logs = 2;
+  string error = 3;
+}
+
+// RedisAgent-Nachrichten
+message RedisSetRequest {
+  string key = 1;
+  string value = 2;
+  int32 ttl = 3;
+}
+
+message RedisSetResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RedisGetRequest {
+  string key = 1;
+}
+
+message RedisGetResponse {
+  bool success = 1;
+  string value = 2;
+  string error = 3;
+}
+
+message RedisDeleteRequest {
+  string key = 1;
+}
+
+message RedisDeleteResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RedisExistsRequest {
+  string key = 1;
+}
+
+message RedisExistsResponse {
+  bool success = 1;
+  bool exists = 2;
+}
+
+message RedisKeysRequest {
+  string pattern = 1;
+}
+
+message RedisKeysResponse {
+  bool success = 1;
+  repeated string keys = 2;
+}
+
+message RedisFlushAllRequest {}
+
+message RedisFlushAllResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RedisInfoRequest {
+  string section = 1;
+}
+
+message RedisInfoResponse {
+  bool success = 1;
+  map<string, string> info = 2;
+}
+
+message RedisMonitorRequest {
+  int32 duration = 1;
+}
+
+message RedisMonitorResponse {
+  bool success = 1;
+  repeated string commands = 2;
+}
+
+// PostgresAgent-Nachrichten
+message PostgresQueryRequest {
+  string query = 1;
+  repeated string params = 2;
+}
+
+message PostgresQueryResponse {
+  bool success = 1;
+  repeated map<string, string> rows = 2;
+  string error = 3;
+}
+
+message PostgresExecuteRequest {
+  string query = 1;
+  repeated string params = 2;
+}
+
+message PostgresExecuteResponse {
+  bool success = 1;
+  int32 rows_affected = 2;
+  string error = 3;
+}
+
+message PostgresGetSchemaRequest {}
+
+message PostgresGetSchemaResponse {
+  bool success = 1;
+  repeated TableSchema tables = 2;
+  string error = 3;
+}
+
+message TableSchema {
+  string table_name = 1;
+  repeated ColumnSchema columns = 2;
+}
+
+message ColumnSchema {
+  string column_name = 1;
+  string data_type = 2;
+  bool nullable = 3;
+  string default_value = 4;
+}
+
+message PostgresGetTablesRequest {}
+
+message PostgresGetTablesResponse {
+  bool success = 1;
+  repeated string tables = 2;
+  string error = 3;
+}
+
+message PostgresGetTableInfoRequest {
+  string table_name = 1;
+}
+
+message PostgresGetTableInfoResponse {
+  bool success = 1;
+  TableSchema table_info = 2;
+  string error = 3;
+}
+
+message PostgresBackupRequest {
+  string backup_path = 1;
+}
+
+message PostgresBackupResponse {
+  bool success = 1;
+  string message = 2;
+  string backup_path = 3;
+}
+
+message PostgresRestoreRequest {
+  string backup_path = 1;
+}
+
+message PostgresRestoreResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PostgresLogsRequest {
+  int32 tail = 2;
+}
+
+message PostgresLogsResponse {
+  bool success = 1;
+  repeated string logs = 2;
+  string error = 3;
+}
+
+// PlaywrightAgent-Nachrichten
+message PlaywrightStartRequest {
+  string browser_type = 1;
+  bool headless = 2;
+}
+
+message PlaywrightStartResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PlaywrightStopRequest {}
+
+message PlaywrightStopResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PlaywrightGotoRequest {
+  string url = 1;
+  string wait_until = 2;
+}
+
+message PlaywrightGotoResponse {
+  bool success = 1;
+  string url = 2;
+  string error = 3;
+}
+
+message PlaywrightClickRequest {
+  string selector = 1;
+  int32 timeout = 2;
+}
+
+message PlaywrightClickResponse {
+  bool success = 1;
+  string selector = 2;
+  string error = 3;
+}
+
+message PlaywrightFillRequest {
+  string selector = 1;
+  string value = 2;
+  int32 timeout = 3;
+}
+
+message PlaywrightFillResponse {
+  bool success = 1;
+  string selector = 2;
+  string error = 3;
+}
+
+message PlaywrightGetTextRequest {
+  string selector = 1;
+  int32 timeout = 2;
+}
+
+message PlaywrightGetTextResponse {
+  bool success = 1;
+  string selector = 2;
+  string text = 3;
+  string error = 4;
+}
+
+message PlaywrightScreenshotRequest {
+  string filename = 1;
+  string format = 2;
+  bool full_page = 3;
+}
+
+message PlaywrightScreenshotResponse {
+  bool success = 1;
+  string filename = 2;
+  string path = 3;
+  string error = 4;
+}
+
+message PlaywrightWaitForSelectorRequest {
+  string selector = 1;
+  int32 timeout = 2;
+}
+
+message PlaywrightWaitForSelectorResponse {
+  bool success = 1;
+  string selector = 2;
+  string error = 3;
+}
+
+message PlaywrightWaitForTimeoutRequest {
+  int32 timeout = 1;
+}
+
+message PlaywrightWaitForTimeoutResponse {
+  bool success = 1;
+  int32 timeout = 2;
+  string error = 3;
+}
+
+message PlaywrightEvaluateRequest {
+  string script = 1;
+}
+
+message PlaywrightEvaluateResponse {
+  bool success = 1;
+  string result = 2;
+  string error = 3;
+}
+
+message PlaywrightGetUrlRequest {}
+
+message PlaywrightGetUrlResponse {
+  bool success = 1;
+  string url = 2;
+  string error = 3;
+}
+
+message PlaywrightGetTitleRequest {}
+
+message PlaywrightGetTitleResponse {
+  bool success = 1;
+  string title = 2;
+  string error = 3;
+}
+
+message PlaywrightGetConsoleLogsRequest {}
+
+message PlaywrightGetConsoleLogsResponse {
+  bool success = 1;
+  repeated ConsoleLogEntry logs = 2;
+  string error = 3;
+}
+
+message ConsoleLogEntry {
+  string type = 1;
+  string text = 2;
+  string timestamp = 3;
+}
+
+message PlaywrightGetNetworkLogsRequest {}
+
+message PlaywrightGetNetworkLogsResponse {
+  bool success = 1;
+  repeated NetworkLogEntry logs = 2;
+  string error = 3;
+}
+
+message NetworkLogEntry {
+  string url = 1;
+  int32 status = 2;
+  string method = 3;
+  string timestamp = 4;
+}
+
+message PlaywrightRunTestRequest {
+  string test_name = 1;
+  repeated TestStep steps = 2;
+}
+
+message TestStep {
+  string type = 1;
+  map<string, string> params = 2;
+}
+
+message PlaywrightRunTestResponse {
+  bool success = 1;
+  string test_name = 2;
+  bool passed = 3;
+  repeated TestStepResult results = 4;
+  string error = 5;
+}
+
+message TestStepResult {
+  TestStep step = 1;
+  bool success = 2;
+  string error = 3;
+}

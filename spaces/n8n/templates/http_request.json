@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "description": "HTTP Request node — for calling external APIs (e.g. Datev)",
+    "placeholders": ["url", "method", "headers", "body"]
+  },
+  "type": "n8n-nodes-base.httpRequest",
+  "typeVersion": 4.2,
+  "name": "HTTP Request",
+  "position": [1000, 400],
+  "parameters": {
+    "method": "GET",
+    "url": "https://api.example.com/endpoint",
+    "options": {}
+  }
+}

@@ -1,0 +1,340 @@
+{
+  "version": "1.0",
+  "description": "Sense-based classification for MCP tools, inspired by human sensory perception",
+  "sense_categories": {
+    "VISUAL": {
+      "description": "Visual perception: screenshots, UI, layout, DOM structure",
+      "color": "#4A90E2",
+      "icon": "👁️",
+      "operations": ["capture", "navigate", "observe", "inspect", "screenshot"],
+      "data_types": ["image", "screenshot", "dom", "layout", "pixels"],
+      "tools": ["playwright", "desktop"]
+    },
+    "TACTILE": {
+      "description": "Physical manipulation: files, processes, containers, system state",
+      "color": "#E67E22",
+      "icon": "✋",
+      "operations": ["create", "delete", "modify", "move", "execute", "kill", "touch"],
+      "data_types": ["file", "process", "container", "binary", "resource"],
+      "tools": ["docker", "windows-core", "filesystem", "desktop"]
+    },
+    "MEMORY": {
+      "description": "Storage and retrieval: knowledge graphs, databases, caching",
+      "color": "#9B59B6",
+      "icon": "🧠",
+      "operations": ["store", "retrieve", "update", "query", "associate", "remember", "forget"],
+      "data_types": ["entity", "relation", "key-value", "graph", "table", "cache"],
+      "tools": ["memory", "redis", "supabase", "taskmanager"]
+    },
+    "LINGUISTIC": {
+      "description": "Text processing: search, retrieval, comprehension, extraction",
+      "color": "#27AE60",
+      "icon": "📝",
+      "operations": ["search", "fetch", "extract", "parse", "summarize", "translate"],
+      "data_types": ["text", "html", "markdown", "code", "transcript", "document"],
+      "tools": ["fetch", "brave-search", "tavily", "context7", "youtube"]
+    },
+    "TEMPORAL": {
+      "description": "Time-based operations: scheduling, workflows, sequences",
+      "color": "#F39C12",
+      "icon": "⏰",
+      "operations": ["schedule", "sequence", "delay", "trigger", "chain", "timestamp"],
+      "data_types": ["timestamp", "duration", "workflow", "event", "cron"],
+      "tools": ["time", "n8n", "sequential-thinking"]
+    },
+    "COLLABORATIVE": {
+      "description": "Multi-user interaction: version control, communication, sharing",
+      "color": "#E74C3C",
+      "icon": "🤝",
+      "operations": ["commit", "push", "pull", "review", "comment", "merge", "fork"],
+      "data_types": ["repository", "issue", "pr", "commit", "diff", "branch"],
+      "tools": ["github"]
+    }
+  },
+  "tool_sense_map": {
+    "playwright": {
+      "primary": "VISUAL",
+      "secondary": ["TACTILE", "LINGUISTIC"],
+      "description": "Browser automation with visual perception and DOM manipulation",
+      "operations": {
+        "browser_navigate": ["VISUAL", "TACTILE"],
+        "browser_click": ["VISUAL", "TACTILE"],
+        "browser_take_screenshot": ["VISUAL"],
+        "browser_snapshot": ["VISUAL"],
+        "browser_evaluate": ["VISUAL", "LINGUISTIC"],
+        "browser_type": ["TACTILE", "LINGUISTIC"],
+        "browser_fill_form": ["TACTILE", "LINGUISTIC"],
+        "browser_hover": ["VISUAL", "TACTILE"],
+        "browser_drag": ["VISUAL", "TACTILE"],
+        "browser_wait_for": ["VISUAL", "TEMPORAL"]
+      }
+    },
+    "memory": {
+      "primary": "MEMORY",
+      "secondary": ["LINGUISTIC"],
+      "description": "Knowledge graph storage with semantic search",
+      "operations": {
+        "create_entity": ["MEMORY"],
+        "create_relation": ["MEMORY"],
+        "add_observation": ["MEMORY"],
+        "delete_entity": ["MEMORY"],
+        "delete_observation": ["MEMORY"],
+        "delete_relation": ["MEMORY"],
+        "read_graph": ["MEMORY"],
+        "search_nodes": ["MEMORY", "LINGUISTIC"],
+        "open_nodes": ["MEMORY"]
+      }
+    },
+    "docker": {
+      "primary": "TACTILE",
+      "secondary": ["MEMORY", "TEMPORAL"],
+      "description": "Container lifecycle management and system manipulation",
+      "operations": {
+        "container_create": ["TACTILE", "MEMORY"],
+        "container_start": ["TACTILE", "TEMPORAL"],
+        "container_stop": ["TACTILE", "TEMPORAL"],
+        "container_remove": ["TACTILE"],
+        "container_logs": ["LINGUISTIC", "TEMPORAL"],
+        "container_inspect": ["MEMORY", "LINGUISTIC"],
+        "image_pull": ["TACTILE", "MEMORY"],
+        "image_build": ["TACTILE", "TEMPORAL"]
+      }
+    },
+    "brave-search": {
+      "primary": "LINGUISTIC",
+      "secondary": [],
+      "description": "Privacy-focused web search with text retrieval",
+      "operations": {
+        "web_search": ["LINGUISTIC"],
+        "local_search": ["LINGUISTIC"]
+      }
+    },
+    "filesystem": {
+      "primary": "TACTILE",
+      "secondary": ["MEMORY", "LINGUISTIC"],
+      "description": "File and directory operations with content handling",
+      "operations": {
+        "read_file": ["LINGUISTIC", "MEMORY"],
+        "read_multiple_files": ["LINGUISTIC", "MEMORY"],
+        "write_file": ["TACTILE", "MEMORY"],
+        "edit_file": ["TACTILE", "LINGUISTIC"],
+        "create_directory": ["TACTILE"],
+        "list_directory": ["LINGUISTIC", "TACTILE"],
+        "move_file": ["TACTILE"],
+        "search_files": ["LINGUISTIC", "TACTILE"],
+        "get_file_info": ["MEMORY", "TEMPORAL"]
+      }
+    },
+    "github": {
+      "primary": "COLLABORATIVE",
+      "secondary": ["MEMORY", "LINGUISTIC"],
+      "description": "Git repository management and team collaboration",
+      "operations": {
+        "create_or_update_file": ["COLLABORATIVE", "TACTILE"],
+        "create_pull_request": ["COLLABORATIVE", "LINGUISTIC"],
+        "create_issue": ["COLLABORATIVE", "LINGUISTIC"],
+        "create_repository": ["COLLABORATIVE", "MEMORY"],
+        "get_file_contents": ["LINGUISTIC", "MEMORY"],
+        "push_files": ["COLLABORATIVE", "TACTILE"],
+        "search_code": ["LINGUISTIC", "MEMORY"],
+        "search_issues": ["LINGUISTIC", "COLLABORATIVE"]
+      }
+    },
+    "time": {
+      "primary": "TEMPORAL",
+      "secondary": [],
+      "description": "Time operations and timezone conversions",
+      "operations": {
+        "get_current_time": ["TEMPORAL"],
+        "convert_timezone": ["TEMPORAL"],
+        "get_timestamp": ["TEMPORAL"],
+        "format_time": ["TEMPORAL", "LINGUISTIC"]
+      }
+    },
+    "n8n": {
+      "primary": "TEMPORAL",
+      "secondary": ["COLLABORATIVE", "TACTILE"],
+      "description": "Workflow automation and sequential task execution",
+      "operations": {
+        "execute_workflow": ["TEMPORAL", "TACTILE"],
+        "trigger_webhook": ["TEMPORAL", "COLLABORATIVE"],
+        "list_workflows": ["MEMORY", "LINGUISTIC"],
+        "get_workflow": ["MEMORY", "LINGUISTIC"]
+      }
+    },
+    "sequential-thinking": {
+      "primary": "TEMPORAL",
+      "secondary": ["LINGUISTIC", "MEMORY"],
+      "description": "Step-by-step reasoning with thought sequences",
+      "operations": {
+        "create_thought": ["TEMPORAL", "LINGUISTIC"],
+        "next_step": ["TEMPORAL"],
+        "branch_thought": ["TEMPORAL", "MEMORY"],
+        "finalize_thought": ["TEMPORAL", "LINGUISTIC"]
+      }
+    },
+    "redis": {
+      "primary": "MEMORY",
+      "secondary": ["TEMPORAL"],
+      "description": "In-memory key-value store with expiration support",
+      "operations": {
+        "set": ["MEMORY"],
+        "get": ["MEMORY"],
+        "delete": ["MEMORY"],
+        "expire": ["MEMORY", "TEMPORAL"],
+        "list_keys": ["MEMORY", "LINGUISTIC"],
+        "search": ["MEMORY", "LINGUISTIC"]
+      }
+    },
+    "supabase": {
+      "primary": "MEMORY",
+      "secondary": ["COLLABORATIVE", "TEMPORAL"],
+      "description": "PostgreSQL database with real-time collaboration",
+      "operations": {
+        "select": ["MEMORY", "LINGUISTIC"],
+        "insert": ["MEMORY", "TACTILE"],
+        "update": ["MEMORY", "TACTILE"],
+        "delete": ["MEMORY", "TACTILE"],
+        "execute_sql": ["MEMORY", "LINGUISTIC"],
+        "subscribe": ["MEMORY", "TEMPORAL", "COLLABORATIVE"]
+      }
+    },
+    "taskmanager": {
+      "primary": "MEMORY",
+      "secondary": ["TEMPORAL", "COLLABORATIVE"],
+      "description": "Task tracking with temporal scheduling",
+      "operations": {
+        "create_task": ["MEMORY", "TEMPORAL"],
+        "update_task": ["MEMORY", "TACTILE"],
+        "delete_task": ["MEMORY", "TACTILE"],
+        "list_tasks": ["MEMORY", "LINGUISTIC"],
+        "get_task": ["MEMORY"]
+      }
+    },
+    "desktop": {
+      "primary": "TACTILE",
+      "secondary": ["VISUAL", "LINGUISTIC"],
+      "description": "Desktop environment control with terminal access",
+      "operations": {
+        "run_terminal_command": ["TACTILE", "LINGUISTIC"],
+        "read_file": ["LINGUISTIC", "MEMORY"],
+        "write_file": ["TACTILE", "MEMORY"],
+        "list_directory": ["LINGUISTIC", "TACTILE"],
+        "get_process_list": ["MEMORY", "LINGUISTIC"],
+        "kill_process": ["TACTILE"]
+      }
+    },
+    "windows-core": {
+      "primary": "TACTILE",
+      "secondary": ["MEMORY", "LINGUISTIC", "TEMPORAL"],
+      "description": "Windows system operations with 25 core tools",
+      "operations": {
+        "file_read": ["LINGUISTIC", "MEMORY"],
+        "file_write": ["TACTILE", "MEMORY"],
+        "file_delete": ["TACTILE"],
+        "file_copy": ["TACTILE", "MEMORY"],
+        "file_move": ["TACTILE", "MEMORY"],
+        "directory_create": ["TACTILE"],
+        "directory_list": ["LINGUISTIC", "TACTILE"],
+        "process_list": ["MEMORY", "LINGUISTIC"],
+        "process_kill": ["TACTILE"],
+        "registry_read": ["MEMORY", "LINGUISTIC"],
+        "system_info": ["MEMORY", "LINGUISTIC"],
+        "network_info": ["MEMORY", "LINGUISTIC"]
+      }
+    },
+    "fetch": {
+      "primary": "LINGUISTIC",
+      "secondary": ["MEMORY"],
+      "description": "HTTP requests and web content retrieval",
+      "operations": {
+        "fetch_url": ["LINGUISTIC"],
+        "post_data": ["LINGUISTIC", "TACTILE"],
+        "get_headers": ["MEMORY", "LINGUISTIC"]
+      }
+    },
+    "tavily": {
+      "primary": "LINGUISTIC",
+      "secondary": ["MEMORY", "VISUAL"],
+      "description": "Advanced web search with extraction and crawling",
+      "operations": {
+        "search": ["LINGUISTIC"],
+        "extract": ["LINGUISTIC", "VISUAL"],
+        "qna_search": ["LINGUISTIC", "MEMORY"],
+        "map_website": ["LINGUISTIC", "VISUAL", "MEMORY"]
+      }
+    },
+    "context7": {
+      "primary": "LINGUISTIC",
+      "secondary": ["MEMORY"],
+      "description": "Up-to-date code documentation and examples",
+      "operations": {
+        "get_docs": ["LINGUISTIC", "MEMORY"],
+        "search_examples": ["LINGUISTIC", "MEMORY"],
+        "get_api_reference": ["LINGUISTIC", "MEMORY"]
+      }
+    },
+    "youtube": {
+      "primary": "LINGUISTIC",
+      "secondary": ["TEMPORAL", "MEMORY"],
+      "description": "Video transcript and caption retrieval",
+      "operations": {
+        "get_transcript": ["LINGUISTIC", "TEMPORAL"],
+        "search_captions": ["LINGUISTIC"],
+        "get_video_info": ["MEMORY", "LINGUISTIC"]
+      }
+    }
+  },
+  "sense_fusion_patterns": {
+    "visual_linguistic": {
+      "description": "Screenshot analysis with text extraction (OCR, DOM parsing)",
+      "tools": ["playwright", "tavily"],
+      "use_cases": ["web scraping", "UI testing", "content extraction", "visual QA"],
+      "complexity": "moderate"
+    },
+    "tactile_memory": {
+      "description": "File/system manipulation with persistent state tracking",
+      "tools": ["filesystem", "docker", "windows-core", "memory"],
+      "use_cases": ["state management", "configuration changes", "deployment tracking"],
+      "complexity": "simple"
+    },
+    "linguistic_memory": {
+      "description": "Text retrieval with knowledge storage and semantic search",
+      "tools": ["brave-search", "memory", "context7", "tavily"],
+      "use_cases": ["research", "knowledge building", "RAG systems", "documentation"],
+      "complexity": "moderate"
+    },
+    "temporal_collaborative": {
+      "description": "Workflow automation with team coordination",
+      "tools": ["n8n", "github", "taskmanager"],
+      "use_cases": ["CI/CD", "automated releases", "notification chains", "project management"],
+      "complexity": "complex"
+    },
+    "tactile_temporal": {
+      "description": "System operations with scheduling and timing",
+      "tools": ["docker", "n8n", "windows-core"],
+      "use_cases": ["cron jobs", "scheduled deployments", "automated maintenance"],
+      "complexity": "moderate"
+    },
+    "visual_tactile": {
+      "description": "Visual observation with direct manipulation",
+      "tools": ["playwright", "desktop"],
+      "use_cases": ["browser automation", "UI automation", "testing"],
+      "complexity": "moderate"
+    }
+  },
+  "complexity_levels": {
+    "simple": {
+      "description": "Single-sense operations with clear inputs/outputs",
+      "examples": ["get_current_time", "set_value", "read_file"]
+    },
+    "moderate": {
+      "description": "Two-sense fusion or multi-step single-sense operations",
+      "examples": ["browser_navigate + screenshot", "search + store", "workflow execution"]
+    },
+    "complex": {
+      "description": "Three+ sense fusion or sophisticated reasoning required",
+      "examples": ["visual QA + knowledge graph", "multi-tool workflows", "adaptive automation"]
+    }
+  }
+}

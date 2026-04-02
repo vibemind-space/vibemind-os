@@ -1,0 +1,223 @@
+# ============================================================
+# Customer Live-Deployment Docker Compose
+# 
+# Ermöglicht Live-Updates von generiertem Code auf Kundensysteme
+# über Docker Bind Mounts mit Hot Reload.
+#
+# Usage:
+#   DEPLOY_SOURCE=C:/deployed_apps/customer_xyz \
+#   CUSTOMER_ID=xyz \
+#   docker-compose -f docker-compose.customer-deploy.yml up -d
+#
+# ============================================================
+version: "3.9"
+
+services:
+  # ============================================================
+  # PostgreSQL Database
+  # ============================================================
+  db:
+    image: postgres:15-alpine
+    container_name: ${CUSTOMER_ID:-default}-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================================
+  # Redis Cache
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: ${CUSTOMER_ID:-default}-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redispassword}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispassword}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================================
+  # Haupt-Applikation mit Live-Mount
+  # ============================================================
+  customer-app:
+    image: node:20-alpine
+    container_name: ${CUSTOMER_ID:-default}-app
+    working_dir: /app
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    volumes:
+      # BIND MOUNT: Coding Engine Output → Container
+      # Source: Das Verzeichnis das in Docker Desktop "File sharing" freigegeben wurde
+      - type: bind
+        source: ${DEPLOY_SOURCE:-./output}
+        target: /app
+        read_only: false  # Für bidirektionale Sync
+
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+    environment:
+      - NODE_ENV=development
+      # Database connection
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-dev}:${POSTGRES_PASSWORD:-devpassword}@db:5432/${POSTGRES_DB:-app}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redispassword}@redis:6379
+      # Windows File Watching Compatibility
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
+      - WATCHPACK_POLLING=true
+      # Vite spezifisch
+      - VITE_HOT=true
+    
+    command: >
+      sh -c "
+        echo '🚀 Starting Live-Deploy Container...'
+        echo '📁 Source: ${DEPLOY_SOURCE:-./output}'
+        echo '🔗 Mounted to: /app'
+        
+        # Install dependencies if package.json exists
+        if [ -f package.json ]; then
+          echo '📦 Installing dependencies...'
+          npm install --legacy-peer-deps 2>/dev/null || npm install
+        fi
+        
+        # Start dev server with hot reload
+        echo '🔥 Starting dev server with Hot Reload...'
+        npm run dev -- --host 0.0.0.0 --port 3000
+      "
+    
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  # ============================================================
+  # File Watcher Service (Optional - für Logging/Monitoring)
+  # ============================================================
+  file-watcher:
+    image: alpine:3.19
+    container_name: ${CUSTOMER_ID:-default}-watcher
+    profiles:
+      - monitoring  # Nur wenn --profile monitoring angegeben
+    
+    volumes:
+      - type: bind
+        source: ${DEPLOY_SOURCE:-./output}
+        target: /watch
+        read_only: true
+    
+    command: >
+      sh -c "
+        apk add --no-cache inotify-tools
+        echo '👁️ File Watcher started for ${DEPLOY_SOURCE:-./output}'
+        echo '-------------------------------------------'
+        inotifywait -m -r -e modify,create,delete,move /watch |
+        while read path action file; do
+          timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+          echo \"[$timestamp] $action: $path$file\"
+        done
+      "
+    
+    restart: unless-stopped
+
+  # ============================================================
+  # Production Build Service (für einmaligen Build)
+  # ============================================================
+  production-build:
+    image: node:20-alpine
+    container_name: ${CUSTOMER_ID:-default}-build
+    profiles:
+      - build  # Nur wenn --profile build angegeben
+    
+    volumes:
+      - type: bind
+        source: ${DEPLOY_SOURCE:-./output}
+        target: /app
+      # Output für statische Dateien
+      - type: bind
+        source: ${BUILD_OUTPUT:-./dist}
+        target: /dist
+    
+    working_dir: /app
+    
+    command: >
+      sh -c "
+        echo '🏗️ Building production bundle...'
+        npm install --legacy-peer-deps 2>/dev/null || npm install
+        npm run build
+        
+        # Copy build output
+        if [ -d dist ]; then
+          cp -r dist/* /dist/
+          echo '✅ Build complete! Output in ${BUILD_OUTPUT:-./dist}'
+        fi
+      "
+
+  # ============================================================
+  # Nginx Static Server (für Production)
+  # ============================================================
+  production-server:
+    image: nginx:1.25-alpine
+    container_name: ${CUSTOMER_ID:-default}-nginx
+    profiles:
+      - production  # Nur wenn --profile production angegeben
+    
+    volumes:
+      - type: bind
+        source: ${BUILD_OUTPUT:-./dist}
+        target: /usr/share/nginx/html
+        read_only: true
+    
+    ports:
+      - "${PROD_PORT:-80}:80"
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: customer-${CUSTOMER_ID:-default}-network
+    driver: bridge

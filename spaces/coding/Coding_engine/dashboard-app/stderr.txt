@@ -1,0 +1,26 @@
+node:internal/modules/cjs/loader:1087
+  throw err;
+  ^
+
+Error: Cannot find module 'electron'
+Require stack:
+- c:\Users\User\Desktop\Coding_engine\dashboard-app\out\main\main.js
+- c:\Users\User\Desktop\Coding_engine\dashboard-app\bootstrap.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1084:15)
+    at Module._load (node:internal/modules/cjs/loader:929:27)
+    at l._load (node:electron/js2c/asar_bundle:2:13642)
+    at Module.require (node:internal/modules/cjs/loader:1150:19)
+    at require (node:internal/modules/cjs/helpers:119:18)
+    at Object.<anonymous> (c:\Users\User\Desktop\Coding_engine\dashboard-app\out\main\main.js:2:18)
+    at Module._compile (node:internal/modules/cjs/loader:1271:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1326:10)
+    at Module.load (node:internal/modules/cjs/loader:1126:32)
+    at Module._load (node:internal/modules/cjs/loader:967:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'c:\\Users\\User\\Desktop\\Coding_engine\\dashboard-app\\out\\main\\main.js',
+    'c:\\Users\\User\\Desktop\\Coding_engine\\dashboard-app\\bootstrap.js'
+  ]
+}
+
+Node.js v18.18.2

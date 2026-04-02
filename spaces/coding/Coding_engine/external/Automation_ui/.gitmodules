@@ -1,0 +1,3 @@
+[submodule "moire_tracker"]
+	path = moire_tracker
+	url = https://github.com/Flissel/Vibemind_Moire_Tracker.git

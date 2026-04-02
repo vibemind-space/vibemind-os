@@ -1,0 +1,332 @@
+# Cell Colony Vault Integration
+# Configures HashiCorp Vault for secret management
+
+---
+# Vault namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vault
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/component: secrets-management
+
+---
+# ServiceAccount for Vault authentication
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: vault-auth
+
+---
+# ClusterRoleBinding for Vault to verify ServiceAccount tokens
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-tokenreview-binding
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/component: auth
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: vault-auth
+    namespace: cell-colony
+
+---
+# ConfigMap for Vault Agent configuration template
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-agent-config
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: vault-agent
+data:
+  vault-agent-config.hcl: |
+    exit_after_auth = false
+
+    pid_file = "/home/vault/pidfile"
+
+    vault {
+      address = "http://vault.vault.svc.cluster.local:8200"
+    }
+
+    auto_auth {
+      method "kubernetes" {
+        mount_path = "auth/kubernetes"
+        config = {
+          role = "cell-role"
+        }
+      }
+
+      sink "file" {
+        config = {
+          path = "/home/vault/.vault-token"
+        }
+      }
+    }
+
+    template_config {
+      exit_on_retry_failure = true
+    }
+
+    template {
+      destination = "/vault/secrets/config.json"
+      contents = <<EOT
+    {
+      {{- with secret "secret/data/cells/CELL_ID" }}
+      {{ range $k, $v := .Data.data }}
+      "{{ $k }}": "{{ $v }}",
+      {{ end }}
+      {{- end }}
+      "injected_at": "{{ timestamp }}"
+    }
+    EOT
+    }
+
+  vault-agent-init.hcl: |
+    exit_after_auth = true
+
+    pid_file = "/home/vault/pidfile"
+
+    vault {
+      address = "http://vault.vault.svc.cluster.local:8200"
+    }
+
+    auto_auth {
+      method "kubernetes" {
+        mount_path = "auth/kubernetes"
+        config = {
+          role = "cell-role"
+        }
+      }
+
+      sink "file" {
+        config = {
+          path = "/vault/secrets/.vault-token"
+          mode = 0644
+        }
+      }
+    }
+
+---
+# Vault policy for cells (apply via Vault CLI)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-policies
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: vault-policies
+data:
+  cell-policy.hcl: |
+    # Policy for individual cells
+    # Path is parameterized with cell_id
+
+    # Read own secrets
+    path "secret/data/cells/{{identity.entity.aliases.auth_kubernetes_*.metadata.service_account_name}}/*" {
+      capabilities = ["read", "list"]
+    }
+
+    # Read shared namespace secrets
+    path "secret/data/shared/cell-colony/*" {
+      capabilities = ["read", "list"]
+    }
+
+    # Read global config
+    path "secret/data/global/config" {
+      capabilities = ["read"]
+    }
+
+    # Use transit encryption
+    path "transit/encrypt/cell-key" {
+      capabilities = ["update"]
+    }
+
+    path "transit/decrypt/cell-key" {
+      capabilities = ["update"]
+    }
+
+  colony-manager-policy.hcl: |
+    # Policy for ColonyManager
+
+    # Full access to cell secrets for management
+    path "secret/data/cells/*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }
+
+    path "secret/metadata/cells/*" {
+      capabilities = ["list", "read", "delete"]
+    }
+
+    # Manage shared secrets
+    path "secret/data/shared/*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }
+
+    # Create tokens for cells
+    path "auth/token/create" {
+      capabilities = ["create", "update"]
+    }
+
+    # Revoke cell tokens
+    path "auth/token/revoke" {
+      capabilities = ["update"]
+    }
+
+    path "auth/token/revoke-accessor" {
+      capabilities = ["update"]
+    }
+
+    # Read token info
+    path "auth/token/lookup" {
+      capabilities = ["update"]
+    }
+
+    # Transit key management
+    path "transit/keys/cell-key" {
+      capabilities = ["read"]
+    }
+
+    path "transit/encrypt/cell-key" {
+      capabilities = ["update"]
+    }
+
+    path "transit/decrypt/cell-key" {
+      capabilities = ["update"]
+    }
+
+  database-policy.hcl: |
+    # Policy for database credential access
+
+    # Generate database credentials
+    path "database/creds/cell-db-role" {
+      capabilities = ["read"]
+    }
+
+    # Renew leases
+    path "sys/leases/renew" {
+      capabilities = ["update"]
+    }
+
+---
+# Vault Kubernetes auth role configuration (apply via Vault CLI)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-auth-roles
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: vault-auth
+data:
+  configure-auth.sh: |
+    #!/bin/bash
+    # Run this script to configure Vault Kubernetes auth
+    # Assumes VAULT_ADDR and VAULT_TOKEN are set
+
+    # Enable Kubernetes auth if not already enabled
+    vault auth enable kubernetes 2>/dev/null || true
+
+    # Configure Kubernetes auth
+    vault write auth/kubernetes/config \
+      kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
+      token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+      kubernetes_ca_cert="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)" \
+      issuer="https://kubernetes.default.svc.cluster.local"
+
+    # Create role for cells
+    vault write auth/kubernetes/role/cell-role \
+      bound_service_account_names="*" \
+      bound_service_account_namespaces="cell-colony" \
+      policies="cell-policy" \
+      ttl="1h" \
+      max_ttl="4h"
+
+    # Create role for ColonyManager
+    vault write auth/kubernetes/role/colony-manager-role \
+      bound_service_account_names="colony-manager-sa" \
+      bound_service_account_namespaces="cell-colony" \
+      policies="colony-manager-policy" \
+      ttl="24h" \
+      max_ttl="72h"
+
+---
+# Vault sidecar injector annotations template
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-injector-annotations
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: vault-injector
+data:
+  # These annotations can be added to cell pods for Vault sidecar injection
+  annotations.yaml: |
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/role: "cell-role"
+    vault.hashicorp.com/agent-inject-status: "update"
+    vault.hashicorp.com/agent-inject-secret-config: "secret/data/cells/CELL_ID/config"
+    vault.hashicorp.com/agent-inject-template-config: |
+      {{- with secret "secret/data/cells/CELL_ID/config" -}}
+      {{ range $k, $v := .Data.data }}
+      export {{ $k }}="{{ $v }}"
+      {{ end }}
+      {{- end }}
+
+  # Init container only (no sidecar)
+  init-only-annotations.yaml: |
+    vault.hashicorp.com/agent-inject: "true"
+    vault.hashicorp.com/agent-pre-populate-only: "true"
+    vault.hashicorp.com/role: "cell-role"
+    vault.hashicorp.com/agent-inject-secret-config: "secret/data/cells/CELL_ID/config"
+
+---
+# Secret for Vault CA certificate (if using TLS)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-tls
+  namespace: cell-colony
+  labels:
+    app.kubernetes.io/name: cell-colony
+    app.kubernetes.io/component: vault-tls
+type: Opaque
+data:
+  # Replace with actual base64-encoded CA certificate
+  ca.crt: ""  # Base64 encoded CA cert
+
+---
+# External Secret Operator ClusterSecretStore (if using ESO)
+# Uncomment if External Secrets Operator is installed
+# apiVersion: external-secrets.io/v1beta1
+# kind: ClusterSecretStore
+# metadata:
+#   name: vault-backend
+#   labels:
+#     app.kubernetes.io/name: cell-colony
+#     app.kubernetes.io/component: external-secrets
+# spec:
+#   provider:
+#     vault:
+#       server: "http://vault.vault.svc.cluster.local:8200"
+#       path: "secret"
+#       version: "v2"
+#       auth:
+#         kubernetes:
+#           mountPath: "kubernetes"
+#           role: "colony-manager-role"
+#           serviceAccountRef:
+#             name: "colony-manager-sa"
+#             namespace: "cell-colony"

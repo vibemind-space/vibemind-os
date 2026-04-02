@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "desktop-automation": {
+      "command": "python",
+      "args": ["backend/moire_agents/mcp_server_handoff.py"]
+    }
+  }
+}

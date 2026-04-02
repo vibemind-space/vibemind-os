@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "description": "PostgreSQL database node — used as AI Agent tool for DB queries",
+    "placeholders": ["operation", "query", "credential_name"]
+  },
+  "type": "n8n-nodes-base.postgres",
+  "typeVersion": 2.5,
+  "name": "Postgres",
+  "position": [1000, 500],
+  "parameters": {
+    "operation": "executeQuery",
+    "query": "SELECT * FROM table_name LIMIT 10",
+    "options": {}
+  }
+}

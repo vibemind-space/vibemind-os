@@ -1,0 +1,2 @@
+Use the available tools to accomplish the goal and stream your progress.
+For Playwright, prefer safe sources (e.g., Wikipedia) and extract minimal text/HTML.

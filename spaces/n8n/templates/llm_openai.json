@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "description": "OpenAI Chat Model — LLM provider for the AI Agent",
+    "placeholders": ["model_name"]
+  },
+  "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+  "typeVersion": 1.2,
+  "name": "OpenAI Chat Model",
+  "position": [600, 400],
+  "parameters": {
+    "model": "gpt-4o",
+    "options": {}
+  }
+}

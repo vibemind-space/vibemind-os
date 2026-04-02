@@ -1,0 +1,21 @@
+{
+  "name": "@automation-ui/clawdbot-plugin",
+  "version": "1.0.0",
+  "description": "Clawdbot plugin for desktop automation via Automation_ui backend",
+  "main": "index.ts",
+  "clawdbot": {
+    "extensions": ["index.ts"]
+  },
+  "keywords": [
+    "clawdbot",
+    "plugin",
+    "desktop-automation",
+    "pyautogui",
+    "ocr"
+  ],
+  "author": "Automation_ui",
+  "license": "MIT",
+  "peerDependencies": {
+    "clawdbot": ">=1.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "description": "Think tool for AI Agent — allows the agent to reason step by step",
+    "n8n_version": "1.70+"
+  },
+  "type": "@n8n/n8n-nodes-langchain.toolThink",
+  "typeVersion": 1,
+  "name": "Think",
+  "position": [1000, 600],
+  "parameters": {}
+}

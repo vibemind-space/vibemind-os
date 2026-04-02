@@ -1,0 +1,43 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+
+# Logs & temp
+*.log
+*.tmp
+
+# Forge state (regenerated at runtime)
+forge_state.json
+forge_metrics.json
+swarm_agents.json
+
+# Output artifacts (large, regenerated)
+output/
+
+# MCP
+.playwright-mcp/
+
+# Claude config (contains auth)
+.claude/
+
+# Node
+node_modules/
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "description": "AI Agent node with LLM chat model — base for all AI agent workflows",
+    "n8n_version": "1.70+",
+    "placeholders": ["agent_prompt", "system_prompt"]
+  },
+  "type": "@n8n/n8n-nodes-langchain.agent",
+  "typeVersion": 1.7,
+  "name": "AI Agent",
+  "position": [800, 300],
+  "parameters": {
+    "promptType": "define",
+    "text": "={{ $json.chatInput }}",
+    "options": {
+      "systemMessage": "You are a helpful assistant."
+    }
+  }
+}

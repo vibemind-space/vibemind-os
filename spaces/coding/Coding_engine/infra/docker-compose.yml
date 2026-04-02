@@ -1,0 +1,131 @@
+# Coding Engine Container - Docker Compose
+#
+# Usage:
+#   docker-compose up -d          # Start in background
+#   docker-compose logs -f        # View logs
+#   docker-compose down           # Stop
+#
+# Access:
+#   - Widget: http://localhost:6080/widget.html
+#   - VNC: http://localhost:6080/vnc.html
+#   - API: http://localhost:8000/docs
+#
+# Mount your requirements:
+#   Place JSON files in ./data/requirements/
+#   Output will be in ./data/output/
+
+version: '3.8'
+
+services:
+  coding-engine:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    image: coding-engine:latest
+    container_name: coding-engine
+    hostname: coding-engine
+    
+    # Port mappings
+    ports:
+      - "6080:6080"   # noVNC web client (widget + VNC stream)
+      - "8000:8000"   # Control API
+      # Dev server preview is visible through VNC, no need for direct access
+    
+    # Volume mounts
+    volumes:
+      - ${PWD}/../requirements.txt:/data/requirements/requirements.txt:ro
+      - ${PWD}/../output:/data/output
+      - ${PWD}/../src:/app/src:ro
+      - ${PWD}/control_server:/app/control_server:ro
+      - ${PWD}/widget:/app/widget:ro
+      # Requirements input
+      - ./data/requirements:/data/requirements:ro
+      # Generated output
+      - ./data/output:/data/output:rw
+      # Control state (persisted)
+      - ./data/control:/data/control:rw
+      # Logs
+      - ./data/logs:/data/logs:rw
+      # Claude CLI config (mount from host)
+      - ~/.claude:/root/.claude:ro
+      # Anthropic API key (alternative to Claude CLI auth)
+      # - ./.env:/app/.env:ro
+    
+    # Environment variables
+    environment:
+      # Display configuration
+      - DISPLAY=:99
+      - DISPLAY_WIDTH=1920
+      - DISPLAY_HEIGHT=1080
+      - DISPLAY_DEPTH=24
+      
+      # VNC configuration
+      - VNC_PORT=5900
+      - NOVNC_PORT=6080
+      # - VNC_PASSWORD=  # Optional: set VNC password
+      # Git Integration - pass through from host
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      
+      # Control server
+      - CONTROL_PORT=8000
+      - CONTROL_HOST=0.0.0.0
+      
+      # Preview
+      - PREVIEW_PORT=5173
+      
+      # Paths
+      - OUTPUT_DIR=/data/output
+      - REQUIREMENTS_DIR=/data/requirements
+      - CONTROL_DIR=/data/control
+      - LOG_DIR=/data/logs
+      
+      # Engine behavior
+      - NO_TIMEOUT=true
+      - MAX_ITERATIONS=999999
+      
+      # API Key (alternative to ~/.claude mount)
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Security
+    security_opt:
+      - seccomp:unconfined  # Required for Chrome sandbox
+    cap_add:
+      - SYS_ADMIN  # Required for Chrome
+    
+    # Shared memory for Chrome
+    shm_size: 2gb
+
+# Optional: Network configuration for multi-container setups
+networks:
+  default:
+    name: coding-engine-network
+    driver: bridge
+
+# Volume definitions (for named volumes if preferred)
+# volumes:
+#   requirements:
+#   output:
+#   output-data:
+#   control-data:
+#   logs-data:

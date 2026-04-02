@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ cell.k8s_deployment_name }}
+  namespace: {{ cell.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ cell.name }}
+    app.kubernetes.io/instance: {{ cell.id[:8] }}
+    app.kubernetes.io/version: "{{ cell.version }}"
+    app.kubernetes.io/managed-by: cell-colony
+    colony.codingengine.io/cell-id: {{ cell.id }}
+    {% for key, value in cell.labels.items() %}
+    {{ key }}: "{{ value }}"
+    {% endfor %}
+  annotations:
+    colony.codingengine.io/source-type: {{ cell.source_type.value }}
+    colony.codingengine.io/source-ref: "{{ cell.source_ref | truncate(200) }}"
+    {% for key, value in cell.annotations.items() %}
+    {{ key }}: "{{ value }}"
+    {% endfor %}
+spec:
+  replicas: {{ replicas | default(1) }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ cell.name }}
+      app.kubernetes.io/instance: {{ cell.id[:8] }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ cell.name }}
+        app.kubernetes.io/instance: {{ cell.id[:8] }}
+        app.kubernetes.io/version: "{{ cell.version }}"
+        colony.codingengine.io/cell-id: {{ cell.id }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ cell.ports[0] }}"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: cell-{{ cell.name }}-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ cell.name }}
+          image: {{ cell.full_image_name }}
+          imagePullPolicy: {{ image_pull_policy | default("IfNotPresent") }}
+          ports:
+            {% for port in cell.ports %}
+            - name: http{% if loop.index > 1 %}-{{ loop.index }}{% endif %}
+              containerPort: {{ port }}
+              protocol: TCP
+            {% endfor %}
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CELL_ID
+              value: "{{ cell.id }}"
+            - name: CELL_NAME
+              value: "{{ cell.name }}"
+            - name: CELL_VERSION
+              value: "{{ cell.version }}"
+            {% for key, value in cell.env_vars.items() %}
+            - name: {{ key }}
+              value: "{{ value }}"
+            {% endfor %}
+          envFrom:
+            - configMapRef:
+                name: {{ cell.k8s_configmap_name }}
+                optional: true
+          resources:
+            requests:
+              cpu: {{ cell.resource_limits.cpu_request }}
+              memory: {{ cell.resource_limits.memory_request }}
+            limits:
+              cpu: {{ cell.resource_limits.cpu_limit }}
+              memory: {{ cell.resource_limits.memory_limit }}
+              ephemeral-storage: {{ cell.resource_limits.ephemeral_storage_limit }}
+          livenessProbe:
+            httpGet:
+              path: {{ cell.health_check.path }}
+              port: {{ cell.health_check.port }}
+            initialDelaySeconds: {{ cell.health_check.initial_delay_seconds }}
+            periodSeconds: {{ cell.health_check.period_seconds }}
+            timeoutSeconds: {{ cell.health_check.timeout_seconds }}
+            failureThreshold: {{ cell.health_check.failure_threshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ cell.health_check.path }}
+              port: {{ cell.health_check.port }}
+            initialDelaySeconds: {{ (cell.health_check.initial_delay_seconds / 2) | int }}
+            periodSeconds: {{ cell.health_check.period_seconds }}
+            timeoutSeconds: {{ cell.health_check.timeout_seconds }}
+            successThreshold: {{ cell.health_check.success_threshold }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /var/cache
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: {{ cell.name }}
+                topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 30

@@ -1,0 +1,22 @@
+Use the available Context7 tools to retrieve up-to-date documentation and code examples.
+
+**Instructions:**
+1. Specify the framework/library and version when querying
+2. Search official documentation sources first
+3. Provide code examples with context and explanations
+4. Include links to official documentation when available
+5. Handle rate limits gracefully and inform user if limits are hit
+6. Validate that documentation matches the requested version
+
+**Query Best Practices:**
+- Be specific: "React 18 hooks API" instead of "React hooks"
+- Include version: "Django 4.2 ORM examples" not just "Django ORM"
+- Specify language: "TypeScript async/await syntax" vs "JavaScript async/await"
+- Target platform: "AWS Lambda Python runtime" vs "serverless Python"
+
+**Output Format:**
+- Provide clear documentation summaries
+- Include relevant code examples
+- Link to official sources
+- Mention version compatibility
+- Note any deprecations or breaking changes

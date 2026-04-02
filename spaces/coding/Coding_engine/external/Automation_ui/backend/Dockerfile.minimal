@@ -1,0 +1,37 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system deps including Xvfb for headless display
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl git build-essential libpq-dev \
+    xvfb python3-tk python3-dev x11-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ALL Python dependencies in one shot (no version pins to avoid conflicts)
+RUN pip install --no-cache-dir \
+    fastapi uvicorn[standard] websockets httpx requests aiohttp \
+    pydantic pydantic-settings python-multipart orjson \
+    psycopg2-binary redis sqlalchemy alembic asyncpg \
+    Pillow opencv-python-headless numpy \
+    python-dotenv loguru psutil watchdog backoff \
+    pyautogui mss pytesseract \
+    jinja2 aiofiles structlog openai \
+    sse-starlette watchfiles python-dateutil typing-extensions \
+    mcp anthropic "pyautogen>=0.2,<0.3" autogen-agentchat "autogen-ext[openai]"
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p logs data config autogen_service
+
+EXPOSE 8007
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8007/api/health || exit 1
+
+ENV DISPLAY=:99
+ENV PYAUTOGUI_FAILSAFE=False
+
+CMD ["sh", "-c", "rm -f /tmp/.X99-lock && touch /root/.Xauthority && Xvfb :99 -screen 0 1920x1080x24 -ac &>/dev/null & sleep 2 && python server.py"]
