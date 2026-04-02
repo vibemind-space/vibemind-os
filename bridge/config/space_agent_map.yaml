@@ -1,0 +1,22 @@
+# Brain Space → OpenFang Agent Name Mapping
+# Maps to existing running agents in OpenFang (by name).
+# Falls back to spawning from template if not found.
+
+mappings:
+  coding: brain-coder
+  research: brain-researcher
+  desktop: brain-devops
+  ideas: brain-planner
+  bubbles: brain-writer
+  minibook: brain-writer
+  agentfarm: brain-orchestrator
+  n8n: brain-orchestrator
+  schedule: vibemind
+  roarboot: vibemind
+  video: vibemind
+  flowzen: vibemind
+  mirofish: vibemind
+
+# Below this confidence threshold, always use this agent
+min_confidence: 0.3
+fallback_agent: vibemind
