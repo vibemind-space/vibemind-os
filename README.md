@@ -6,7 +6,10 @@
 
 ```
 VibeMind-OS/
-├── voice/          VibeMind-VoiceDialog    The Product — 14 AI spaces, 3D UI, voice control
+├── brain/          the_brain               Neuroscience-inspired cognitive routing (standalone)
+├── bridge/         brain-openfang-bridge   Routes Brain decisions to OpenFang agents (Claude Code)
+├── spaces/         Domain Spaces           14 AI spaces extracted from voice (ideas, coding, desktop, ...)
+├── voice/          VibeMind-VoiceDialog    Voice input + intent orchestration + 3D Electron UI
 ├── ops/            vibemind-os             Operations — email pipeline, pitch deck, MCP tools
 ├── shared/         vibemind-shared         Shared LLM client (pip install vibemind-shared)
 ├── security/       vibemind-security       Security research — 30 PoCs, red/blue team
@@ -30,10 +33,32 @@ cd VibeMind-OS
 # Or if already cloned:
 git submodule update --init --recursive
 
-# Install shared package
-cd shared && pip install -e . && cd ..
+# Configure API keys
+cp .env.example .env
+# Edit .env — add at least one LLM key (Groq is free: https://console.groq.com/)
 
-# Start the voice workspace
+# Start Brain + OpenFang + Bridge
+./start.sh
+```
+
+### Services
+
+| Service  | Port  | Description                                |
+| -------- | ----- | ------------------------------------------ |
+| Brain    | 5000  | Cognitive routing (Hebbian learning)       |
+| OpenFang | 50051 | Agent OS (57 tools, 27 LLMs)               |
+| Bridge   | 5100  | Routes Brain decisions to OpenFang agents   |
+
+### Test the routing chain
+
+```bash
+curl -X POST http://localhost:5100/bridge/route \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Write a fibonacci function in Python"}'
+```
+
+### Voice workspace (Electron 3D UI)
+```bash
 cd voice && pip install -r requirements.txt
 python python/electron_backend.py
 ```
