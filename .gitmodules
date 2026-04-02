@@ -16,9 +16,6 @@
 [submodule "clawcode"]
 	path = clawcode
 	url = https://github.com/Flissel/ClawCode.git
-[submodule "davelovable"]
-	path = davelovable
-	url = https://github.com/Flissel/DaveLovable.git
 [submodule "openclaw"]
 	path = openclaw
 	url = https://github.com/Flissel/openclaw.git
@@ -31,3 +28,9 @@
 [submodule "openclaude"]
 	path = openclaude
 	url = https://github.com/Flissel/openclaude.git
+[submodule "la-fungus-search"]
+	path = la-fungus-search
+	url = https://github.com/Flissel/la_fungus_search.git
+[submodule "coding-engine"]
+	path = coding-engine
+	url = https://github.com/Flissel/DaveFelix-Coding-Engine.git

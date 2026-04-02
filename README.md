@@ -14,8 +14,8 @@ VibeMind-OS/
 ├── langdock-mcp/   langdock-mcp            Langdock API — 35 MCP tools
 ├── la-fungus-search/ la_fungus_search      Semantic search engine (Qdrant + embeddings)
 ├── openclaude/     openclaude              OpenClaude HTTP service + Docker deployment
+├── coding-engine/  DaveFelix-Coding-Engine  Autonomous code generation (10 AI agents)
 ├── clawcode/       ClawCode                Docker Claude integration
-├── davelovable/    DaveLovable             AI web development platform
 ├── openclaw/       openclaw                Fork: personal AI assistant (40+ channels)
 └── openfang/       openfang                Fork: Agent OS (Rust, 53 tools, 27 LLMs)
 ```
