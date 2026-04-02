@@ -12,6 +12,8 @@ VibeMind-OS/
 ├── security/       vibemind-security       Security research — 30 PoCs, red/blue team
 ├── x-pathfinder/   x-pathfinder            Backer discovery — evolutionary Twitter scraping
 ├── langdock-mcp/   langdock-mcp            Langdock API — 35 MCP tools
+├── la-fungus-search/ la_fungus_search      Semantic search engine (Qdrant + embeddings)
+├── openclaude/     openclaude              OpenClaude HTTP service + Docker deployment
 ├── clawcode/       ClawCode                Docker Claude integration
 ├── davelovable/    DaveLovable             AI web development platform
 ├── openclaw/       openclaw                Fork: personal AI assistant (40+ channels)

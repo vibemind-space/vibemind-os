@@ -28,3 +28,6 @@
 [submodule "security"]
 	path = security
 	url = https://github.com/Flissel/vibemind-security.git
+[submodule "openclaude"]
+	path = openclaude
+	url = https://github.com/Flissel/openclaude.git
