@@ -1,0 +1,56 @@
+##
+## VibeMind Media Server
+##
+## Serves video/audio assets from a named Docker volume on port 9877.
+## Replaces the Python media_server.py with nginx (faster, zero-config).
+##
+## Usage:
+##   docker compose -f docker-compose.media.yml up -d
+##
+## First-time migration (copy existing videos into the volume):
+##   docker compose -f docker-compose.media.yml run --rm migrate
+##
+## Backup:
+##   docker run --rm -v rowboat-videos:/data -v "$(pwd)":/backup alpine \
+##     tar czf /backup/rowboat-videos-backup.tar.gz -C /data .
+##
+## Restore:
+##   docker run --rm -v rowboat-videos:/data -v "$(pwd)":/backup alpine \
+##     tar xzf /backup/rowboat-videos-backup.tar.gz -C /data
+##
+
+services:
+  media:
+    image: nginx:alpine
+    container_name: vibemind-media
+    restart: unless-stopped
+    ports:
+      - "9877:80"
+    volumes:
+      - rowboat-videos:/usr/share/nginx/html:ro
+      - ./nginx-media.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # One-shot migration: copies ~/.rowboat/Videos/ into the named volume
+  migrate:
+    image: alpine
+    volumes:
+      - rowboat-videos:/data
+      - ${VIDEOS_SOURCE:-~/.rowboat/Videos}:/source:ro
+    command: >
+      sh -c "
+        echo 'Migrating videos from /source to /data...'
+        cp -a /source/. /data/ 2>/dev/null || true
+        echo 'Done. Files in volume:'
+        du -sh /data/*/ 2>/dev/null || echo '(empty)'
+      "
+    profiles:
+      - migration
+
+volumes:
+  rowboat-videos:
+    name: rowboat-videos

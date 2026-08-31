@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolutionary Training Monitor - Romantic 3-Agent System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+
+        /* Puzzle Grid Visualization */
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            margin: 20px 0;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .grid-cell {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .grid-cell.agent-beginning {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+            animation: pulse-blue 2s infinite;
+        }
+
+        .grid-cell.agent-mid {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+            animation: pulse-yellow 2s infinite;
+        }
+
+        .grid-cell.agent-end {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+            animation: pulse-red 2s infinite;
+        }
+
+        .grid-cell.path {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: #22c55e;
+        }
+
+        .grid-cell.connection {
+            background: linear-gradient(135deg, #ec4899, #be185d);
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.8);
+            animation: celebration 0.5s infinite;
+        }
+
+        @keyframes pulse-blue {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(5deg); }
+            75% { transform: scale(1.2) rotate(-5deg); }
+        }
+
+        /* Agent Status Cards */
+        .agent-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .agent-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .agent-card.beginning { border-color: #3b82f6; }
+        .agent-card.mid { border-color: #fbbf24; }
+        .agent-card.end { border-color: #ef4444; }
+
+        .agent-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .agent-stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        /* Metrics Display */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .metric-box {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #10b981);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Generation Timeline */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255,255,255,0.2);
+            z-index: 0;
+        }
+
+        .timeline-item {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item.active {
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            border-color: #22c55e;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+            transform: scale(1.2);
+        }
+
+        .timeline-item.extinct {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: #ef4444;
+        }
+
+        /* Communication Log */
+        .comm-log {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .comm-message {
+            background: rgba(255,255,255,0.05);
+            border-left: 3px solid;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .comm-message.beginning { border-color: #3b82f6; }
+        .comm-message.mid { border-color: #fbbf24; }
+        .comm-message.end { border-color: #ef4444; }
+
+        .comm-timestamp {
+            font-size: 0.8em;
+            opacity: 0.6;
+        }
+
+        /* Connection Alert */
+        .connection-alert {
+            background: linear-gradient(135deg, #ec4899, #be185d);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.6);
+            animation: celebration 1s infinite;
+            display: none;
+        }
+
+        .connection-alert.active {
+            display: block;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .status-badge.running {
+            background: linear-gradient(135deg, #22c55e, #10b981);
+        }
+
+        .status-badge.reproduction {
+            background: linear-gradient(135deg, #ec4899, #be185d);
+        }
+
+        .status-badge.extinction {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧬 Evolutionary Training Monitor 💕</h1>
+            <div class="subtitle">Romantic 3-Agent System - Running in the Dark</div>
+            <div style="margin-top: 10px;">
+                <span class="status-badge running" id="status">RUNNING</span>
+                <span id="generation-badge"></span>
+            </div>
+        </header>
+
+        <!-- Connection Alert -->
+        <div class="connection-alert" id="connectionAlert">
+            💕 CONNECTION ESTABLISHED - REPRODUCTION! 💕
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Panel: Puzzle Visualization -->
+            <div class="panel">
+                <div class="panel-title">🎯 Puzzle Grid - 3 Agents in the Dark</div>
+                <div class="puzzle-grid" id="puzzleGrid">
+                    <!-- 8x8 grid generated by JS -->
+                </div>
+                <div class="agent-cards">
+                    <div class="agent-card beginning">
+                        <div class="agent-name">🔵 Beginning</div>
+                        <div class="agent-stat">
+                            <span>Position:</span>
+                            <span id="pos-beginning">(1, 1)</span>
+                        </div>
+                        <div class="agent-stat">
+                            <span>Role:</span>
+                            <span>Beacon</span>
+                        </div>
+                        <div class="agent-stat">
+                            <span>Path Length:</span>
+                            <span id="path-beginning">0</span>
+                        </div>
+                    </div>
+                    <div class="agent-card mid">
+                        <div class="agent-name">🟡 Mid</div>
+                        <div class="agent-stat">
+                            <span>Position:</span>
+                            <span id="pos-mid">(3, 4)</span>
+                        </div>
+                        <div class="agent-stat">
+                            <span>Role:</span>
+                            <span>Navigator</span>
+                        </div>
+                        <div class="agent-stat">
+                            <span>Path Length:</span>
+                            <span id="path-mid">0</span>
+                        </div>
+                    </div>
+                    <div class="agent-card end">
+                        <div class="agent-name">🔴 End</div>
+                        <div class="agent-stat">
+                            <span>Position:</span>
+                            <span id="pos-end">(6, 6)</span>
+                        </div>
+                        <div class="agent-stat">
+                            <span>Role:</span>
+                            <span>Beacon</span>
+                        </div>
+                        <div class="agent-stat">
+                            <span>Path Length:</span>
+                            <span id="path-end">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Metrics -->
+            <div class="panel">
+                <div class="panel-title">📊 Training Metrics</div>
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-label">Current Generation</div>
+                        <div class="metric-value" id="currentGen">0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Episode</div>
+                        <div class="metric-value" id="currentEpisode">0/200</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Connections</div>
+                        <div class="metric-value" id="connections">0</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Path Quality</div>
+                        <div class="metric-value" id="pathQuality">0%</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Success Rate</div>
+                        <div class="metric-value" id="successRate">0%</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Difficulty</div>
+                        <div class="metric-value" id="difficulty">1.00x</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Conv Penalty</div>
+                        <div class="metric-value" id="convPenalty">-0.1</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Total Reward</div>
+                        <div class="metric-value" id="totalReward">0</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div style="font-size: 1.1em; margin-bottom: 10px;">Episode Progress</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="episodeProgress" style="width: 0%">0%</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div style="font-size: 1.1em; margin-bottom: 10px;">Reproduction Progress</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="reproductionProgress" style="width: 0%">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generation Timeline -->
+        <div class="panel">
+            <div class="panel-title">🧬 Generation Timeline</div>
+            <div class="timeline" id="timeline">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+        <!-- Communication Log -->
+        <div class="panel">
+            <div class="panel-title">💬 Communication Log (Love Happening Inbetween)</div>
+            <div class="comm-log" id="commLog">
+                <div class="comm-message beginning">
+                    <div class="comm-timestamp">00:00:00</div>
+                    <div>System initialized - 3 agents ready</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize puzzle grid
+        function initPuzzleGrid() {
+            const grid = document.getElementById('puzzleGrid');
+            for (let y = 0; y < 8; y++) {
+                for (let x = 0; x < 8; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.id = `cell-${x}-${y}`;
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // Initialize generation timeline
+        function initTimeline() {
+            const timeline = document.getElementById('timeline');
+            for (let i = 0; i <= 10; i++) {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.id = `gen-${i}`;
+                item.innerHTML = `<div style="font-size: 0.8em;">Gen</div><div>${i}</div>`;
+                timeline.appendChild(item);
+            }
+        }
+
+        // Update agent positions on grid
+        function updateAgentPositions(positions) {
+            // Clear previous positions
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.className = 'grid-cell';
+            });
+
+            // Set new positions
+            if (positions.beginning) {
+                const cell = document.getElementById(`cell-${positions.beginning[0]}-${positions.beginning[1]}`);
+                if (cell) cell.classList.add('agent-beginning');
+            }
+            if (positions.mid) {
+                const cell = document.getElementById(`cell-${positions.mid[0]}-${positions.mid[1]}`);
+                if (cell) cell.classList.add('agent-mid');
+            }
+            if (positions.end) {
+                const cell = document.getElementById(`cell-${positions.end[0]}-${positions.end[1]}`);
+                if (cell) cell.classList.add('agent-end');
+            }
+
+            // Show paths
+            if (positions.paths) {
+                positions.paths.forEach(pos => {
+                    const cell = document.getElementById(`cell-${pos[0]}-${pos[1]}`);
+                    if (cell && !cell.classList.contains('agent-beginning') &&
+                        !cell.classList.contains('agent-mid') &&
+                        !cell.classList.contains('agent-end')) {
+                        cell.classList.add('path');
+                    }
+                });
+            }
+        }
+
+        // Update metrics
+        function updateMetrics(data) {
+            document.getElementById('currentGen').textContent = data.generation || 0;
+            document.getElementById('currentEpisode').textContent = `${data.episode || 0}/200`;
+            document.getElementById('connections').textContent = data.connections || 0;
+            document.getElementById('pathQuality').textContent = `${Math.round((data.path_quality || 0) * 100)}%`;
+            document.getElementById('successRate').textContent = `${Math.round((data.success_rate || 0) * 100)}%`;
+            document.getElementById('difficulty').textContent = `${(data.difficulty || 1.0).toFixed(2)}x`;
+            document.getElementById('convPenalty').textContent = data.conv_penalty || '-0.1';
+            document.getElementById('totalReward').textContent = Math.round(data.total_reward || 0);
+
+            // Update progress bars
+            const episodePercent = ((data.episode || 0) / 200) * 100;
+            document.getElementById('episodeProgress').style.width = `${episodePercent}%`;
+            document.getElementById('episodeProgress').textContent = `${Math.round(episodePercent)}%`;
+
+            const reproPercent = Math.min(100, (data.success_rate || 0) * 100);
+            document.getElementById('reproductionProgress').style.width = `${reproPercent}%`;
+            document.getElementById('reproductionProgress').textContent = `${Math.round(reproPercent)}%`;
+
+            // Update timeline
+            for (let i = 0; i <= 10; i++) {
+                const item = document.getElementById(`gen-${i}`);
+                item.classList.remove('active', 'extinct');
+                if (i === data.generation) {
+                    item.classList.add('active');
+                } else if (i < data.generation) {
+                    if (data.extinct_generations && data.extinct_generations.includes(i)) {
+                        item.classList.add('extinct');
+                    }
+                }
+            }
+
+            // Show connection alert
+            if (data.connected) {
+                document.getElementById('connectionAlert').classList.add('active');
+                setTimeout(() => {
+                    document.getElementById('connectionAlert').classList.remove('active');
+                }, 3000);
+            }
+
+            // Update status badge
+            const badge = document.getElementById('generation-badge');
+            if (data.reproduction) {
+                badge.className = 'status-badge reproduction';
+                badge.textContent = 'REPRODUCTION!';
+            } else if (data.extinct) {
+                badge.className = 'status-badge extinction';
+                badge.textContent = 'EXTINCT';
+            } else {
+                badge.className = 'status-badge running';
+                badge.textContent = `Gen ${data.generation || 0}`;
+            }
+        }
+
+        // Add communication message
+        function addCommMessage(agent, message, timestamp) {
+            const log = document.getElementById('commLog');
+            const msg = document.createElement('div');
+            msg.className = `comm-message ${agent}`;
+            msg.innerHTML = `
+                <div class="comm-timestamp">${timestamp}</div>
+                <div><strong>${agent.toUpperCase()}:</strong> ${message}</div>
+            `;
+            log.appendChild(msg);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Fetch updates from server
+        async function fetchUpdates() {
+            try {
+                const response = await fetch('/api/training_status');
+                const data = await response.json();
+
+                // Update positions
+                if (data.positions) {
+                    updateAgentPositions(data.positions);
+
+                    // Update position displays
+                    if (data.positions.beginning) {
+                        document.getElementById('pos-beginning').textContent =
+                            `(${data.positions.beginning[0]}, ${data.positions.beginning[1]})`;
+                    }
+                    if (data.positions.mid) {
+                        document.getElementById('pos-mid').textContent =
+                            `(${data.positions.mid[0]}, ${data.positions.mid[1]})`;
+                    }
+                    if (data.positions.end) {
+                        document.getElementById('pos-end').textContent =
+                            `(${data.positions.end[0]}, ${data.positions.end[1]})`;
+                    }
+                }
+
+                // Update metrics
+                updateMetrics(data.metrics || {});
+
+                // Add new messages
+                if (data.new_messages) {
+                    data.new_messages.forEach(msg => {
+                        addCommMessage(msg.agent, msg.message, msg.timestamp);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch updates:', error);
+            }
+        }
+
+        // Initialize
+        initPuzzleGrid();
+        initTimeline();
+
+        // Poll for updates every 500ms
+        setInterval(fetchUpdates, 500);
+    </script>
+</body>
+</html>

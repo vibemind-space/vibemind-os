@@ -1,0 +1,33 @@
+{
+  "_comment": "Auto-start config for issue-detector watcher.",
+  "autostart": true,
+  "enabled_sources": ["windows_eventlog", "process_crashes", "file_drop", "electron"],
+  "watched_processes": [
+    "openfang", "openfang.exe",
+    "vibemind", "python.exe",
+    "uvicorn", "claude"
+  ],
+  "watched_log_files": [],
+  "log_error_patterns": [
+    "CRITICAL", "FATAL", "Traceback", "ERROR",
+    "timed out", "timeout", "TimeoutError",
+    "unresponsive", "no response", "not responding",
+    "Connection refused", "ConnectionResetError", "ECONNREFUSED",
+    "panic", "PANIC",
+    "Uncaught", "UnhandledPromiseRejection"
+  ],
+  "auto_issue_event_types": [
+    "python_backend_crashed", "log_critical", "log_fatal",
+    "log_traceback", "process_crashed", "rust_panic", "renderer_crashed"
+  ],
+  "poll_interval_secs": 30,
+  "min_event_severity": 2,
+  "electron_cdp_port": 9223,
+  "_help": {
+    "enabled_sources": "windows_eventlog, process_crashes, log_files, file_drop, electron",
+    "electron": "Monitors: CDP port 9223 (app health + crashed renderers), Python backend process, voice/python/logs/**/*.log + Automation_ui/logs/*.log for all error patterns",
+    "auto_issue_event_types": "These event types create GitHub issues automatically without user approval. Everything else goes to pending for review.",
+    "log_error_patterns": "Patterns searched in log files. Includes hard errors, timeouts/expectations, connection failures, panics, uncaught exceptions.",
+    "file_drop_dir": "event_drops/ — external processes drop JSON event files here"
+  }
+}

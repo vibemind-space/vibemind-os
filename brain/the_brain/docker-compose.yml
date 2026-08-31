@@ -1,0 +1,82 @@
+# =============================================================================
+# Tahlamus Brain System - Docker Compose
+# =============================================================================
+# Services:
+#   unified-brain  (port 5003) - Central brain instance (start first)
+#   dashboard      (port 5000) - Web visualization + chat interface
+#   ollama         (port 11434) - Optional LLM service (activate with --profile llm)
+#
+# Usage:
+#   docker compose up -d                    # Start brain + dashboard
+#   docker compose --profile llm up -d      # Start all including Ollama
+#   docker compose logs -f unified-brain    # Follow brain logs
+#   docker compose down                     # Stop everything
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Unified Brain Service (port 5003) - MUST start first
+  # ---------------------------------------------------------------------------
+  unified-brain:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tahlamus-brain
+    ports:
+      - "5003:5003"
+    environment:
+      - BRAIN_PORT=5003
+      - ENABLE_COGNITIVE_LOOP=true
+    volumes:
+      - ./data:/app/data
+    command: python production/unified_brain_service.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Web Dashboard (port 5000) - depends on unified-brain being healthy
+  # ---------------------------------------------------------------------------
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tahlamus-dashboard
+    ports:
+      - "5000:5000"
+    environment:
+      - DASHBOARD_PORT=5000
+      - UNIFIED_BRAIN_URL=http://unified-brain:5003
+    command: python web/brain_dashboard_server.py
+    depends_on:
+      unified-brain:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Ollama LLM Service (port 11434) - optional, activate with --profile llm
+  # ---------------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: tahlamus-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    profiles:
+      - llm
+    restart: unless-stopped
+
+volumes:
+  ollama-data:
+    driver: local

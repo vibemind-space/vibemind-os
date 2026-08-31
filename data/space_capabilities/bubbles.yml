@@ -1,0 +1,1125 @@
+space: bubbles
+exists: true
+tool_count: 33
+tools:
+- name: get_current_bubble_db_id
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 35
+  doc: Get the current bubble's database UUID.
+  voice_triggers: []
+  args: []
+- name: get_current_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 48
+  doc: Get the current bubble's data as a dictionary.
+  voice_triggers: []
+  args: []
+- name: get_pending_agent_switch
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 180
+  doc: Check if an agent switch is pending.
+  voice_triggers: []
+  args: []
+- name: list_bubbles
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 200
+  doc: List all BUBBLES in the Ideas Space (top-level containers).
+  voice_triggers:
+  - What bubbles do I have?
+  - Show my bubbles
+  - List all bubbles
+  - Welche Bubbles habe ich?
+  - list bubbles
+  - show me my bubbles
+  - show bubbles
+  - what bubbles do I have
+  - display my bubbles
+  - show all bubbles
+  - list my bubbles
+  - get bubbles
+  - show bubble list
+  - fetch my bubbles
+  - what are my bubbles
+  - display bubbles
+  - show my bubble list
+  - get my bubbles
+  - Blasen auflisten
+  - zeige meine Blasen
+  - zeige Blasen
+  - welche Blasen habe ich
+  - Blasen anzeigen
+  - meine Blasen auflisten
+  - alle Blasen anzeigen
+  - meine Blasen anzeigen
+  - zeige alle Blasen
+  - Blasenliste anzeigen
+  - alle meine Blasen zeigen
+  - Blasen abrufen
+  - welche Blasen sind das
+  - meine Blasenliste
+  - Blasen zusammenfassen
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: find_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 259
+  doc: Search for a bubble by name (fuzzy) and automatically enter it.
+  voice_triggers:
+  - Such nach Bubble Marketing
+  - Finde Bubble Swarm Team
+  - Wo ist die Bubble Finanzen?
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: create_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 393
+  doc: Create a new bubble/idea space.
+  voice_triggers:
+  - Create a new space for cooking
+  - Make a bubble for project ideas
+  - Create a new bubble | Erstelle eine neue Bubble
+  - Add a bubble | FÃ¼ge eine Bubble hinzu
+  - New bubble | Neue Bubble
+  - Make a bubble | Mache eine Bubble
+  - Start a bubble | Starte eine Bubble
+  - Open a new bubble | Ã–ffne eine neue Bubble
+  - Create bubble | Erstelle Bubble
+  - Add a new idea | FÃ¼ge eine neue Idee hinzu
+  - New idea | Neue Idee
+  - Make an idea | Mache eine Idee
+  - Start an idea | Starte eine Idee
+  - Create an idea | Erstelle eine Idee
+  - Add idea | FÃ¼ge Idee hinzu
+  - Can you create a bubble | Kannst du eine Bubble erstellen
+  - Please create a bubble | Bitte erstelle eine Bubble
+  - Create a new bubble for me | Erstelle eine neue Bubble fÃ¼r mich
+  - I want to create a bubble | Ich mÃ¶chte eine Bubble erstellen
+  - Let me create a bubble | Lass mich eine Bubble erstellen
+  - Create bubble with title | Erstelle Bubble mit Titel
+  - New bubble please | Neue Bubble bitte
+  - I need a new bubble | Ich brauche eine neue Bubble
+  - Make a new bubble | Mache eine neue Bubble
+  - Start creating | Starte die Erstellung
+  - Open a bubble | Ã–ffne eine Bubble
+  - Add a new bubble | FÃ¼ge eine neue Bubble hinzu
+  - Create workspace bubble | Erstelle Workspace Bubble
+  - Begin a bubble | Beginne eine Bubble
+  - Spawn a bubble | Erzeuge eine Bubble
+  - Generate a bubble | Generiere eine Bubble
+  - Create a fresh bubble | Erstelle eine frische Bubble
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: update_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 444
+  doc: Update a bubble's title or description.
+  voice_triggers:
+  - Rename this space to X
+  - Update bubble name
+  - Change the title to X
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: get_bubble_stats
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 520
+  doc: Get statistics about a bubble based on its content.
+  voice_triggers:
+  - How developed is this idea?
+  - What
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: score_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 573
+  doc: Calculate and update bubble score based on content richness.
+  voice_triggers:
+  - Evaluate this idea
+  - Score this space
+  - How good is this idea?
+  - Rate this bubble / Diese Blase bewerten
+  - Score this idea / Diese Idee bewerten
+  - Give it a score / Gib ihr eine Punktzahl
+  - Rate it / Bewerte es
+  - Score this / Bewerte das
+  - How would you rate this / Wie wÃ¼rdest du das bewerten
+  - Evaluate this bubble / Bewerte diese Blase
+  - Can you score this / Kannst du das bewerten
+  - I want to rate this / Ich mÃ¶chte das bewerten
+  - What's your score / Was ist deine Bewertung
+  - Rate the bubble / Bewerte die Blase
+  - Give it points / Gib ihm Punkte
+  - Score please / Bewertung bitte
+  - How's this idea / Wie ist diese Idee
+  - Assess this / Bewerte das
+  - Score this for me / Bewerte das fÃ¼r mich
+  - Let's rate it / Lass uns das bewerten
+  - What's the score / Was ist die Bewertung
+  - I'd like to rate this bubble / Ich mÃ¶chte diese Blase bewerten
+  - Rate me on this / Bewerte mich darin
+  - Score bubble / Blase bewerten
+  - Evaluate this idea / Bewerte diese Idee
+  - Can I rate this / Kann ich das bewerten
+  - Let me score this / Lass mich das bewerten
+  - Scoring time / Zeit zu bewerten
+  - Give it a rating / Gib ihm eine Bewertung
+  - What do you think of this / Was hÃ¤ltst du davon
+  - Score this bubble / Bewerte diese Blase
+  - I want to score this bubble / Ich mÃ¶chte diese Blase bewerten
+  - Bubble score / Blasenbewertung
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: promote_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 664
+  doc: Promote a bubble/idea to a project.
+  voice_triggers:
+  - Turn this into a project
+  - Promote this idea
+  - Make this a project
+  - promote this bubble | diesen bubble hochstufen
+  - boost this idea | diese Idee ankurbeln
+  - make it more visible | mach es sichtbarer
+  - elevate this | heb das hervor
+  - push this higher | schieb das nach oben
+  - feature this bubble | prÃ¤sentiere diesen bubble
+  - highlight this | markiere das
+  - promote the bubble | fÃ¶rder den bubble
+  - move it up | verschieb es nach oben
+  - increase visibility | erhÃ¶he die Sichtbarkeit
+  - amplify this | verstÃ¤rke das
+  - give it more prominence | gib dem mehr Gewicht
+  - this bubble needs promotion | dieser bubble braucht FÃ¶rderung
+  - make this stand out | mach das hervorstechend
+  - prioritize this bubble | priorisiere diesen bubble
+  - push to the top | nach oben pushen
+  - bring this forward | bring das nach vorne
+  - highlight this concept | markiere dieses Konzept
+  - promote this idea | fÃ¶rder diese Idee
+  - boost visibility | steigere die Sichtbarkeit
+  - make this more important | mach das wichtiger
+  - elevate this concept | heb dieses Konzept hervor
+  - increase prominence | erhÃ¶he die Prominenz
+  - feature this idea | prÃ¤sentiere diese Idee
+  - put this in the spotlight | setz das in den Fokus
+  - bring attention to this | lenk Aufmerksamkeit auf das
+  - promote and boost | fÃ¶rdern und verstÃ¤rken
+  - make it stand out | mach es prominenter
+  - lift this bubble | heb diesen bubble an
+  - I want to promote this | ich mÃ¶chte das fÃ¶rdern
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: delete_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 762
+  doc: 'Delete a bubble/idea space with CASCADE deletion of all content.
+
+    Supports deleting multiple bubbles when a list of names is provided.'
+  voice_triggers:
+  - Delete this space
+  - Remove the cooking bubble
+  - delete bubble
+  - remove bubble
+  - delete this bubble
+  - remove this idea
+  - trash this bubble
+  - get rid of this bubble
+  - clear bubble
+  - erase bubble
+  - delete the bubble
+  - remove this bubble
+  - delete idea
+  - discard bubble
+  - delete current bubble
+  - take out this bubble
+  - destroy bubble
+  - Blase lÃ¶schen
+  - Blase entfernen
+  - Diese Blase lÃ¶schen
+  - Idee lÃ¶schen
+  - Blase weg
+  - Blase raus
+  - Diesen Bubble lÃ¶schen
+  - Blase lÃ¶schen bitte
+  - Weg mit der Blase
+  - LÃ¶sch die Blase
+  - Entfern diese Blase
+  - LÃ¶sch diese Idee
+  - Blase auslÃ¶schen
+  - Aus mit der Blase
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: delete_all_bubbles_except
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 910
+  doc: Delete all bubbles/spaces EXCEPT the specified ones.
+  voice_triggers:
+  - Delete all bubbles except
+  - Keep only
+  - Remove all bubbles except
+  - Clear all bubbles except
+  - Keep these bubbles
+  - Delete everything except
+  - LÃ¶sche alle Bubbles auÃŸer
+  - Behalte nur
+  - Entferne alle Bubbles auÃŸer
+  - Alle Bubbles auÃŸer lÃ¶schen
+  - Nur diese Bubbles behalten
+  - LÃ¶sche alles auÃŸer
+  - Remove all except these
+  - Keep just
+  - Purge all bubbles except
+  - Alle auÃŸer lÃ¶schen
+  - Behalte alles auÃŸer
+  - Entferne alles auÃŸer
+  - Delete all but
+  - Keep these
+  - Wipe all bubbles except
+  - Alle Bubbles lÃ¶schen auÃŸer
+  - Nur diese behalten
+  - Alles lÃ¶schen auÃŸer
+  - Clear everything except
+  - Preserve only
+  - Remove other bubbles
+  - Alle anderen Bubbles lÃ¶schen
+  - Behalte nur diese
+  - Entferne alle anderen
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    default: None
+- name: enter_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1029
+  doc: Enter a bubble and switch to its dedicated agent.
+  voice_triggers:
+  - Enter cooking space
+  - Go into my project ideas
+  - Open the recipes bubble
+  - Geh in 2
+  - Enter bubble / Blase betreten
+  - Open bubble / Blase Ã¶ffnen
+  - Jump into bubble / In die Blase springen
+  - Dive into this bubble / In diese Blase eintauchen
+  - Go to bubble / Zur Blase gehen
+  - Let me into the bubble / Lass mich in die Blase
+  - Navigate to bubble / Zur Blase navigieren
+  - Take me to the bubble / Bring mich zur Blase
+  - Switch to bubble / Zur Blase wechseln
+  - Focus on this bubble / Auf diese Blase konzentrieren
+  - Enter the bubble / Betrete die Blase
+  - Open this bubble / Ã–ffne diese Blase
+  - Explore this bubble / Erkunde diese Blase
+  - Go inside the bubble / Geh in die Blase
+  - Let's enter the bubble / Lassen Sie uns die Blase betreten
+  - Move to bubble / Zur Blase wechseln
+  - Access bubble / Auf Blase zugreifen
+  - Launch bubble / Blase starten
+  - Start exploring bubble / Beginne mit der Erkundung der Blase
+  - Enter the space / Den Raum betreten
+  - Get into bubble / Geh in die Blase
+  - Bring up bubble / Blase anzeigen
+  - Show me the bubble / Zeige mir die Blase
+  - Let's dive into bubble / Lassen Sie uns in die Blase eintauchen
+  - Enter my bubble / Betrete meine Blase
+  - Access this bubble / Auf diese Blase zugreifen
+  - Jump to bubble / Zur Blase springen
+  - Open the bubble / Ã–ffne die Blase
+  - Take me into bubble / Bring mich in die Blase
+  - Let's go into this bubble / Lassen Sie uns in diese Blase gehen
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: exit_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1195
+  doc: Exit current bubble and return to the multiverse agent.
+  voice_triggers:
+  - Go back
+  - Exit this space
+  - Return to multiverse
+  - Leave
+  - exit bubble|exit_bubble
+  - leave bubble|bubble verlassen
+  - go back|zurÃ¼ck gehen
+  - back to main|zurÃ¼ck zur Hauptseite
+  - close bubble|bubble schlieÃŸen
+  - exit space|space verlassen
+  - return home|zur Startseite
+  - done here|fertig hier
+  - go home|nach Hause gehen
+  - leave space|raum verlassen
+  - close this|schlieÃŸe das
+  - exit now|jetzt verlassen
+  - get out of here|hier rausgehen
+  - finish bubble|bubble beenden
+  - close space|raum schlieÃŸen
+  - return to main|zurÃ¼ck zum HauptmenÃ¼
+  - escape bubble|aus bubble entkommen
+  - leave this space|diesen raum verlassen
+  - back to start|zurÃ¼ck zum Start
+  - previous screen|vorheriger Bildschirm
+  - close current|aktuelle schlieÃŸen
+  - exit this|das verlassen
+  - back out|aussteigen
+  - leave now|jetzt gehen
+  - go back home|zurÃ¼ck nach Hause gehen
+  - end bubble|bubble beenden
+  - close this bubble|diese bubble schlieÃŸen
+  - main menu|HauptmenÃ¼
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: generate_bubble_embeddings
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1226
+  doc: Generate embeddings for all bubbles in the database.
+  voice_triggers:
+  - Generiere Embeddings
+  - Erstelle Vektoren
+  - Bubbles indizieren
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: evaluate_bubble_evolution
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1319
+  doc: Evaluate how evolved/complete a bubble's ideas are using AI analysis.
+  voice_triggers:
+  - Evaluate this bubble
+  - How complete is this idea?
+  - Score the evolution of this space
+  - evaluate bubble evolution
+  - Bewerte Bubble Evolution
+  - How is my bubble evolving?
+  - Wie entwickelt sich meine Blase?
+  - Analyze bubble growth
+  - Analysiere Bubble Wachstum
+  - Show me the bubble status
+  - Zeige mir den Bubble Status
+  - Track bubble changes
+  - Verfolge Bubble Ã„nderungen
+  - What's the evolution of this idea?
+  - Wie hat sich diese Idee entwickelt?
+  - Assess bubble progress
+  - Bewerte Ideen Fortschritt
+  - Display bubble development
+  - Zeige Bubble Entwicklung
+  - How has this bubble changed?
+  - Wie hat sich diese Blase verÃ¤ndert?
+  - Evaluate idea evolution
+  - Bewerte Ideen Evolution
+  - Monitor bubble growth
+  - Ãœberwache Bubble Wachstum
+  - Show bubble transformation
+  - Zeige Bubble Transformation
+  - Analyze how this bubble has grown
+  - Analysiere wie diese Blase gewachsen ist
+  - Check bubble status
+  - ÃœberprÃ¼fe Bubble Status
+  - Rate bubble evolution
+  - Bewerte Bubble Entwicklung
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: register_bubble_tools
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1517
+  doc: Register all bubble tools with the tools manager (with observer logging).
+  voice_triggers: []
+  args:
+  - name: tools_manager
+    kind: positional
+    required: true
+- name: parse_bubble_content_for_paper
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 1149
+  doc: Parse bubble content to extract research paper components.
+  voice_triggers:
+  - Extract this bubble for my paper | Extrahiere diese Blase fÃ¼r mein Paper
+  - Turn this idea into a paper section | Verwandle diese Idee in einen Paper-Abschnitt
+  - Parse this for my research paper | Parse das fÃ¼r mein Forschungspapier
+  - Prepare this bubble content for writing | Bereite diese Blaseninhalte zum Schreiben vor
+  - Convert bubble to paper format | Konvertiere Blase in Papierformat
+  - Extract content from this bubble | Extrahiere Inhalte aus dieser Blase
+  - Make this bubble paper-ready | Mache diese Blase schreibbereit
+  - Parse bubble content for my paper | Parse Blaseninhalte fÃ¼r mein Paper
+  - Prepare this for a paper | Bereite das fÃ¼r ein Paper vor
+  - Extract bubble ideas for paper | Extrahiere Blasenideen fÃ¼r Paper
+  - Organize this bubble for my paper | Organisiere diese Blase fÃ¼r mein Paper
+  - Convert this to paper content | Konvertiere das zu Paperinhalten
+  - Process this bubble for writing | Verarbeite diese Blase zum Schreiben
+  - Make this ready for my paper | Mache das bereit fÃ¼r mein Paper
+  - Extract and format for paper | Extrahiere und formatiere fÃ¼r Paper
+  - Parse this bubble for my paper | Parse diese Blase fÃ¼r mein Paper
+  - Turn bubble content into paper text | Verwandle Blaseninhalte in Papiertext
+  - Prepare bubble for my document | Bereite Blase fÃ¼r mein Dokument vor
+  - Extract this for writing | Extrahiere das zum Schreiben
+  - Parse content for paper format | Parse Inhalte fÃ¼r Paperformat
+  - Use this bubble for my paper | Nutze diese Blase fÃ¼r mein Paper
+  - Convert bubble to writing | Konvertiere Blase zum Schreiben
+  - Extract bubble for document | Extrahiere Blase fÃ¼r Dokument
+  - Prepare this idea for paper | Bereite diese Idee fÃ¼r Paper vor
+  - Parse bubble for my writing | Parse Blase fÃ¼r mein Schreiben
+  - Transform this bubble to paper | Transformiere diese Blase zu Paper
+  - Make bubble suitable for paper | Mache Blase geeignet fÃ¼r Paper
+  - Extract and prepare for paper | Extrahiere und bereite fÃ¼r Paper vor
+  - Parse this content for my paper | Parse diese Inhalte fÃ¼r mein Paper
+  - Convert to paper-ready format | Konvertiere in Papierformat
+  args:
+  - name: bubble_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: content_text
+    kind: positional
+    annotation: Optional[str]
+    default: None
+- name: explore_bubble_complete
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 1324
+  doc: 'One-Shot Bubble Exploration: Kombiniert Inter-Bubble und Intra-Bubble Exploration.'
+  voice_triggers:
+  - explore this bubble fully
+  - show me everything about this idea
+  - dive deep into this bubble
+  - let me explore this completely
+  - vollstÃ¤ndige erkundung dieser blase
+  - zeige mir alles Ã¼ber diese idee
+  - erfasse alle details dieser blase
+  - complete exploration of this bubble
+  - what's in this bubble
+  - explore it all
+  - durchsuche diese blase komplett
+  - gib mir den vollstÃ¤ndigen Ã¼berblick
+  - let me see the full picture
+  - show the complete context
+  - explore this thoroughly
+  - untersuche diese idee grÃ¼ndlich
+  - komplette analyse dieser blase
+  - show me all connections
+  - get all details about this bubble
+  - erfasse das groÃŸe bild
+  - explore bubble details
+  - zeige mir alles was damit verbunden ist
+  - deep dive into this
+  - complete bubble analysis
+  - alle aspekte dieser blase zeigen
+  - full exploration now
+  - show everything here
+  - ganz erkundung starten
+  - let me fully explore this
+  - reveal the complete bubble
+  args:
+  - name: bubble_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: output_type
+    kind: positional
+    annotation: str
+    default: '''paper'''
+  - name: exploration_mode
+    kind: positional
+    annotation: str
+    default: '''auto'''
+  - name: depth
+    kind: positional
+    annotation: int
+    default: '4'
+  - name: target_journal
+    kind: positional
+    annotation: str
+    default: '''general'''
+  - name: citation_style
+    kind: positional
+    annotation: str
+    default: '''APA'''
+- name: list_bubbles
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 19
+  doc: List all spaces/bubbles in the multiverse.
+  voice_triggers:
+  - list bubbles
+  - show me my bubbles
+  - show bubbles
+  - what bubbles do I have
+  - display my bubbles
+  - show all bubbles
+  - list my bubbles
+  - get bubbles
+  - show bubble list
+  - fetch my bubbles
+  - what are my bubbles
+  - display bubbles
+  - list all bubbles
+  - show my bubble list
+  - get my bubbles
+  - Blasen auflisten
+  - zeige meine Blasen
+  - zeige Blasen
+  - welche Blasen habe ich
+  - Blasen anzeigen
+  - meine Blasen auflisten
+  - alle Blasen anzeigen
+  - meine Blasen anzeigen
+  - zeige alle Blasen
+  - Blasenliste anzeigen
+  - alle meine Blasen zeigen
+  - Blasen abrufen
+  - welche Blasen sind das
+  - meine Blasenliste
+  - Blasen zusammenfassen
+  args: []
+- name: create_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 30
+  doc: Create a new bubble/space in the multiverse.
+  voice_triggers:
+  - Create a new bubble | Erstelle eine neue Bubble
+  - Add a bubble | FÃ¼ge eine Bubble hinzu
+  - New bubble | Neue Bubble
+  - Make a bubble | Mache eine Bubble
+  - Start a bubble | Starte eine Bubble
+  - Open a new bubble | Ã–ffne eine neue Bubble
+  - Create bubble | Erstelle Bubble
+  - Add a new idea | FÃ¼ge eine neue Idee hinzu
+  - New idea | Neue Idee
+  - Make an idea | Mache eine Idee
+  - Start an idea | Starte eine Idee
+  - Create an idea | Erstelle eine Idee
+  - Add idea | FÃ¼ge Idee hinzu
+  - Can you create a bubble | Kannst du eine Bubble erstellen
+  - Please create a bubble | Bitte erstelle eine Bubble
+  - Create a new bubble for me | Erstelle eine neue Bubble fÃ¼r mich
+  - I want to create a bubble | Ich mÃ¶chte eine Bubble erstellen
+  - Let me create a bubble | Lass mich eine Bubble erstellen
+  - Create bubble with title | Erstelle Bubble mit Titel
+  - New bubble please | Neue Bubble bitte
+  - I need a new bubble | Ich brauche eine neue Bubble
+  - Make a new bubble | Mache eine neue Bubble
+  - Start creating | Starte die Erstellung
+  - Open a bubble | Ã–ffne eine Bubble
+  - Add a new bubble | FÃ¼ge eine neue Bubble hinzu
+  - Create workspace bubble | Erstelle Workspace Bubble
+  - Begin a bubble | Beginne eine Bubble
+  - Spawn a bubble | Erzeuge eine Bubble
+  - Generate a bubble | Generiere eine Bubble
+  - Create a fresh bubble | Erstelle eine frische Bubble
+  args:
+  - name: title
+    kind: positional
+    annotation: str
+    default: None
+  - name: description
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: enter_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 47
+  doc: Enter a bubble/space to work on ideas inside it.
+  voice_triggers:
+  - Enter bubble / Blase betreten
+  - Open bubble / Blase Ã¶ffnen
+  - Jump into bubble / In die Blase springen
+  - Dive into this bubble / In diese Blase eintauchen
+  - Go to bubble / Zur Blase gehen
+  - Let me into the bubble / Lass mich in die Blase
+  - Navigate to bubble / Zur Blase navigieren
+  - Take me to the bubble / Bring mich zur Blase
+  - Switch to bubble / Zur Blase wechseln
+  - Focus on this bubble / Auf diese Blase konzentrieren
+  - Enter the bubble / Betrete die Blase
+  - Open this bubble / Ã–ffne diese Blase
+  - Explore this bubble / Erkunde diese Blase
+  - Go inside the bubble / Geh in die Blase
+  - Let's enter the bubble / Lassen Sie uns die Blase betreten
+  - Move to bubble / Zur Blase wechseln
+  - Access bubble / Auf Blase zugreifen
+  - Launch bubble / Blase starten
+  - Start exploring bubble / Beginne mit der Erkundung der Blase
+  - Enter the space / Den Raum betreten
+  - Get into bubble / Geh in die Blase
+  - Bring up bubble / Blase anzeigen
+  - Show me the bubble / Zeige mir die Blase
+  - Let's dive into bubble / Lassen Sie uns in die Blase eintauchen
+  - Enter my bubble / Betrete meine Blase
+  - Access this bubble / Auf diese Blase zugreifen
+  - Jump to bubble / Zur Blase springen
+  - Open the bubble / Ã–ffne die Blase
+  - Take me into bubble / Bring mich in die Blase
+  - Let's go into this bubble / Lassen Sie uns in diese Blase gehen
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: None
+- name: exit_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 63
+  doc: Exit current bubble and return to multiverse view.
+  voice_triggers:
+  - exit bubble|exit_bubble
+  - leave bubble|bubble verlassen
+  - go back|zurÃ¼ck gehen
+  - back to main|zurÃ¼ck zur Hauptseite
+  - close bubble|bubble schlieÃŸen
+  - exit space|space verlassen
+  - return home|zur Startseite
+  - done here|fertig hier
+  - go home|nach Hause gehen
+  - leave space|raum verlassen
+  - close this|schlieÃŸe das
+  - exit now|jetzt verlassen
+  - get out of here|hier rausgehen
+  - finish bubble|bubble beenden
+  - close space|raum schlieÃŸen
+  - return to main|zurÃ¼ck zum HauptmenÃ¼
+  - escape bubble|aus bubble entkommen
+  - leave this space|diesen raum verlassen
+  - back to start|zurÃ¼ck zum Start
+  - previous screen|vorheriger Bildschirm
+  - close current|aktuelle schlieÃŸen
+  - exit this|das verlassen
+  - back out|aussteigen
+  - leave now|jetzt gehen
+  - go back home|zurÃ¼ck nach Hause gehen
+  - end bubble|bubble beenden
+  - close this bubble|diese bubble schlieÃŸen
+  - main menu|HauptmenÃ¼
+  args: []
+- name: delete_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 74
+  doc: Delete a bubble/space and all its content.
+  voice_triggers:
+  - delete bubble
+  - remove bubble
+  - delete this bubble
+  - remove this idea
+  - trash this bubble
+  - get rid of this bubble
+  - clear bubble
+  - erase bubble
+  - delete the bubble
+  - remove this bubble
+  - delete idea
+  - discard bubble
+  - delete current bubble
+  - take out this bubble
+  - destroy bubble
+  - Blase lÃ¶schen
+  - Blase entfernen
+  - Diese Blase lÃ¶schen
+  - Idee lÃ¶schen
+  - Blase weg
+  - Blase raus
+  - Diesen Bubble lÃ¶schen
+  - Blase lÃ¶schen bitte
+  - Weg mit der Blase
+  - LÃ¶sch die Blase
+  - Entfern diese Blase
+  - LÃ¶sch diese Idee
+  - Blase auslÃ¶schen
+  - Aus mit der Blase
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: _targets
+    kind: positional
+    annotation: list
+    default: None
+  - name: _target_type
+    kind: positional
+    annotation: str
+    default: None
+- name: delete_all_bubbles_except
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 118
+  doc: Delete all bubbles/spaces EXCEPT the specified ones.
+  voice_triggers:
+  - Delete all bubbles except
+  - Keep only
+  - Remove all bubbles except
+  - Clear all bubbles except
+  - Keep these bubbles
+  - Delete everything except
+  - LÃ¶sche alle Bubbles auÃŸer
+  - Behalte nur
+  - Entferne alle Bubbles auÃŸer
+  - Alle Bubbles auÃŸer lÃ¶schen
+  - Nur diese Bubbles behalten
+  - LÃ¶sche alles auÃŸer
+  - Remove all except these
+  - Keep just
+  - Purge all bubbles except
+  - Alle auÃŸer lÃ¶schen
+  - Behalte alles auÃŸer
+  - Entferne alles auÃŸer
+  - Delete all but
+  - Keep these
+  - Wipe all bubbles except
+  - Alle Bubbles lÃ¶schen auÃŸer
+  - Nur diese behalten
+  - Alles lÃ¶schen auÃŸer
+  - Clear everything except
+  - Preserve only
+  - Remove other bubbles
+  - Alle anderen Bubbles lÃ¶schen
+  - Behalte nur diese
+  - Entferne alle anderen
+  args:
+  - name: exceptions
+    kind: positional
+    annotation: str
+    default: None
+  - name: keep
+    kind: positional
+    annotation: str
+    default: None
+- name: get_bubble_stats
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 157
+  doc: Get statistics about a bubble (note count, connections, score).
+  voice_triggers: []
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: score_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 171
+  doc: Calculate and update bubble score based on content richness.
+  voice_triggers:
+  - Rate this bubble / Diese Blase bewerten
+  - Score this idea / Diese Idee bewerten
+  - Give it a score / Gib ihr eine Punktzahl
+  - Rate it / Bewerte es
+  - Score this / Bewerte das
+  - How would you rate this / Wie wÃ¼rdest du das bewerten
+  - Evaluate this bubble / Bewerte diese Blase
+  - Can you score this / Kannst du das bewerten
+  - I want to rate this / Ich mÃ¶chte das bewerten
+  - What's your score / Was ist deine Bewertung
+  - Rate the bubble / Bewerte die Blase
+  - Give it points / Gib ihm Punkte
+  - Score please / Bewertung bitte
+  - How's this idea / Wie ist diese Idee
+  - Assess this / Bewerte das
+  - Score this for me / Bewerte das fÃ¼r mich
+  - Let's rate it / Lass uns das bewerten
+  - What's the score / Was ist die Bewertung
+  - I'd like to rate this bubble / Ich mÃ¶chte diese Blase bewerten
+  - Rate me on this / Bewerte mich darin
+  - Score bubble / Blase bewerten
+  - Evaluate this idea / Bewerte diese Idee
+  - Can I rate this / Kann ich das bewerten
+  - Let me score this / Lass mich das bewerten
+  - Scoring time / Zeit zu bewerten
+  - Give it a rating / Gib ihm eine Bewertung
+  - What do you think of this / Was hÃ¤ltst du davon
+  - Score this bubble / Bewerte diese Blase
+  - I want to score this bubble / Ich mÃ¶chte diese Blase bewerten
+  - Bubble score / Blasenbewertung
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: evaluate_bubble_evolution
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 185
+  doc: Evaluate how evolved/complete a bubble's ideas are using AI analysis.
+  voice_triggers:
+  - evaluate bubble evolution
+  - Bewerte Bubble Evolution
+  - How is my bubble evolving?
+  - Wie entwickelt sich meine Blase?
+  - Analyze bubble growth
+  - Analysiere Bubble Wachstum
+  - Show me the bubble status
+  - Zeige mir den Bubble Status
+  - Track bubble changes
+  - Verfolge Bubble Ã„nderungen
+  - What's the evolution of this idea?
+  - Wie hat sich diese Idee entwickelt?
+  - Assess bubble progress
+  - Bewerte Ideen Fortschritt
+  - Display bubble development
+  - Zeige Bubble Entwicklung
+  - How has this bubble changed?
+  - Wie hat sich diese Blase verÃ¤ndert?
+  - Evaluate idea evolution
+  - Bewerte Ideen Evolution
+  - Monitor bubble growth
+  - Ãœberwache Bubble Wachstum
+  - Show bubble transformation
+  - Zeige Bubble Transformation
+  - Analyze how this bubble has grown
+  - Analysiere wie diese Blase gewachsen ist
+  - Check bubble status
+  - ÃœberprÃ¼fe Bubble Status
+  - Rate bubble evolution
+  - Bewerte Bubble Entwicklung
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: promote_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 199
+  doc: Promote a bubble/idea to a project.
+  voice_triggers:
+  - promote this bubble | diesen bubble hochstufen
+  - boost this idea | diese Idee ankurbeln
+  - make it more visible | mach es sichtbarer
+  - elevate this | heb das hervor
+  - push this higher | schieb das nach oben
+  - feature this bubble | prÃ¤sentiere diesen bubble
+  - highlight this | markiere das
+  - promote the bubble | fÃ¶rder den bubble
+  - move it up | verschieb es nach oben
+  - increase visibility | erhÃ¶he die Sichtbarkeit
+  - amplify this | verstÃ¤rke das
+  - give it more prominence | gib dem mehr Gewicht
+  - this bubble needs promotion | dieser bubble braucht FÃ¶rderung
+  - make this stand out | mach das hervorstechend
+  - prioritize this bubble | priorisiere diesen bubble
+  - push to the top | nach oben pushen
+  - bring this forward | bring das nach vorne
+  - highlight this concept | markiere dieses Konzept
+  - promote this idea | fÃ¶rder diese Idee
+  - boost visibility | steigere die Sichtbarkeit
+  - make this more important | mach das wichtiger
+  - elevate this concept | heb dieses Konzept hervor
+  - increase prominence | erhÃ¶he die Prominenz
+  - feature this idea | prÃ¤sentiere diese Idee
+  - put this in the spotlight | setz das in den Fokus
+  - bring attention to this | lenk Aufmerksamkeit auf das
+  - promote and boost | fÃ¶rdern und verstÃ¤rken
+  - make it stand out | mach es prominenter
+  - lift this bubble | heb diesen bubble an
+  - I want to promote this | ich mÃ¶chte das fÃ¶rdern
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: update_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 213
+  doc: Update a bubble's title or description.
+  voice_triggers:
+  - Benenne den Space um
+  - Aendere den Namen zu X
+  - Update den Bubble-Namen
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: new_title
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: new_description
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: stream
+  owner_class: BubblesAgent
+  is_async: false
+  file: spaces/ideas/agents/bubbles_agent.py
+  line: 119
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: name
+  owner_class: BubblesAgent
+  is_async: false
+  file: spaces/ideas/agents/bubbles_agent.py
+  line: 123
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_bubbles_agent
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/agents/bubbles_agent.py
+  line: 178
+  doc: Get or create BubblesAgent singleton.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/ideas/tools
+- spaces/ideas/adapted
+- spaces/ideas/agents
+registry_agent: brain-bubbles
+registry_mcp_servers:
+- vibemind-db
+- vibemind
+registry_events:
+- event: bubble.list
+  tool_hint: vibemind_bubbles
+  required_params: []
+- event: bubble.create
+  tool_hint: vibemind_bubble_create
+  required_params:
+  - title
+- event: bubble.enter
+  tool_hint: vibemind_bubble_enter
+  required_params:
+  - bubble_name
+- event: bubble.exit
+  tool_hint: vibemind_bubble_exit
+  required_params: []
+- event: bubble.back
+  tool_hint: vibemind_bubble_exit
+  required_params: []
+- event: bubble.delete
+  tool_hint: db_ideas_delete
+  required_params:
+  - bubble_name
+- event: bubble.delete_all_except
+  tool_hint: db_ideas_delete
+  required_params:
+  - keep_name
+- event: bubble.update
+  tool_hint: vibemind_bubble_update
+  required_params:
+  - bubble_id
+- event: bubble.find
+  tool_hint: vibemind_bubbles
+  required_params:
+  - query
+- event: bubble.stats
+  tool_hint: vibemind_bubbles
+  required_params: []
+- event: bubble.score
+  tool_hint: vibemind_bubbles
+  required_params:
+  - bubble_id
+- event: bubble.evaluate
+  tool_hint: vibemind_bubble_update
+  required_params:
+  - bubble_id
+- event: bubble.promote
+  tool_hint: vibemind_bubble_update
+  required_params:
+  - bubble_id
+- event: bubble.current
+  tool_hint: vibemind_bubbles
+  required_params: []
+all_routed_events:
+- bubble.back
+- bubble.create
+- bubble.current
+- bubble.delete
+- bubble.delete_all_except
+- bubble.enter
+- bubble.evaluate
+- bubble.exit
+- bubble.find
+- bubble.list
+- bubble.promote
+- bubble.score
+- bubble.stats
+- bubble.update

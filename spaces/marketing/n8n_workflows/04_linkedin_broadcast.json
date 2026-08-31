@@ -1,0 +1,282 @@
+{
+  "name": "marketing-linkedin-broadcast-v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-linkedin-broadcast",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (broadcast_approved)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ],
+      "webhookId": "marketing-linkedin-broadcast"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/broadcast_proposals/{{ $json.proposal_id }}/verify_and_consume",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-Workflow",
+              "value": "linkedin-broadcast-v2"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "ignoreHttpStatusErrors": true
+        }
+      },
+      "name": "Claim: verify_and_consume",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "d2ZEUjEOcZbMmBWT",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success === true }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "IF claimed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "post",
+        "text": "={{ $('Webhook (broadcast_approved)').first().json.body_text }}",
+        "additionalFields": {},
+        "person": "={{ $('LinkedIn: whoami').first().json.sub }}",
+        "postAs": "person"
+      },
+      "name": "LinkedIn: create post",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "MIapzKkYtKBBKPyr",
+          "name": "LinkedIn Marketing"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/broadcast_proposals/{{ $('Webhook (broadcast_approved)').first().json.proposal_id }}/record_result",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"sent_external_id\": \"{{ $('LinkedIn: create post').first().json.id || 'unknown' }}\" }",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-Workflow",
+              "value": "linkedin-broadcast-v2"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "ignoreHttpStatusErrors": true
+        }
+      },
+      "name": "Record result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1100,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "d2ZEUjEOcZbMmBWT",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"posted\" }"
+      },
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"skipped\", \"reason\": \"claim failed (already consumed or not approved)\" }"
+      },
+      "name": "Respond skipped",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        880,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.linkedin.com/v2/userinfo",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "LinkedIn: whoami",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        760,
+        160
+      ],
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "MIapzKkYtKBBKPyr",
+          "name": "LinkedIn Marketing"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook (broadcast_approved)": {
+      "main": [
+        [
+          {
+            "node": "Claim: verify_and_consume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim: verify_and_consume": {
+      "main": [
+        [
+          {
+            "node": "IF claimed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF claimed": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn: whoami",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn: create post": {
+      "main": [
+        [
+          {
+            "node": "Record result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record result": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn: whoami": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn: create post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "_meta": {
+    "version": "2.1.0",
+    "description": "linkedin broadcast (Schicht 8.0). Receives the broadcast_approved bus event (payload: proposal_id, channel, body_text, subject, media_url, channel_params, bubble_id) — routing is channel-aware in the webhook bus (migration 038), so there is NO channel IF-filter here. verify_and_consume is the atomic exactly-once claim; a 409 (already consumed) exits via 'Respond skipped'.",
+    "todo": "send-error branch (record_result with {error, status:'failed'}) not wired yet — a failed send surfaces as failed n8n execution.",
+    "test_payload": {
+      "proposal_id": "00000000-0000-0000-0000-000000000000",
+      "channel": "linkedin",
+      "body_text": "Test broadcast body",
+      "subject": null,
+      "media_url": null,
+      "channel_params": {},
+      "bubble_id": "test-bubble"
+    },
+    "imports_required": {
+      "credential_oauth": "LinkedIn Marketing (id=7dPKlFWvvBauW2Re) — OAuth flow via n8n UI",
+      "credential_header": "Marketing n8n API key"
+    },
+    "linkedin_person": "The linkedIn node requires `person` (author member id). It is normally picked from a UI dropdown, which headless import cannot do. A 'LinkedIn: whoami' httpRequest node (same OAuth2 credential -> /v2/userinfo) supplies it at runtime via {{ $('LinkedIn: whoami').first().json.sub }}, so the workflow posts as whichever account the credential belongs to — no hardcoded id."
+  }
+}

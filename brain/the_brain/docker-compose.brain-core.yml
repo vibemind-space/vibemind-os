@@ -1,0 +1,150 @@
+# =============================================================================
+# Tahlamus Brain — Phase A containerised core (brain-core)
+# =============================================================================
+# Replaces the native venv Brain Dashboard with a single container that runs
+# the PATCHED clean entrypoint `start_server.py <port>` (passes the app OBJECT
+# to uvicorn — no import-string fork, so NO pyenv-3.11 double-spawn).
+#
+# Why a separate compose file (not docker-compose.yml)?
+#   The legacy docker-compose.yml wires `dashboard` -> web/brain_dashboard_server.py
+#   which DOES NOT EXIST. Keeping this file separate makes Phase A a clean,
+#   revertible step; the Phase B swarm stack supersedes both.
+#
+# Usage (matches Vibemind.debug.ps1 integration in A2):
+#   docker compose --env-file ../../../.env -f docker-compose.brain-core.yml \
+#       -p vibemind-brain up -d
+#
+# Host services the container must reach (Ollama :11434, Qdrant :6730) are
+# resolved via host.docker.internal (extra_hosts) — same pattern as
+# vibemind-os/spaces/desktop/Automation_ui/docker-compose.yml.
+# =============================================================================
+
+services:
+  brain-core:
+    build:
+      # Context = vibemind-os/ so the local `shared/` (vibemind-shared) package
+      # is reachable; vibemind-os/.dockerignore keeps the context lean.
+      context: ../..
+      dockerfile: brain/the_brain/Dockerfile
+    image: vibemind-brain-core:latest
+    container_name: vibemind-brain-core
+    ports:
+      - "5000:5000"
+    environment:
+      # start_server.py reads argv[1] OR BRAIN_PORT (start_server.py:38-49)
+      - BRAIN_PORT=5000
+      - PYTHONUNBUFFERED=1
+      # localhost in .env points at the container itself — rewrite host-bound
+      # infra to host.docker.internal so the container reaches the host's
+      # Qdrant (:6730) and (if used) the Brain URL.
+      - QDRANT_URL=http://host.docker.internal:6730
+      - BRAIN_URL=http://host.docker.internal:5000
+      # Phase 11.U.H — Supabase (Kong :54321) runs on the HOST. The repo
+      # .env has SUPABASE_URL=http://localhost:54321 which from inside this
+      # container points at the container itself (curl -> 000). The
+      # supabase: capability ops (idea.create/update/evaluate/enter) write
+      # canvas_nodes via REST; without this rewrite every node-write
+      # silently returns "Failed to create node". Same rewrite rationale
+      # as QDRANT_URL/BRAIN_URL above.
+      - SUPABASE_URL=http://192.168.178.65:54321
+      # OpenFang runs on the HOST and binds its HTTP API on :4200
+      # (openfang.vibemind.toml api_listen = 127.0.0.1:4200). From a
+      # container reach it via host.docker.internal:4200. Brain's
+      # OpenFangExecutor (core/capability_targets.py) POSTs
+      # <OPENFANG_URL>/api/agents/<id>/message to dispatch openfang:<agent>.
+      # 2026-06-23: corrected from the stale :50051 port-drift — that old
+      # gRPC-bridge port is dead; :4200 is the SOURCE OF TRUTH, verified
+      # live (gap-filer + coding_task dispatch resolve + run over :4200).
+      - OPENFANG_URL=http://host.docker.internal:4200
+      # Routing-matrix auto-train (Approach B, 2026-05-19): the
+      # ProductionPlanner REST API (:5001) runs as a HOST venv process,
+      # so from this container it's host.docker.internal — same rewrite
+      # rationale as OPENFANG_URL above. The hook
+      # (core/routing_matrix_autotrain.py) feeds ONLY trustworthy
+      # shortcut+ok routing decisions so the matrix learns organically
+      # without cementing LLM-planner mistakes. Set ROUTING_AUTOTRAIN=0
+      # to disable.
+      - ROUTING_AUTOTRAIN_URL=http://host.docker.internal:5001
+      - ROUTING_AUTOTRAIN=1
+      # CRITICAL (2026-05-19): this stack runs under Docker SWARM
+      # (`docker service` / `docker stack deploy`). Swarm IGNORES
+      # `env_file:` entirely — only explicit `environment:` entries reach
+      # the container (verified: service had exactly the 5 explicit vars,
+      # ZERO of the ~60 .env keys). That is the real root cause behind the
+      # OPENFANG_URL bug AND multihop's "GROQ_API_KEY not set" Plan-Critic
+      # failure. Fix: pass the LLM keys via ${VAR} substitution —
+      # `docker stack deploy -c <file>` DOES interpolate ${VAR} from the
+      # deploy shell env / --env-file (unlike env_file:). Keep these in
+      # sync with the keys multihop/critic/agents actually need.
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    env_file:
+      # Kept for `docker compose up` (dev / -BrainNative) which DOES read
+      # env_file. Under Swarm this is inert — the explicit ${VAR} entries
+      # above are what actually deliver the keys. `environment:` wins over
+      # `env_file:` for any same-named var either way.
+      - ../../../.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Checkpoint persistence — EventRoutingHead/SpaceRoutingHead .pt files,
+      # ctm_checkpoints, snapshots. MUST survive container restarts.
+      - ./data:/app/data
+    command: python start_server.py 5000
+    healthcheck:
+      # Real endpoint confirmed at web/brain_server.py:1425 — the same one
+      # Vibemind.debug.ps1 probes for Gate A.
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      # SBERT + RadialNetwork cold start is ~35s; give generous slack.
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── ProductionPlanner REST API (:5001) ──────────────────────────────
+  # 2026-05-19: the routing-matrix learner. Was a fragile session-only
+  # venv process (died at Heartbeat tick #109 when the session ended) —
+  # now a real Swarm service like brain-core, so the
+  # routing-matrix auto-train pipeline has a persistent target. Reuses
+  # the SAME image (it already contains production/api_server.py + Flask)
+  # — only the command/port differ. Shares the SAME ./data volume so the
+  # trained_matrices/ + routing_autotrain_queue live in one place that
+  # both this service and the host drain worker see.
+  brain-api:
+    image: vibemind-brain-core:latest
+    container_name: vibemind-brain-api
+    ports:
+      - "5001:5001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - QDRANT_URL=http://host.docker.internal:6730
+      - BRAIN_URL=http://host.docker.internal:5000
+      - SUPABASE_URL=http://192.168.178.65:54321
+      # :4200 source of truth (2026-06-23, was stale :50051 port-drift)
+      - OPENFANG_URL=http://host.docker.internal:4200
+      # Same Swarm-ignores-env_file rule as brain-core: pass keys
+      # explicitly via ${VAR} substitution (docker stack deploy).
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    env_file:
+      - ../../../.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # MUST be the same data volume as brain-core: trained_matrices/,
+      # routing_autotrain_queue.jsonl + .offset all live here.
+      - ./data:/app/data
+    command: python production/api_server.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      # ProductionPlanner init (HierarchicalPlanner + SBERT) is slow.
+      start_period: 90s
+    restart: unless-stopped

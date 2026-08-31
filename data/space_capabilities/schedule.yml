@@ -1,0 +1,197 @@
+space: schedule
+exists: true
+tool_count: 11
+tools:
+- name: set_electron_sender
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/tools/schedule_tools.py
+  line: 37
+  doc: Set the Electron IPC message sender callback.
+  voice_triggers: []
+  args:
+  - name: sender
+    kind: positional
+    annotation: Callable[[dict], None]
+    required: true
+- name: set_schedule_worker
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/tools/schedule_tools.py
+  line: 43
+  doc: Set the ScheduleWorker reference so tools can add/remove jobs live.
+  voice_triggers: []
+  args:
+  - name: worker
+    kind: positional
+    required: true
+- name: create_scheduled_task
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/tools/schedule_tools.py
+  line: 83
+  doc: 'Parse a German time expression from user_text, persist to DB,
+
+    and register with APScheduler.'
+  voice_triggers: []
+  args:
+  - name: user_text
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: list_scheduled_tasks
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/tools/schedule_tools.py
+  line: 188
+  doc: List scheduled tasks, optionally filtered by status.
+  voice_triggers: []
+  args:
+  - name: status
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: cancel_scheduled_task
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/tools/schedule_tools.py
+  line: 249
+  doc: Cancel a scheduled task by ID or fuzzy title match.
+  voice_triggers: []
+  args:
+  - name: task_id
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: modify_scheduled_task
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/tools/schedule_tools.py
+  line: 314
+  doc: Modify a scheduled task's time and/or action.
+  voice_triggers: []
+  args:
+  - name: task_id
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: new_time
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: new_action
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_schedule_status
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/tools/schedule_tools.py
+  line: 410
+  doc: Get a summary of all scheduled tasks.
+  voice_triggers: []
+  args: []
+- name: snooze_scheduled_task
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/tools/schedule_tools.py
+  line: 457
+  doc: Snooze a task — create a new one-shot DateTrigger for now + X minutes.
+  voice_triggers: []
+  args:
+  - name: task_id
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: minutes
+    kind: positional
+    annotation: int
+    default: '5'
+  - name: user_text
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: name
+  owner_class: ScheduleBackendAgent
+  is_async: false
+  file: spaces/schedule/agents/schedule_agent.py
+  line: 73
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: ScheduleBackendAgent
+  is_async: false
+  file: spaces/schedule/agents/schedule_agent.py
+  line: 77
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_schedule_agent
+  owner_class: null
+  is_async: false
+  file: spaces/schedule/agents/schedule_agent.py
+  line: 117
+  doc: Get or create the ScheduleBackendAgent singleton.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/schedule/tools
+- spaces/schedule/agents
+registry_agent: brain-scheduler
+registry_mcp_servers:
+- vibemind-db
+- scheduled-tasks
+registry_events:
+- event: schedule.create
+  tool_hint: db_schedule_create
+  required_params:
+  - title
+  - trigger_config
+- event: schedule.list
+  tool_hint: db_schedule_list
+  required_params: []
+- event: schedule.cancel
+  tool_hint: db_update
+  required_params:
+  - task_id
+- event: schedule.modify
+  tool_hint: db_update
+  required_params:
+  - task_id
+- event: schedule.status
+  tool_hint: db_schedule_list
+  required_params: []
+- event: schedule.snooze
+  tool_hint: db_update
+  required_params:
+  - task_id
+- event: openclaw.cron
+  tool_hint: db_schedule_create
+  required_params:
+  - cron_expr
+all_routed_events:
+- openclaw.cron
+- schedule.cancel
+- schedule.create
+- schedule.list
+- schedule.modify
+- schedule.snooze
+- schedule.status

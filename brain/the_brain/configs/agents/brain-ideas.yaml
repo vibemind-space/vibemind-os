@@ -1,0 +1,31 @@
+agent: brain-ideas
+description: Auto-seeded for idea.* events
+default_namespace: idea
+events:
+- idea.add_image
+- idea.analyze_links
+- idea.auto_link
+- idea.connect
+- idea.convert_format
+- idea.create
+- idea.current_space
+- idea.delete
+- idea.expand
+- idea.explain
+- idea.explore.start
+- idea.explore.stop
+- idea.find
+- idea.format_action_list
+- idea.format_hierarchy
+- idea.format_note
+- idea.format_pros_cons
+- idea.format_specs
+- idea.format_table
+- idea.generate_doc
+- idea.list
+- idea.summarize
+- idea.to_project
+- idea.update
+- idea.whitepaper
+fallback_agent: ''
+notes: Auto-seeded from namespace='idea'.

@@ -1,0 +1,222 @@
+[
+  {
+    "timestamp": "2025-10-15T02:00:22.307834",
+    "task": "Fix critical bug in authentication",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.25844497050825704,
+    "actual_action": "suggest",
+    "success": true,
+    "user_rating": 0.85,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:01:33.973056",
+    "task": "Deploy with Docker urgently",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.25854907987588216,
+    "actual_action": "suggest",
+    "success": true,
+    "user_rating": 0.8500000000000001,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:01:36.012047",
+    "task": "git commit and push to GitHub",
+    "predicted_action": "terminate",
+    "predicted_weight": 0.26477026649921864,
+    "actual_action": "terminate",
+    "success": true,
+    "user_rating": 0.9,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:04:52.647148",
+    "task": "Error: Connection timeout - database unreachable",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.2586133349009447,
+    "actual_action": "retry",
+    "success": true,
+    "user_rating": 0.3,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:04:57.232597",
+    "task": "Error: Connection timeout - database unreachable",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.2586009455403435,
+    "actual_action": "retry",
+    "success": true,
+    "user_rating": 0.3,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:05:01.813431",
+    "task": "Error: Connection timeout - database unreachable",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.25858855554702054,
+    "actual_action": "retry",
+    "success": true,
+    "user_rating": 0.3,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:05:06.375101",
+    "task": "Error: Connection timeout - database unreachable",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.2585761649212235,
+    "actual_action": "retry",
+    "success": true,
+    "user_rating": 0.3,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:05:10.954813",
+    "task": "Error: Connection timeout - database unreachable",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.2585637736632001,
+    "actual_action": "retry",
+    "success": true,
+    "user_rating": 0.3,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:05:15.534272",
+    "task": "Error: Connection timeout - database unreachable",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.25855138177319825,
+    "actual_action": "retry",
+    "success": true,
+    "user_rating": 0.3,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  },
+  {
+    "timestamp": "2025-10-15T02:05:20.122992",
+    "task": "Error: Connection timeout - database unreachable",
+    "predicted_action": "suggest",
+    "predicted_weight": 0.2585389892514656,
+    "actual_action": "retry",
+    "success": true,
+    "user_rating": 0.3,
+    "brain_gates": [
+      0.05560751201374907,
+      0.08374531203963075,
+      0.07015796563236486,
+      0.06362968720962639,
+      0.05496603250564383,
+      0.12762158865875686,
+      0.09259254369931719,
+      0.108444244050093,
+      0.09544692439735739,
+      0.2477881897934607
+    ],
+    "execution_time_ms": null
+  }
+]

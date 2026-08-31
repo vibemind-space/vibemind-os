@@ -1,0 +1,10 @@
+agent: brain-knowledge
+description: Auto-seeded for minibook.* events
+default_namespace: minibook
+events:
+- minibook.collaborate
+- minibook.discuss
+- minibook.list_projects
+- minibook.status
+fallback_agent: ''
+notes: Auto-seeded from namespace='minibook'.

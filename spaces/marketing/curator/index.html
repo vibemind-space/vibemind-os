@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Marketing-Curator</title>
+  <!-- Tailwind + Alpine: same-origin static (no CDN, no SRI complexity).
+       Loaded from spaces/marketing/curator/vendor/ which is mounted by
+       FastAPI's StaticFiles. The marketing-API process is the integrity
+       boundary: bytes-on-disk are controlled by repo + .gitignore'd from
+       contributions outside the curator-vendor pipeline.
+
+       Vendor refresh:
+         curl -sL -o vendor/tailwind.min.css https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css
+         curl -sL -o vendor/alpine.min.js https://cdn.jsdelivr.net/npm/alpinejs@3.14.7/dist/cdn.min.js
+       After refresh, verify byte-counts against vendor/CHECKSUMS.txt. -->
+  <link rel="stylesheet" href="/curator/vendor/tailwind.min.css" />
+  <script defer src="/curator/vendor/alpine.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    body { background: #0a0a0a; color: #e5e5e5; }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+  </style>
+</head>
+<body class="min-h-screen">
+<div x-data="curatorApp" x-init="init()" x-cloak class="max-w-7xl mx-auto p-6">
+
+  <!-- Header + Auth -->
+  <header class="mb-6 flex items-center justify-between border-b border-zinc-800 pb-4">
+    <div>
+      <h1 class="text-2xl font-bold text-zinc-100">Marketing Curator</h1>
+      <p class="text-sm text-zinc-500">Schicht 6.4 — Inbound review, Reply curation, Approval</p>
+    </div>
+    <div class="text-xs text-zinc-500">
+      <template x-if="!apiKey">
+        <input x-model="apiKey" @change="saveKey()"
+               type="password"
+               placeholder="MARKETING_PROPOSAL_API_KEY"
+               class="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 w-80 text-zinc-200" />
+      </template>
+      <template x-if="apiKey">
+        <button @click="clearKey()"
+                class="text-zinc-400 hover:text-zinc-200 underline">
+          api-key set · clear
+        </button>
+      </template>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="mb-6 flex gap-1 border-b border-zinc-800">
+    <template x-for="t in tabs" :key="t.key">
+      <button @click="activeTab = t.key"
+              :class="activeTab === t.key
+                ? 'border-b-2 border-emerald-400 text-emerald-300'
+                : 'text-zinc-500 hover:text-zinc-300'"
+              class="px-4 py-3 text-sm font-medium">
+        <span x-text="t.label"></span>
+        <span x-show="t.count !== null" class="ml-2 px-2 py-0.5 bg-zinc-800 rounded text-xs"
+              x-text="t.count"></span>
+      </button>
+    </template>
+  </nav>
+
+  <!-- Error banner -->
+  <template x-if="lastError">
+    <div class="mb-4 bg-red-950 border border-red-800 text-red-200 p-3 rounded text-sm">
+      <strong>Error:</strong> <span x-text="lastError"></span>
+      <button @click="lastError = ''" class="float-right">×</button>
+    </div>
+  </template>
+
+  <!-- INBOUND QUEUE TAB ─────────────────────────────────────────────── -->
+  <section x-show="activeTab === 'inbound'" class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-zinc-200">Inbound Queue</h2>
+      <button @click="loadInbound()"
+              class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded text-sm">
+        Refresh
+      </button>
+    </div>
+
+    <template x-if="!inbound.length">
+      <p class="text-zinc-500 text-sm py-4">No inbound messages need review.</p>
+    </template>
+
+    <template x-for="msg in inbound" :key="msg.id">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <div class="text-xs text-zinc-500"
+                 x-text="`${msg.received_at} · ${msg.from_email}`"></div>
+            <div class="text-base text-zinc-100 mt-1" x-text="msg.subject || '(no subject)'"></div>
+            <div class="text-xs text-zinc-500 mt-1 flex gap-3">
+              <span x-show="msg.pre_classification">
+                pre: <span class="text-amber-400" x-text="msg.pre_classification"></span>
+              </span>
+              <span x-show="msg.classification">
+                final: <span class="text-emerald-400" x-text="msg.classification"></span>
+              </span>
+              <span x-show="msg.classified_by"
+                    x-text="`by ${msg.classified_by}`"></span>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1 ml-4">
+            <template x-for="lbl in ['bounce','opt-out','reply','spam','question','other']"
+                       :key="lbl">
+              <button @click="classifyInbound(msg.id, lbl)"
+                      class="text-xs px-2 py-1 rounded border border-zinc-700 hover:bg-zinc-800 text-zinc-300"
+                      x-text="lbl"></button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </section>
+
+  <!-- REPLY PROPOSALS TAB ─────────────────────────────────────────────── -->
+  <section x-show="activeTab === 'replies'" class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-zinc-200">Reply Proposals</h2>
+      <div class="flex gap-2">
+        <select x-model="statusFilter" @change="loadProposals()"
+                class="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200">
+          <option value="">draft + pending</option>
+          <option value="draft">draft only</option>
+          <option value="pending_approval">pending_approval</option>
+          <option value="approved">approved</option>
+          <option value="rejected">rejected</option>
+          <option value="sent">sent</option>
+        </select>
+        <button @click="loadProposals()"
+                class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded text-sm">
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <template x-if="!proposals.length">
+      <p class="text-zinc-500 text-sm py-4">No proposals match.</p>
+    </template>
+
+    <template x-for="p in proposals" :key="p.id">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 cursor-pointer hover:border-zinc-600"
+           @click="openProposal(p.id)">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <div class="text-xs text-zinc-500"
+                 x-text="`${p.created_at} · to: ${p.draft_to_email}`"></div>
+            <div class="text-base text-zinc-100 mt-1" x-text="p.draft_subject"></div>
+            <div class="text-xs mt-2 flex gap-3 items-center">
+              <span class="px-2 py-0.5 rounded"
+                    :class="{
+                      'bg-zinc-800 text-zinc-300': p.status === 'draft',
+                      'bg-amber-950 text-amber-300': p.status === 'pending_approval',
+                      'bg-emerald-950 text-emerald-300': p.status === 'approved' || p.status === 'sent',
+                      'bg-red-950 text-red-300': p.status === 'rejected',
+                    }"
+                    x-text="p.status"></span>
+              <span class="text-zinc-500" x-text="`by ${p.created_by}`"></span>
+              <span x-show="p.rowboat_received_at" class="text-blue-400">
+                · rowboat context received
+              </span>
+              <span x-show="p.rowboat_request_id && !p.rowboat_received_at" class="text-amber-500">
+                · rowboat pending
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </section>
+
+  <!-- AUDIT TAB ─────────────────────────────────────────────────────── -->
+  <section x-show="activeTab === 'audit'" class="space-y-3">
+    <h2 class="text-lg font-semibold text-zinc-200">Recent Audit</h2>
+    <div class="text-xs text-zinc-500">
+      For full audit, query <code>marketing.audit_log</code> and
+      <code>marketing.n8n_api_audit</code> via psql.
+    </div>
+    <pre class="bg-zinc-950 border border-zinc-800 rounded p-3 text-xs text-zinc-400 overflow-auto"
+         x-text="auditLog"></pre>
+  </section>
+
+  <!-- PROPOSAL DETAIL MODAL ─────────────────────────────────────────── -->
+  <template x-if="openProp">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
+         @click.self="openProp = null">
+      <div class="bg-zinc-950 border border-zinc-700 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto p-6">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-xl font-bold text-zinc-100" x-text="openProp.draft_subject"></h3>
+            <div class="text-sm text-zinc-500 mt-1">
+              To: <span x-text="openProp.draft_to_email"></span>
+              · status: <span class="text-amber-400" x-text="openProp.status"></span>
+            </div>
+          </div>
+          <button @click="openProp = null" class="text-zinc-500 hover:text-zinc-200 text-2xl">×</button>
+        </div>
+
+        <!-- Inbound context -->
+        <template x-if="openProp.inbound">
+          <div class="mb-4 bg-zinc-900 border border-zinc-800 rounded p-4">
+            <div class="text-xs text-zinc-500 mb-1">Inbound from</div>
+            <div class="text-sm text-zinc-200" x-text="openProp.inbound.from_email"></div>
+            <div class="text-sm text-zinc-400 mt-1" x-text="openProp.inbound.subject"></div>
+            <pre class="text-xs text-zinc-500 mt-2"
+                 x-text="(openProp.inbound.body_text || '').slice(0, 2000)"></pre>
+          </div>
+        </template>
+
+        <!-- Rowboat context -->
+        <template x-if="openProp.rowboat_context">
+          <div class="mb-4 bg-blue-950/30 border border-blue-900 rounded p-4">
+            <div class="text-xs text-blue-400 mb-1">Rowboat context</div>
+            <pre class="text-xs text-zinc-300"
+                 x-text="JSON.stringify(openProp.rowboat_context, null, 2)"></pre>
+          </div>
+        </template>
+
+        <!-- Draft fields -->
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs text-zinc-500">Subject</label>
+            <input x-model="openProp.draft_subject"
+                   :disabled="openProp.status !== 'draft'"
+                   class="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-zinc-200 disabled:opacity-60" />
+          </div>
+          <div>
+            <label class="text-xs text-zinc-500">Body</label>
+            <textarea x-model="openProp.draft_body_text"
+                      :disabled="openProp.status !== 'draft'"
+                      rows="8"
+                      class="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-zinc-200 disabled:opacity-60"></textarea>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-4 flex gap-2 justify-end">
+          <button x-show="openProp.status === 'draft'"
+                  @click="saveEdit()"
+                  class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded text-sm">
+            Save edits
+          </button>
+          <button x-show="openProp.status === 'draft'"
+                  @click="requestApproval('telegram')"
+                  class="bg-amber-700 hover:bg-amber-600 px-4 py-2 rounded text-sm text-amber-100">
+            Request approval (Telegram)
+          </button>
+        </div>
+
+        <!-- Approval-token toast -->
+        <template x-if="lastApprovalToken">
+          <div class="mt-4 bg-yellow-950 border border-yellow-800 p-3 rounded text-xs">
+            <strong class="text-yellow-200">Approval token:</strong>
+            <code class="block mt-1 text-yellow-100 break-all"
+                  x-text="lastApprovalToken"></code>
+            <p class="text-yellow-400 mt-1">
+              Store this securely — the approve-endpoint needs it.
+            </p>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('curatorApp', () => ({
+    apiKey: localStorage.getItem('marketing_proposal_api_key') || '',
+    activeTab: 'inbound',
+    inbound: [],
+    proposals: [],
+    statusFilter: '',
+    openProp: null,
+    lastError: '',
+    lastApprovalToken: '',
+    auditLog: 'Loading...',
+    tabs: [
+      { key: 'inbound',  label: 'Inbound Queue',   count: null },
+      { key: 'replies',  label: 'Reply Proposals', count: null },
+      { key: 'audit',    label: 'Audit',           count: null },
+    ],
+
+    async init() {
+      if (this.apiKey) {
+        await this.loadInbound();
+        await this.loadProposals();
+      }
+    },
+
+    saveKey() {
+      localStorage.setItem('marketing_proposal_api_key', this.apiKey);
+      this.init();
+    },
+    clearKey() {
+      localStorage.removeItem('marketing_proposal_api_key');
+      this.apiKey = '';
+    },
+
+    async _fetch(url, options = {}) {
+      if (!this.apiKey) {
+        this.lastError = 'No api_key set';
+        return null;
+      }
+      const opt = {
+        ...options,
+        // Security-Fix 2026-06-09: API-Key via X-API-Key-Header statt URL-Query
+        // (Keys in URLs lecken in Access-/Proxy-Logs + Browser-History).
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey, ...(options.headers || {}) }
+      };
+      try {
+        const r = await fetch(url, opt);
+        const data = await r.json();
+        if (!r.ok || data.success === false) {
+          this.lastError = data.message || `HTTP ${r.status}`;
+          return null;
+        }
+        return data;
+      } catch (e) {
+        this.lastError = `network: ${e.message}`;
+        return null;
+      }
+    },
+
+    async loadInbound() {
+      const data = await this._fetch(
+        `/api/curator/inbound_queue?limit=50`
+      );
+      if (data) {
+        this.inbound = data.data;
+        this.tabs[0].count = data.data.length;
+      }
+    },
+
+    async classifyInbound(msgId, classification) {
+      const data = await this._fetch(
+        `/api/curator/inbound_messages/${msgId}/classify`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            api_key: this.apiKey,
+            classification,
+            actor: 'curator'
+          })
+        }
+      );
+      if (data) {
+        // Optimistic remove
+        this.inbound = this.inbound.filter(m => m.id !== msgId);
+        this.tabs[0].count = this.inbound.length;
+      }
+    },
+
+    async loadProposals() {
+      const u = new URL('/api/curator/reply_proposals', location.origin);
+      if (this.statusFilter) u.searchParams.set('status', this.statusFilter);
+      const data = await this._fetch(u.toString());
+      if (data) {
+        this.proposals = data.data;
+        this.tabs[1].count = data.data.length;
+      }
+    },
+
+    async openProposal(id) {
+      const data = await this._fetch(
+        `/api/curator/reply_proposals/${id}`
+      );
+      if (data) {
+        this.openProp = data.data;
+        this.lastApprovalToken = '';
+      }
+    },
+
+    async saveEdit() {
+      if (!this.openProp) return;
+      const data = await this._fetch(
+        `/api/curator/reply_proposals/${this.openProp.id}/edit`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            api_key: this.apiKey,
+            draft_subject: this.openProp.draft_subject,
+            draft_body_text: this.openProp.draft_body_text,
+            actor: 'curator'
+          })
+        }
+      );
+      if (data) {
+        await this.loadProposals();
+        this.openProp = null;
+      }
+    },
+
+    async requestApproval(channel) {
+      if (!this.openProp) return;
+      const data = await this._fetch(
+        `/api/curator/reply_proposals/${this.openProp.id}/request_approval`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            api_key: this.apiKey,
+            channel,
+            actor: 'curator'
+          })
+        }
+      );
+      if (data) {
+        this.lastApprovalToken = data.data.approval_token || '';
+        await this.loadProposals();
+      }
+    }
+  }));
+});
+</script>
+</body>
+</html>

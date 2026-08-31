@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>VibeMind</title>
+  <style>
+    :root {
+      --bg: #050608;
+      --bg2: #0c0e12;
+      --fg: #e6e8ee;
+      --dim: #6b7280;
+      --accent: #a6f000;
+      --accent-dim: #4a6a00;
+      --err: #ff5566;
+      --ok: #5cdc8a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; width: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-monospace, "JetBrains Mono", Consolas, monospace;
+      font-size: 12px;
+      overflow: hidden;
+      user-select: none;
+    }
+    .app {
+      display: flex; flex-direction: column;
+      height: 100vh;
+    }
+    .hero {
+      position: relative;
+      flex: 0 0 360px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    canvas.stars {
+      width: 320px; height: 320px;
+      display: block;
+    }
+    .bubble {
+      position: absolute;
+      bottom: 16px; left: 16px; right: 16px;
+      background: var(--bg2);
+      border: 1px solid #1a1d24;
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--dim);
+      line-height: 1.4;
+    }
+    .bubble.ok    { border-color: #1d3a25; color: var(--ok); }
+    .bubble.err   { border-color: #3a1d1d; color: var(--err); }
+    .bubble.busy  { border-color: var(--accent-dim); color: var(--accent); }
+    .controls {
+      display: flex; gap: 8px; padding: 12px;
+      border-top: 1px solid #14171e;
+      background: var(--bg2);
+    }
+    button {
+      flex: 1;
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid #232830;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 120ms, background 120ms;
+    }
+    button:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    button:disabled { opacity: 0.4; cursor: default; }
+    button.primary { border-color: var(--accent-dim); color: var(--accent); }
+    button.primary:hover:not(:disabled) { background: rgba(166, 240, 0, 0.06); }
+    .log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-top: 1px solid #14171e;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .log .l { color: var(--fg); white-space: pre-wrap; word-break: break-word; }
+    .log .l.err { color: var(--err); }
+    .log .l.exit { color: var(--accent); }
+    .log .l.warn { color: #f0c040; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #232830; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="hero">
+      <canvas class="stars" id="stars" width="640" height="640"></canvas>
+      <div class="bubble" id="status">idle — click START to bring the stack up.</div>
+    </div>
+    <div class="controls">
+      <button id="btn-start" class="primary">Start</button>
+      <button id="btn-stop" disabled>Stop</button>
+      <button id="btn-clear">Clear log</button>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    // withGlobalTauri=true in tauri.conf.json exposes window.__TAURI__.
+    // We resolve invoke/listen lazily so the canvas animation can start
+    // even if the Tauri runtime injection is briefly missing (first
+    // paint, dev-reload, etc.) — never blank the hero.
+    function getTauri() {
+      return (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.event)
+        ? { invoke: window.__TAURI__.core.invoke, listen: window.__TAURI__.event.listen }
+        : null;
+    }
+
+    // ── Animated star-circle ─────────────────────────────────────────
+    // Mirrors the screenshot: dark background, faint green circle outline,
+    // a radial grid of dots fading inward, plus brighter "live" stars
+    // that drift slowly. All computed; no image assets.
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2;
+    const R  = W * 0.46;
+
+    // Background grid: concentric rings of small low-opacity dots.
+    const gridDots = [];
+    for (let r = 12; r < R; r += 7) {
+      const ringDots = Math.floor(2 * Math.PI * r / 6);
+      for (let i = 0; i < ringDots; i++) {
+        const a = (i / ringDots) * Math.PI * 2;
+        gridDots.push({
+          x: cx + Math.cos(a) * r,
+          y: cy + Math.sin(a) * r,
+          r: 0.7,
+          alpha: 0.08 + 0.06 * (r / R)
+        });
+      }
+    }
+
+    // Live stars: brighter dots that drift along a slow random walk and
+    // twinkle. Seeded so colors are consistent across reloads.
+    function rand(seed) { let s = seed; return () => (s = (s * 9301 + 49297) % 233280) / 233280; }
+    const rng = rand(20260520);
+    const stars = [];
+    for (let i = 0; i < 60; i++) {
+      const a = rng() * Math.PI * 2;
+      const r = Math.sqrt(rng()) * R;     // sqrt for uniform area distribution
+      const hue = 200 + rng() * 160;      // blue-violet-magenta-cyan range
+      stars.push({
+        x: cx + Math.cos(a) * r,
+        y: cy + Math.sin(a) * r,
+        r: 1.2 + rng() * 2.0,
+        hue,
+        phase: rng() * Math.PI * 2,
+        speed: 0.4 + rng() * 1.4,         // twinkle speed
+        drift: 0.05 + rng() * 0.15        // pixels/frame drift
+      });
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+
+      // Background grid dots
+      for (const d of gridDots) {
+        ctx.fillStyle = `rgba(166, 240, 0, ${d.alpha})`;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Outer green circle outline
+      ctx.strokeStyle = 'rgba(166, 240, 0, 0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Center dim glow
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.25);
+      grad.addColorStop(0, 'rgba(166, 240, 0, 0.06)');
+      grad.addColorStop(1, 'rgba(166, 240, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Live drifting + twinkling stars
+      const dt = t * 0.001;
+      for (const s of stars) {
+        // drift
+        s.x += Math.cos(dt * s.drift + s.phase) * 0.18;
+        s.y += Math.sin(dt * s.drift + s.phase * 1.3) * 0.18;
+        // keep inside the circle (soft bounce by re-projecting)
+        const dx = s.x - cx, dy = s.y - cy;
+        const d = Math.hypot(dx, dy);
+        if (d > R - 4) {
+          const k = (R - 4) / d;
+          s.x = cx + dx * k;
+          s.y = cy + dy * k;
+        }
+        const twinkle = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(dt * s.speed + s.phase));
+        ctx.fillStyle = `hsla(${s.hue}, 90%, 75%, ${twinkle})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+        // bloom
+        if (s.r > 2) {
+          ctx.fillStyle = `hsla(${s.hue}, 90%, 75%, ${0.06 * twinkle})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r * 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+
+    // ── UI wiring ────────────────────────────────────────────────────
+    const $btnStart  = document.getElementById('btn-start');
+    const $btnStop   = document.getElementById('btn-stop');
+    const $btnClear  = document.getElementById('btn-clear');
+    const $status    = document.getElementById('status');
+    const $log       = document.getElementById('log');
+
+    let busy = null; // null | "start" | "stop"
+
+    function setBusy(kind) {
+      busy = kind;
+      $btnStart.disabled = !!kind;
+      $btnStop.disabled  = !!kind;
+      if (kind === 'start') $status.textContent = 'starting stack — see log below…';
+      if (kind === 'stop')  $status.textContent = 'stopping stack…';
+      $status.className = kind ? 'bubble busy' : 'bubble';
+    }
+
+    function setIdle(ok, code, kind) {
+      busy = null;
+      $btnStart.disabled = false;
+      $btnStop.disabled  = false;
+      if (ok && kind === 'start') {
+        $status.textContent = 'stack up. you can stop it with the button.';
+        $status.className = 'bubble ok';
+      } else if (ok && kind === 'stop') {
+        $status.textContent = 'stack stopped. named volumes persisted.';
+        $status.className = 'bubble ok';
+      } else if (kind === 'start' && code === 2) {
+        $status.textContent = 'started but health gate did not pass (exit 2). check the log.';
+        $status.className = 'bubble err';
+      } else {
+        $status.textContent = `${kind} exited with code ${code}.`;
+        $status.className = 'bubble err';
+      }
+    }
+
+    function appendLog(line, kind) {
+      const div = document.createElement('div');
+      div.className = 'l' + (kind ? ` ${kind}` : '');
+      div.textContent = line;
+      $log.appendChild(div);
+      $log.scrollTop = $log.scrollHeight;
+      // prune old lines so the DOM doesn't grow unbounded
+      while ($log.childNodes.length > 800) $log.removeChild($log.firstChild);
+    }
+
+    $btnStart.addEventListener('click', async () => {
+      const T = getTauri();
+      if (!T) { appendLog('Tauri runtime not ready — refresh window', 'err'); return; }
+      if (busy) return;
+      setBusy('start');
+      appendLog('=== start clicked ===', 'exit');
+      try {
+        await T.invoke('start_stack');
+      } catch (e) {
+        appendLog('invoke error: ' + e, 'err');
+        setIdle(false, -1, 'start');
+      }
+    });
+
+    $btnStop.addEventListener('click', async () => {
+      const T = getTauri();
+      if (!T) { appendLog('Tauri runtime not ready — refresh window', 'err'); return; }
+      if (busy) return;
+      setBusy('stop');
+      appendLog('=== stop clicked ===', 'exit');
+      try {
+        await T.invoke('stop_stack');
+      } catch (e) {
+        appendLog('invoke error: ' + e, 'err');
+        setIdle(false, -1, 'stop');
+      }
+    });
+
+    $btnClear.addEventListener('click', () => { $log.innerHTML = ''; });
+
+    // Subscribe to live stdout/stderr/exit events from Rust — retry
+    // briefly because withGlobalTauri injection runs on DOM ready and
+    // can race the inline script.
+    (async function wireTauri(attempt = 0) {
+      const T = getTauri();
+      if (!T) {
+        if (attempt > 20) {
+          appendLog('Tauri runtime never appeared — buttons inert', 'err');
+          return;
+        }
+        setTimeout(() => wireTauri(attempt + 1), 100);
+        return;
+      }
+      await T.listen('log', (event) => {
+        const { stream, line } = event.payload;
+        appendLog(line, stream === 'err' ? 'err' : '');
+      });
+      await T.listen('exit', (event) => {
+        const { kind, code } = event.payload;
+        appendLog(`=== ${kind} exited code=${code} ===`, 'exit');
+        setIdle(code === 0, code, kind);
+      });
+      try {
+        const p = await T.invoke('repo_root_path');
+        appendLog('repo root: ' + p, 'warn');
+      } catch (e) {
+        appendLog('repo root NOT FOUND: ' + e, 'err');
+        $status.textContent = 'Repo root not found — see log.';
+        $status.className = 'bubble err';
+      }
+    })();
+  </script>
+</body>
+</html>

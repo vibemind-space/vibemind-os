@@ -1,0 +1,13 @@
+agent: brain-scheduler
+description: Auto-seeded for schedule.* events
+default_namespace: schedule
+events:
+- openclaw.cron
+- schedule.cancel
+- schedule.create
+- schedule.list
+- schedule.modify
+- schedule.snooze
+- schedule.status
+fallback_agent: ''
+notes: Auto-seeded from namespace='schedule'.

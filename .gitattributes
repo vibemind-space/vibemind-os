@@ -1,0 +1,63 @@
+# VibeMind — line-ending normalisation (Cross-Platform-Audit Phase 1, 2026-05-21).
+#
+# Problem: core.autocrlf=true + no .gitattributes meant shell scripts got
+# checked out with CRLF on Windows and committed back that way — which
+# breaks them on Linux (the shebang line `#!/usr/bin/env bash\r` is parsed
+# with the trailing CR as part of the interpreter path → "bad interpreter").
+#
+# Rule of thumb: text files are auto-detected; the OS-specific script
+# families are pinned so they are correct regardless of the checkout OS.
+
+# Default: let git decide, normalise to LF in the repo.
+* text=auto
+
+# --- Shell / POSIX — ALWAYS LF (run on Linux/macOS/WSL) ---
+*.sh    text eol=lf
+*.bash  text eol=lf
+
+# --- Windows shells — ALWAYS CRLF (cmd.exe / PowerShell expect it) ---
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.psd1  text eol=crlf
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
+
+# --- Source files — LF everywhere (consistent diffs) ---
+*.py    text eol=lf
+*.js    text eol=lf
+*.ts    text eol=lf
+*.jsx   text eol=lf
+*.tsx   text eol=lf
+*.rs    text eol=lf
+*.go    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.toml  text eol=lf
+*.md    text eol=lf
+*.sql   text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+Dockerfile      text eol=lf
+.gitattributes  text eol=lf
+.gitignore      text eol=lf
+
+# --- Binary — never touched ---
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.pdf   binary
+*.zip   binary
+*.tar   binary
+*.gz    binary
+*.exe   binary
+*.dll   binary
+*.so    binary
+*.dylib binary
+*.bundle binary
+*.pt    binary
+*.onnx  binary
+*.bin   binary

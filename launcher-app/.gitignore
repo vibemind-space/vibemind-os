@@ -1,0 +1,13 @@
+# Tauri-specific build artifacts not caught by the parent .gitignore
+src-tauri/gen/
+src-tauri/target/
+
+# Local IDE state
+.vscode/
+.idea/
+
+# Standard Node — already covered by parent but explicit here for clarity
+node_modules/
+
+# Note: Cargo.lock IS committed (this is a binary — reproducible builds).
+# package-lock.json IS committed too (the parent .gitignore doesn't ignore it).

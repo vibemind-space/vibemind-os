@@ -1,0 +1,19 @@
+agent: brain-video
+description: "Videoproduktion mit Laura: Import, Reel-Bau, Render-Status, Publish"
+default_namespace: video
+events:
+  - video.demo_analyze
+  - video.demo_build
+  - video.lipsync
+  - video.status
+  - video.team_run
+  - video.team_status
+  - video.vision
+  - video.voice_clone
+  - video.voice_tts
+notes: |
+  brain-video besitzt alle video.*-Events (unveraendert). Das gestufte
+  Rollout im Plan 2026-08-22 betrifft die Tool-Bindungen in
+  config/space_agent_registry.yml, nicht diese Ownership: dort zeigt
+  aktuell nur video.status auf ein echtes Tool, die uebrigen bleiben
+  db_*-Platzhalter bis zum end-to-end-Beweis.

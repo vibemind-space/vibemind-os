@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install AutoGen with gRPC support + OpenAI for LLM agents
+RUN pip install --no-cache-dir \
+    "autogen-core==0.7.5" \
+    "autogen-ext[grpc]==0.7.5" \
+    "grpcio>=1.62.0" \
+    "openai>=1.0"
+
+# Copy shared message types (must be identical on all workers)
+COPY messages.py .
+
+# Worker script is mounted via docker-compose volumes

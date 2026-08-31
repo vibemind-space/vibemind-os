@@ -1,0 +1,97 @@
+space: flowzen
+exists: true
+tool_count: 7
+tools:
+- name: set_electron_sender
+  owner_class: null
+  is_async: false
+  file: spaces/flowzen/flowzen/tools/flowzen_tools.py
+  line: 18
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: sender
+    kind: positional
+    annotation: Callable[[dict], None]
+    required: true
+- name: recommend_task
+  owner_class: null
+  is_async: false
+  file: spaces/flowzen/flowzen/tools/flowzen_tools.py
+  line: 28
+  doc: 'Generate a circadian-aware task recommendation with LLM reasoning.
+
+    Only triggered when user explicitly asks "Was soll ich machen?"'
+  voice_triggers: []
+  args:
+  - name: mood
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: accept_recommendation
+  owner_class: null
+  is_async: false
+  file: spaces/flowzen/flowzen/tools/flowzen_tools.py
+  line: 207
+  doc: Mark a recommendation as accepted. Triggers preference learning + wellbeing reward.
+  voice_triggers: []
+  args:
+  - name: recommendation_log_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_flowzen_status
+  owner_class: null
+  is_async: false
+  file: spaces/flowzen/flowzen/tools/flowzen_tools.py
+  line: 237
+  doc: Get Blaue Rose status — tracker state + circadian info.
+  voice_triggers: []
+  args: []
+- name: name
+  owner_class: FlowzenAgent
+  is_async: false
+  file: spaces/flowzen/flowzen/agents/flowzen_agent.py
+  line: 33
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: FlowzenAgent
+  is_async: false
+  file: spaces/flowzen/flowzen/agents/flowzen_agent.py
+  line: 37
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_flowzen_agent
+  owner_class: null
+  is_async: false
+  file: spaces/flowzen/flowzen/agents/flowzen_agent.py
+  line: 65
+  doc: ''
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/flowzen/tools
+- spaces/flowzen/agents
+- spaces/flowzen/flowzen/tools
+- spaces/flowzen/flowzen/agents
+registry_agent: brain-wellness
+registry_mcp_servers:
+- vibemind-db
+registry_events:
+- event: rose.recommend
+  tool_hint: db_flowzen_checkin
+  required_params: []
+- event: rose.accept
+  tool_hint: db_flowzen_checkin
+  required_params: []
+- event: rose.status
+  tool_hint: db_flowzen_activity
+  required_params: []
+all_routed_events:
+- rose.accept
+- rose.recommend
+- rose.status

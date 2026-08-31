@@ -1,0 +1,4 @@
+Use the available Supabase tools to accomplish the goal.
+Be explicit about table names, column names, and query conditions.
+Provide progress updates and handle errors properly.
+Use transactions when modifying multiple records.

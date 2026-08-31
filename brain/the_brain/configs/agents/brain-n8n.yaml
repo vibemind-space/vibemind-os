@@ -1,0 +1,14 @@
+agent: brain-n8n
+description: Auto-seeded for n8n.* events
+default_namespace: n8n
+events:
+- n8n.activate
+- n8n.deactivate
+- n8n.delete
+- n8n.describe
+- n8n.execute
+- n8n.generate
+- n8n.list
+- n8n.status
+fallback_agent: ''
+notes: Auto-seeded from namespace='n8n'.

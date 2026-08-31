@@ -1,0 +1,212 @@
+  # =============================================================================
+# VibeMind-OS — Unified LLM Configuration
+# =============================================================================
+# Single source of truth for ALL LLM calls across the entire ecosystem.
+#
+# Supported providers (5):
+#   openai      — OpenAI direct (gpt-4o, gpt-4o-mini, gpt-4o-realtime)
+#   anthropic   — Anthropic direct (claude-sonnet, claude-opus, claude-haiku)
+#   openrouter  — OpenRouter gateway (any model, free tier available)
+#   google      — Google Gemini API (gemini-2.0-flash, gemini-1.5-pro)
+#   ollama      — Local Ollama (homelab default, no API key)
+#
+# How to use:
+#   1. Copy this file to llm_config.yml in the same directory
+#   2. Set API keys in .env (referenced via ${VAR_NAME} below)
+#   3. Code resolves a role -> vibemind_shared.get_client("role_name")
+#
+# Resolution order:
+#   overrides[<dir>][<role>] > roles[<role>] > default
+#
+# Each LLM is INDIVIDUALLY configurable per role, per directory.
+# To switch a single component to a different model, only edit this file.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# API Keys — referenced from environment via ${VAR_NAME}
+# Set in .env or shell. Never commit real keys.
+# -----------------------------------------------------------------------------
+keys:
+  openai:      ${OPENAI_API_KEY}
+  anthropic:   ${ANTHROPIC_API_KEY}
+  openrouter:  ${OPENROUTER_API_KEY}
+  google:      ${GOOGLE_API_KEY}
+  ollama:      null   # local, no key needed
+
+# -----------------------------------------------------------------------------
+# Provider Definitions — base URLs + key references + driver type
+# Driver types:
+#   "openai"    → AsyncOpenAI client (works for openai, openrouter, google, ollama)
+#   "anthropic" → AsyncAnthropic client (only for anthropic provider)
+# -----------------------------------------------------------------------------
+providers:
+  openai:
+    type: openai
+    base_url: https://api.openai.com/v1
+    key_ref: openai
+
+  anthropic:
+    type: anthropic
+    base_url: https://api.anthropic.com
+    key_ref: anthropic
+
+  openrouter:
+    type: openai
+    base_url: https://openrouter.ai/api/v1
+    key_ref: openrouter
+
+  google:
+    type: openai
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    key_ref: google
+
+  ollama:
+    type: openai
+    base_url: http://127.0.0.1:11434/v1
+    key_ref: null
+
+# -----------------------------------------------------------------------------
+# Default — global fallback for any unknown role
+# Homelab-first: prefer local Ollama. Override per-role for cloud models.
+# -----------------------------------------------------------------------------
+default:
+  provider: ollama
+  model: qwen2.5-coder:7b
+  temperature: 0
+
+# -----------------------------------------------------------------------------
+# Roles — one entry per logical LLM consumer in the system.
+# Each role can use a different provider+model+temperature.
+# -----------------------------------------------------------------------------
+roles:
+
+  # ── Brain (Tahlamus cognitive system) ──────────────────────────────────────
+  brain_fast_reasoning:    { provider: openrouter, model: openrouter/auto,              temperature: 0.3 }
+  brain_planning:          { provider: anthropic,  model: claude-sonnet-4-5,            temperature: 0.7 }
+  brain_context_tracking:  { provider: anthropic,  model: claude-sonnet-4-5,            temperature: 0.5 }
+  brain_communication:     { provider: openai,     model: gpt-4o,                       temperature: 0.8 }
+  brain_long_term_memory:  { provider: google,     model: gemini-2.0-flash,             temperature: 0.5 }
+  brain_supermemory:       { provider: openai,     model: gpt-4o-mini,                  temperature: 0.5 }
+  brain_data_collector:    { provider: openai,     model: gpt-4o-mini,                  temperature: 0.7 }
+  brain_data_collector_anthropic: { provider: anthropic, model: claude-haiku-4-5-20251001, temperature: 0.7 }
+
+  # ── Coding Engine (autonomous code generation) ─────────────────────────────
+  coding_planner:          { provider: anthropic,  model: claude-sonnet-4-5,            temperature: 0.7 }
+  coding_executor:         { provider: anthropic,  model: claude-sonnet-4-5,            temperature: 0   }
+  coding_reviewer:         { provider: anthropic,  model: claude-sonnet-4-5,            temperature: 0   }
+  coding_test_writer:      { provider: openai,     model: gpt-4o,                       temperature: 0   }
+  coding_security_audit:   { provider: openai,     model: gpt-4o,                       temperature: 0   }
+  coding_architect:        { provider: anthropic,  model: claude-sonnet-4-5,            temperature: 0.5 }
+
+  # ── Voice / Realtime (only OpenAI offers realtime) ─────────────────────────
+  voice_realtime:          { provider: openai,     model: gpt-4o-realtime-preview,      temperature: 0.8 }
+  voice_intent_classifier: { provider: ollama,     model: qwen2.5:7b,                   temperature: 0   }
+  voice_summarizer:        { provider: ollama,     model: qwen2.5:7b,                   temperature: 0.3 }
+  voice_space_agent:       { provider: openai,     model: gpt-4o-mini,                  temperature: 0   }
+
+  # ── Security (red/blue team, judges) — cheap via OpenRouter free tier ──────
+  security_red_team:       { provider: openrouter, model: openrouter/auto,              temperature: 0.7 }
+  security_blue_team:      { provider: openrouter, model: openrouter/auto,              temperature: 0   }
+  security_judge:          { provider: openrouter, model: openrouter/auto,              temperature: 0   }
+  security_analyzer:       { provider: openrouter, model: openrouter/auto,              temperature: 0   }
+
+  # ── Email / Communication ──────────────────────────────────────────────────
+  email_personalizer:      { provider: openrouter, model: meta-llama/llama-3.3-70b-instruct, temperature: 0.7 }
+  email_response:          { provider: openrouter, model: meta-llama/llama-3.3-70b-instruct, temperature: 0   }
+
+  # ── Search / RAG ───────────────────────────────────────────────────────────
+  fungus_summary:          { provider: ollama,     model: qwen2.5-coder:7b,             temperature: 0   }
+  fungus_judge:            { provider: openai,     model: gpt-4o-mini,                  temperature: 0   }
+  rag_classifier:          { provider: google,     model: gemini-2.0-flash,             temperature: 0   }
+
+  # ── Agent Pipelines ────────────────────────────────────────────────────────
+  agent_minibook:          { provider: openai,     model: gpt-4o,                       temperature: 0   }
+  agent_pitch_deck:        { provider: anthropic,  model: claude-sonnet-4-5,            temperature: 0.7 }
+  agent_pc_cleaner:        { provider: openai,     model: gpt-4o-mini,                  temperature: 0   }
+
+  # ── Local-only (no internet, runs entirely on homelab) ─────────────────────
+  local_default:           { provider: ollama,     model: qwen2.5-coder:7b,             temperature: 0   }
+  local_chat:              { provider: ollama,     model: llama3.2,                     temperature: 0.7 }
+  local_fast:              { provider: ollama,     model: qwen2.5:3b,                   temperature: 0   }
+
+# -----------------------------------------------------------------------------
+# Per-Directory Overrides — switch a specific component without touching code
+#
+# Useful when one service should use a different model than the global role.
+# Example: use Ollama for everything in la-fungus-search (offline-friendly).
+# -----------------------------------------------------------------------------
+overrides:
+
+  the_brain:
+    # Brain in production wants the strongest models
+    brain_planning:        { model: claude-opus-4 }
+    brain_context_tracking: { model: claude-opus-4 }
+
+  la-fungus-search:
+    # Search is local-only, no cloud calls
+    default:               { provider: ollama, model: qwen2.5-coder:7b }
+    fungus_summary:        { provider: ollama, model: qwen2.5-coder:7b }
+
+  security:
+    # Free OpenRouter is fine for security testing
+    default:               { provider: openrouter, model: openrouter/auto }
+
+# -----------------------------------------------------------------------------
+# Embedding Models — separate from chat LLMs.
+# Resolved via vibemind_shared.get_embedding_model("role_name").
+#
+# Drivers:
+#   "sentence_transformers" → local model via SentenceTransformer (no key)
+#   "openai"                → OpenAI/OpenRouter compatible /embeddings endpoint
+#   "ollama"                → Ollama OpenAI-compat /v1/embeddings endpoint
+# -----------------------------------------------------------------------------
+embeddings:
+
+  default:
+    driver: sentence_transformers
+    model: all-MiniLM-L6-v2
+    dim: 384
+
+  # Used by la-fungus-search semantic code search
+  fungus_search:
+    driver: sentence_transformers
+    model: all-MiniLM-L6-v2
+    dim: 384
+
+  # High-quality embeddings (cloud, costs money)
+  openai_large:
+    driver: openai
+    provider: openai
+    model: text-embedding-3-large
+    dim: 3072
+
+  openai_small:
+    driver: openai
+    provider: openai
+    model: text-embedding-3-small
+    dim: 1536
+
+  # Local Ollama embeddings — no key, runs on the homelab
+  ollama_local:
+    driver: ollama
+    provider: ollama
+    model: nomic-embed-text
+    dim: 768
+
+  # Brain semantic clustering (currently uses all-MiniLM-L6-v2 hardcoded)
+  brain_clustering:
+    driver: sentence_transformers
+    model: all-MiniLM-L6-v2
+    dim: 384
+
+  # EmbeddingGemma (Google's small open model — also local)
+  embeddinggemma:
+    driver: sentence_transformers
+    model: google/embeddinggemma-300m
+    dim: 768
+
+  # Code-specific embeddings (project_indexer)
+  code_search:
+    driver: sentence_transformers
+    model: all-MiniLM-L6-v2
+    dim: 384

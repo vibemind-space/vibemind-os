@@ -1,0 +1,10 @@
+agent: brain-researcher
+description: Auto-seeded for research.* events
+default_namespace: research
+events:
+- research.scrape
+- research.summarize
+- research.to_idea
+- research.web
+fallback_agent: ''
+notes: Auto-seeded from namespace='research'.

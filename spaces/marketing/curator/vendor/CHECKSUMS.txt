@@ -1,0 +1,21 @@
+# Curator-Space vendor file checksums (Schicht 6.4)
+#
+# These files are served same-origin from /curator/vendor/ — NO CDN at runtime.
+# Verify checksums after refreshing from upstream.
+#
+# Refresh procedure:
+#   curl -sL -o vendor/tailwind.min.css \
+#     https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css
+#   curl -sL -o vendor/alpine.min.js \
+#     https://cdn.jsdelivr.net/npm/alpinejs@3.14.7/dist/cdn.min.js
+#
+# Then re-verify:
+#   python -c "import hashlib, pathlib; [print(f, hashlib.sha256(pathlib.Path(f).read_bytes()).hexdigest()) for f in ['vendor/tailwind.min.css','vendor/alpine.min.js']]"
+#
+# Versions pinned because:
+#   - Tailwind 2.2.19: last version with a standalone min.css build (v3+ is JIT-only)
+#   - Alpine 3.14.7: stable, ~45KB, well-supported
+
+# Recorded 2026-06-09:
+tailwind.min.css | 2934019 bytes | sha256: b6ad97402eddb903e7a5d7a73ee47a679204efbdda4521a391cbad9df509b932
+alpine.min.js    | 44758 bytes    | sha256: afa01262b1e213446762714f332b7a12c4e85ec66c508d7de2060514936e8c82

@@ -1,0 +1,16 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.venv/
+honeypot_logs/
+*.log
+poc_red_blue/miniforge.sh
+*.sh
+
+# Generated scan artifacts and reports — never commit (may contain real target data)
+.scan_history/
+report_*.html
+attack_chain_*.html
+*.backup

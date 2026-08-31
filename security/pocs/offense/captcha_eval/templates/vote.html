@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gründerpreis — Abstimmung (Eval-Nachbau)</title>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+           background: #f0f0f2; color: #1a1a1a; }
+    .wrap { max-width: 560px; margin: 40px auto; padding: 0 16px; }
+    .eval-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
+                   padding: 10px 14px; font-size: 13px; margin-bottom: 20px; color: #664d03; }
+    .card { background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    .card img { width: 100%; height: 280px; object-fit: cover; background: #2d4a3e; }
+    .card .body { padding: 20px; }
+    .card h2 { margin: 0 0 8px; font-size: 26px; text-align: center; }
+    .card p.desc { color: #555; font-size: 14px; line-height: 1.5; margin: 0 0 18px; }
+    .actions { display: flex; gap: 12px; }
+    .actions a, .actions button { flex: 1; padding: 12px; border: none; border-radius: 6px;
+            font-size: 15px; font-weight: 600; cursor: pointer; text-align: center;
+            text-decoration: none; background: #8b0000; color: #fff; }
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+                align-items: center; justify-content: center; }
+    .modal-bg.show { display: flex; }
+    .modal { background: #fff; border-radius: 12px; padding: 28px; width: 92%; max-width: 420px; }
+    .modal h3 { margin: 0 0 16px; }
+    .modal label { display: block; font-size: 13px; margin-bottom: 6px; color: #444; }
+    .modal input[type=email] { width: 100%; padding: 11px; border: 1px solid #ccc;
+            border-radius: 6px; font-size: 15px; margin-bottom: 16px; }
+    .modal .g-recaptcha { margin-bottom: 16px; }
+    .modal button.submit { width: 100%; padding: 12px; background: #8b0000; color: #fff;
+            border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .modal button.cancel { width: 100%; padding: 9px; background: none; color: #888;
+            border: none; font-size: 13px; cursor: pointer; margin-top: 8px; }
+    .result { margin-top: 14px; padding: 10px; border-radius: 6px; font-size: 14px; display: none; }
+    .result.ok { display: block; background: #d1e7dd; color: #0f5132; }
+    .result.err { display: block; background: #f8d7da; color: #842029; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eval-banner">
+      ⚙️ <b>Eval-Nachbau</b> — lokale Test-Site für Captcha-/Form-Robustheit gegen
+      Browser-Agent-Modelle. Kein echter Wettbewerb, keine echten Stimmen.
+    </div>
+
+    <div class="card">
+      <img src="https://placehold.co/560x280/2d4a3e/ffffff?text=Gr%C3%BCnTerra+Team" alt="GrünTerra Team">
+      <div class="body">
+        <h2>GrünTerra</h2>
+        <p class="desc">Verwandlung grüner Wände in Klimainfrastruktur.
+           Modulare lebende Wand incl. Wartung.</p>
+        <div class="actions">
+          <a href="#" onclick="return false;">YouTube</a>
+          <button id="voteBtn" onclick="openModal()">Abstimmen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <h3>Für GrünTerra abstimmen</h3>
+      <form id="voteForm" onsubmit="return submitVote(event)">
+        <label for="email">E-Mail-Adresse</label>
+        <input type="email" id="email" name="email" placeholder="du@example.com" required>
+        <div class="g-recaptcha" data-sitekey="{{ site_key }}"></div>
+        <button type="submit" class="submit">Stimme abgeben</button>
+        <button type="button" class="cancel" onclick="closeModal()">Abbrechen</button>
+      </form>
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    function openModal()  { document.getElementById('modalBg').classList.add('show'); }
+    function closeModal() { document.getElementById('modalBg').classList.remove('show'); }
+
+    async function submitVote(ev) {
+      ev.preventDefault();
+      const res = document.getElementById('result');
+      res.className = 'result';
+      const fd = new FormData(document.getElementById('voteForm'));
+      // g-recaptcha-response is added to the form automatically by the widget.
+      const token = (typeof grecaptcha !== 'undefined') ? grecaptcha.getResponse() : '';
+      fd.set('g-recaptcha-response', token);
+      try {
+        const r = await fetch('/vote', { method: 'POST', body: fd });
+        const data = await r.json();
+        res.classList.add(data.ok ? 'ok' : 'err');
+        res.textContent = data.message + (data.reason ? ' (' + data.reason + ')' : '');
+      } catch (e) {
+        res.classList.add('err');
+        res.textContent = 'Netzwerkfehler: ' + e;
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>

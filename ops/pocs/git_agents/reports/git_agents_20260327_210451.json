@@ -1,0 +1,500 @@
+[
+  {
+    "repo": "Flissel/openfang",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/openfang' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/vibemind-os",
+    "agent": "triage",
+    "issues_scanned": 24,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": [
+      "All 24 issues already labeled"
+    ]
+  },
+  {
+    "repo": "Flissel/DaveFelix-Coding-Engine",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/VibeMind-VoiceDialog",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/the_brain",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/skill",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/skill' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/flowzen",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/system-prompts-and-models-of-ai-tools",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/system-prompts-and-models-of-ai-tools' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/ai-devkit",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/ai-devkit' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/Automation_ui",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/swe_desgine",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/-req-orchestrator",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/vibevideo",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Coding_engine",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/MiroFish",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/MiroFish' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/antisemitism-monitor",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/fahrdienst-app",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/DaveLovable",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/DaveLovable' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/vibevideo-deepfake",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Autogen_AgentFarm",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/openclaw",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/openclaw' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/ShinkaEvolve",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/ShinkaEvolve' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/aiagentorganisation-gitops",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/aiagentorganisation-workspace",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/aiagentorganisationcore",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/aisalesorgcore",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/requirements-engineer",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/flowzen-mcp",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/flowzen-mcp' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/minibook",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/minibook' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/treequest",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/treequest' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/Vibemind_Moire_Tracker",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/la_fungus_search",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/MoireTracker",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/awesome-claude-skills",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/awesome-claude-skills' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/sakana-desktop-assistant-",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/vibesdk",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/vibesdk' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/snippet-harvester",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Learing_plattform",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Le_vibe",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/autogen-service",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/trae-remote",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Klotski-Webpage",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/Klotski-Webpage' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/curious-web-entrance-way",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/peach-whisper-ai-chat",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/unity-ai-platform",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/MVP-Spedition-Systemdesign",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/voice-magic-converse",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/brushwork-nook",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/deepfake-dialogue",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/InteractiveAvatarNextJSDemo",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/InteractiveAvatarNextJSDemo' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/codesnippet-maker",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/auto-template-factory",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/open-deep-research",
+    "agent": "triage",
+    "actions": [
+      "SKIPPED: gh issue list -R: the 'Flissel/open-deep-research' repository has disabled issues"
+    ]
+  },
+  {
+    "repo": "Flissel/agent-manager-frontend",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/rap_project",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Learing_Platfrom_Frontend",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Jody-Website",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/LernPlattformHswt",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Learinplattfrom",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Lernprogramm",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Projektstudium-Sensorik",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Projeket_Nummerische_Methoden",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Ingolstadt",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  },
+  {
+    "repo": "Flissel/Simulation_Plasma",
+    "agent": "triage",
+    "issues_scanned": 0,
+    "labels_applied": 0,
+    "duplicates_found": 0,
+    "actions": []
+  }
+]

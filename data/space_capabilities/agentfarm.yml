@@ -1,0 +1,239 @@
+space: agentfarm
+exists: true
+tool_count: 16
+tools:
+- name: create_team
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 28
+  doc: Create a new agent team from template or config.
+  voice_triggers: []
+  args:
+  - name: template_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: team_name
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: team_config
+    kind: positional
+    annotation: Optional[Dict]
+    default: None
+- name: run_team
+  owner_class: null
+  is_async: true
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 69
+  doc: Start an async team run. Returns immediately with run_id.
+  voice_triggers: []
+  args:
+  - name: team_id
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: task
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_farm_status
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 90
+  doc: Get overview of all teams and runs.
+  voice_triggers: []
+  args: []
+- name: list_teams
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 108
+  doc: List all registered teams.
+  voice_triggers: []
+  args: []
+- name: stop_run
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 129
+  doc: Stop a running team.
+  voice_triggers: []
+  args:
+  - name: run_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_run_results
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 150
+  doc: Get results of a completed or running team run.
+  voice_triggers: []
+  args:
+  - name: run_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: list_templates
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 179
+  doc: List available team templates from the AgentFarm submodule.
+  voice_triggers: []
+  args: []
+- name: start_collaboration
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 210
+  doc: Start multi-space collaboration via Minibook.
+  voice_triggers: []
+  args:
+  - name: task
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: goal
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: run_pipeline
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 309
+  doc: Start the 13-step HybridPipeline (OpenClaw + Swarm + Claude CLI).
+  voice_triggers: []
+  args:
+  - name: task_description
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: channel
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: session_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_pipeline_status
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 397
+  doc: Get current HybridPipeline status with per-step details.
+  voice_triggers: []
+  args: []
+- name: start_forge
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 407
+  doc: Start ForgeOrchestrator for continuous improvement.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_forge_status
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 455
+  doc: Get ForgeOrchestrator status.
+  voice_triggers: []
+  args: []
+- name: pipeline_answer
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/tools/agentfarm_tools.py
+  line: 462
+  doc: Answer a pipeline enrichment question (Rachel follow-up).
+  voice_triggers: []
+  args:
+  - name: answer
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: session_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: name
+  owner_class: AgentFarmBackendAgent
+  is_async: false
+  file: spaces/autogen/agents/agentfarm_agent.py
+  line: 48
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: AgentFarmBackendAgent
+  is_async: false
+  file: spaces/autogen/agents/agentfarm_agent.py
+  line: 52
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_agentfarm_agent
+  owner_class: null
+  is_async: false
+  file: spaces/autogen/agents/agentfarm_agent.py
+  line: 84
+  doc: ''
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/autogen/tools
+- spaces/autogen/agents
+registry_agent: brain-orchestrator
+registry_mcp_servers:
+- vibemind-db
+registry_events:
+- event: agentfarm.create_team
+  tool_hint: db_insert
+  required_params:
+  - team_name
+- event: agentfarm.run
+  tool_hint: db_update
+  required_params:
+  - team_id
+  - task
+- event: agentfarm.status
+  tool_hint: db_query
+  required_params: []
+- event: agentfarm.list_teams
+  tool_hint: db_query
+  required_params: []
+- event: agentfarm.stop
+  tool_hint: db_update
+  required_params:
+  - team_id
+- event: agentfarm.results
+  tool_hint: db_query
+  required_params:
+  - team_id
+- event: agentfarm.list_templates
+  tool_hint: db_query
+  required_params: []
+- event: agentfarm.collaborate
+  tool_hint: db_update
+  required_params:
+  - team_id
+all_routed_events:
+- agentfarm.collaborate
+- agentfarm.create_team
+- agentfarm.list_teams
+- agentfarm.list_templates
+- agentfarm.results
+- agentfarm.run
+- agentfarm.status
+- agentfarm.stop

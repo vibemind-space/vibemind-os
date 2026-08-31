@@ -1,0 +1,426 @@
+space: rowboat
+exists: true
+tool_count: 33
+tools:
+- name: start_docker
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/docker_tools.py
+  line: 84
+  doc: Start the Rowboat Docker stack.
+  voice_triggers: []
+  args: []
+- name: stop_docker
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/docker_tools.py
+  line: 128
+  doc: Stop the Rowboat Docker stack.
+  voice_triggers: []
+  args: []
+- name: restart_docker
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/docker_tools.py
+  line: 161
+  doc: Restart the Rowboat Docker stack.
+  voice_triggers: []
+  args: []
+- name: docker_status
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/docker_tools.py
+  line: 199
+  doc: Check the status of the Rowboat Docker containers.
+  voice_triggers: []
+  args: []
+- name: project_id
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 44
+  doc: Expose project ID for URL construction.
+  voice_triggers: []
+  args: []
+- name: chat
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 81
+  doc: Send a chat message to Rowboat and get a response.
+  voice_triggers: []
+  args:
+  - name: message
+    kind: positional
+    annotation: str
+    required: true
+  - name: context
+    kind: positional
+    annotation: str
+    default: '''default'''
+- name: search_knowledge
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 217
+  doc: Search the Rowboat knowledge graph.
+  voice_triggers: []
+  args:
+  - name: query
+    kind: positional
+    annotation: str
+    required: true
+- name: query_knowledge
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 224
+  doc: Query knowledge about a subject (person, project, etc.).
+  voice_triggers: []
+  args:
+  - name: subject
+    kind: positional
+    annotation: str
+    required: true
+  - name: question
+    kind: positional
+    annotation: str
+    default: None
+- name: draft_email
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 239
+  doc: Draft an email using Rowboat's knowledge context.
+  voice_triggers: []
+  args:
+  - name: recipient
+    kind: positional
+    annotation: str
+    required: true
+  - name: topic
+    kind: positional
+    annotation: str
+    required: true
+  - name: context
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: generate_meeting_brief
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 247
+  doc: Generate a meeting brief with relevant context.
+  voice_triggers: []
+  args:
+  - name: meeting
+    kind: positional
+    annotation: str
+    required: true
+  - name: participants
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: generate_deck
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 255
+  doc: Generate a presentation deck outline.
+  voice_triggers: []
+  args:
+  - name: topic
+    kind: positional
+    annotation: str
+    required: true
+  - name: context
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: process_voice_note
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 263
+  doc: Process a voice note and update the knowledge graph.
+  voice_triggers: []
+  args:
+  - name: text
+    kind: positional
+    annotation: str
+    required: true
+- name: get_status
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 274
+  doc: Check Rowboat connection status.
+  voice_triggers: []
+  args: []
+- name: reset_conversation
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 318
+  doc: Reset conversation context.
+  voice_triggers: []
+  args:
+  - name: context
+    kind: positional
+    annotation: str
+    default: None
+- name: list_conversations
+  owner_class: RoarbootClient
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 333
+  doc: List active conversation contexts and their IDs.
+  voice_triggers: []
+  args: []
+- name: get_roarboot_client
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_client.py
+  line: 342
+  doc: Get or create RoarbootClient singleton.
+  voice_triggers: []
+  args: []
+- name: search_knowledge
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 36
+  doc: Search the Rowboat knowledge graph.
+  voice_triggers: []
+  args:
+  - name: query
+    kind: positional
+    annotation: str
+    required: true
+- name: query_knowledge
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 67
+  doc: Query knowledge about a person, project, or topic.
+  voice_triggers: []
+  args:
+  - name: subject
+    kind: positional
+    annotation: str
+    required: true
+  - name: question
+    kind: positional
+    annotation: str
+    default: None
+- name: draft_email
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 99
+  doc: Draft an email using Rowboat's knowledge context.
+  voice_triggers: []
+  args:
+  - name: recipient
+    kind: positional
+    annotation: str
+    required: true
+  - name: topic
+    kind: positional
+    annotation: str
+    required: true
+  - name: context
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: generate_meeting_brief
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 133
+  doc: Generate a meeting brief with relevant context.
+  voice_triggers: []
+  args:
+  - name: meeting
+    kind: positional
+    annotation: str
+    required: true
+  - name: participants
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: generate_deck
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 165
+  doc: Generate a presentation deck outline.
+  voice_triggers: []
+  args:
+  - name: topic
+    kind: positional
+    annotation: str
+    required: true
+  - name: context
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: process_voice_note
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 197
+  doc: Process a voice note and update the knowledge graph.
+  voice_triggers: []
+  args:
+  - name: text
+    kind: positional
+    annotation: str
+    required: true
+- name: get_status
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 227
+  doc: Check Rowboat connection status.
+  voice_triggers: []
+  args: []
+- name: open_webview
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 253
+  doc: Signal Electron to show the Rowboat WebView.
+  voice_triggers: []
+  args:
+  - name: context
+    kind: positional
+    annotation: str
+    default: '''default'''
+- name: reset_conversation
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 301
+  doc: Reset Rowboat conversation context.
+  voice_triggers: []
+  args:
+  - name: context
+    kind: positional
+    annotation: str
+    default: None
+- name: chat
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 337
+  doc: 'Free multi-turn chat with Rowboat — the core conversation interface.
+
+    Rowboat responds with full knowledge graph context.'
+  voice_triggers: []
+  args:
+  - name: message
+    kind: positional
+    annotation: str
+    required: true
+  - name: context
+    kind: positional
+    annotation: str
+    default: '''general'''
+- name: rag_search
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 364
+  doc: Semantic RAG search via Qdrant vector DB — finds conceptually similar content.
+  voice_triggers: []
+  args:
+  - name: query
+    kind: positional
+    annotation: str
+    required: true
+  - name: threshold
+    kind: positional
+    annotation: float
+    default: '0.7'
+  - name: limit
+    kind: positional
+    annotation: int
+    default: '5'
+- name: upload_document
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 393
+  doc: 'Upload a document to Rowboat''s knowledge graph for RAG indexing.
+
+    Supports file path (PDF, DOCX, MD, TXT) or raw text.'
+  voice_triggers: []
+  args:
+  - name: file_path
+    kind: positional
+    annotation: str
+    default: None
+  - name: text
+    kind: positional
+    annotation: str
+    default: None
+  - name: title
+    kind: positional
+    annotation: str
+    default: None
+- name: explore_graph
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 457
+  doc: 'Explore knowledge graph connections for a subject.
+
+    Shows relationships, linked notes, and context.'
+  voice_triggers: []
+  args:
+  - name: subject
+    kind: positional
+    annotation: str
+    default: None
+- name: list_tools
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/tools/roarboot_tools.py
+  line: 484
+  doc: List all available Rowboat tools and integrations.
+  voice_triggers: []
+  args: []
+- name: name
+  owner_class: RoarbootBackendAgent
+  is_async: false
+  file: spaces/rowboat/agents/roarboot_agent.py
+  line: 118
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: RoarbootBackendAgent
+  is_async: false
+  file: spaces/rowboat/agents/roarboot_agent.py
+  line: 122
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_roarboot_agent
+  owner_class: null
+  is_async: false
+  file: spaces/rowboat/agents/roarboot_agent.py
+  line: 192
+  doc: Get or create RoarbootBackendAgent singleton.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/rowboat/tools
+- spaces/rowboat/agents
+registry_agent: null
+registry_events: []
+registry_mcp_servers: []
+all_routed_events: []

@@ -1,0 +1,1082 @@
+# ATM-R Default Configuration
+# Adaptive Thalamic Multimodal Routing
+
+# Modality definitions
+modalities:
+  - vision
+  - audio
+  - touch
+  - taste
+  - vestibular
+  - threat
+
+# Dimensionality for each modality
+dimensions:
+  vision: 128
+  audio: 64
+  touch: 32
+  taste: 16
+  vestibular: 16
+  threat: 8
+
+# Time constants (τ_i) - controls dynamics speed
+tau:
+  vision: 50.0
+  audio: 40.0
+  touch: 35.0
+  taste: 45.0
+  vestibular: 30.0
+  threat: 20.0      # faster response for safety
+
+# Priority priors (π_i) - baseline importance
+priors:
+  vision: 0.2
+  audio: 0.15
+  touch: 0.15
+  taste: 0.1
+  vestibular: 0.15
+  threat: 0.25      # higher baseline for safety
+
+# Relevance score weights (β_1, β_2, β_3, β_4)
+beta:
+  activity: 0.3     # β_1: instantaneous activity ‖v_i‖
+  novelty: 0.3      # β_2: prediction error PE_i
+  prior: 0.2        # β_3: prior importance π_i
+  context: 0.2      # β_4: task context ctx_i
+
+# TRN (Thalamic Reticular Nucleus) inhibition
+trn:
+  lambda: 0.5       # λ: inhibition strength
+  init_uniform: 0.1 # initial L_ij values (off-diagonal)
+
+# Gating parameters
+gating:
+  temperature: 0.5  # τ_g: softmax temperature (lower = harder selection)
+
+# Phase coupling (Kuramoto oscillators)
+phase:
+  use_phase: false
+  omega:              # natural frequencies ω_i
+    vision: 0.1
+    audio: 0.12
+    touch: 0.08
+    taste: 0.09
+    vestibular: 0.11
+    threat: 0.15      # faster oscillation
+  coupling_strength: 0.05  # K_ij coupling
+
+# Routing targets
+routing:
+  num_targets: 3    # K downstream targets
+  init_scale: 0.1   # R_ki initialization scale
+
+# Adaptive learning (for ThalamoPC6Adaptive)
+learning:
+  # Input weight learning (Hebbian)
+  lr_input: 0.001
+
+  # Predictive coding
+  lr_generative: 0.01
+
+  # TRN competition
+  lr_trn: 0.0005
+
+  # Prior adaptation (π_i)
+  lr_prior: 0.0001
+  hazard_scale: 0.1
+  reward_scale: 0.05
+
+  # Tau homeostasis
+  lr_tau: 0.0001
+  target_activity: 0.5
+
+  # Gate entropy homeostasis
+  lr_gate_temp: 0.0001
+  target_entropy: 1.5  # bits (log2(M) would be max entropy)
+
+# Homeostatic bounds (prevent runaway adaptation)
+bounds:
+  tau_min: 10.0
+  tau_max: 200.0
+  prior_min: 0.01
+  prior_max: 2.0
+  gate_temp_min: 0.1
+  gate_temp_max: 2.0
+  trn_max: 5.0
+
+# Simulation
+simulation:
+  dt: 1.0           # Δt: time step
+  seed: 42          # random seed for reproducibility
+  nonlinearity: "tanh"  # f: activation function (tanh, relu, sigmoid)
+
+# Cognitive Loop (unified brain cycle)
+cognitive_loop:
+  enabled: false                          # Set to true or use ENABLE_COGNITIVE_LOOP env var
+  memory_routing_bias_strength: 0.25      # How much memory biases routing (0-1)
+  attention_gating_strength: 0.5          # How strongly attention gates modalities (0-1)
+  attention_ctm_threshold: 0.3            # Attention weight to trigger domain CTM
+  neuro_temperature_sensitivity: 0.5      # How much neuromodulation affects temperature
+  low_dopamine_threshold: 0.3             # Below this -> increase exploration
+  high_norepinephrine_threshold: 0.7      # Above this -> narrow focus
+  base_ctm_threshold: 0.4                 # Base CTM complexity threshold
+  uncertainty_ctm_reduction: 0.2          # Reduce threshold by this when uncertain
+  reconsider_confidence_threshold: 0.3    # Below this -> loop back
+  reconsider_pe_threshold: 0.7            # Above this PE -> loop back
+  max_loop_iterations: 2                  # Max loop re-entries
+  enable_memory_bias: true                # Memory biases routing weights
+  enable_attention_driving: true          # Attention gates modalities and selects CTM
+  enable_neuro_modulation: true           # Neuromodulation controls temperature
+  enable_dynamic_ctm: true                # CTM threshold adjusts based on uncertainty
+  enable_reflection_loop: true            # Reflection can trigger re-routing
+  enable_inline_consolidation: true       # Lightweight consolidation runs inline
+  ctm_timeout_seconds: 30.0              # CTM async reasoning timeout (P4.56)
+  # Phase 6 enable flags
+  enable_safety_layer: true              # P6.85: Action safety checking
+  enable_explanation_gen: true           # P6.87: Explanation generation
+  enable_theory_of_mind: true            # P6.76-77: User modeling
+  enable_causal_reasoning: true          # P6.78-79: Causal inference
+  enable_intrinsic_curiosity: true       # P6.81: Curiosity signal
+  enable_temporal_patterns: true          # P6.89-90: Circadian & temporal patterns
+  enable_autonomous_goals: true           # P6.82: Autonomous goal generation
+  enable_self_improvement: true           # P6.80: Self-improvement loop
+  enable_multimodal_fusion: true          # P6.83: Multimodal fusion
+  enable_formal_verifier: true            # P6.86: Formal verification
+  enable_thought_decoder: true            # P6.88: Thought decoder
+
+# Subsystem Registry (P4.51-54)
+subsystem_registry:
+  circuit_breaker_threshold: 3           # Failures before auto-disable
+  circuit_breaker_reset_seconds: 60.0    # Seconds before retry after circuit-open
+
+# Production settings
+production:
+  session_log_dir: "data/logs"
+  matrix_dir: "production/trained_matrices"
+  feedback_dir: "production/feedback"
+  learning_rate: 0.005
+  enable_continuous_learning: true
+  enable_semantic_coherence: true
+  embedding_type: "hash"            # "hash" or "neural"
+  k_min: 0.55
+  green_threshold: 0.75
+  alpha: 0.5
+
+# Brain heartbeat (autonomous background processing)
+heartbeat:
+  enabled: true
+  interval_seconds: 30.0
+  enable_dream_mode: true
+  dream_idle_threshold_seconds: 300.0
+  enable_temporal_updates: true
+  enable_neuromodulation_decay: true
+  enable_meta_learning_checks: true
+  enable_health_monitoring: true
+  meta_learning_check_interval: 10
+
+# Layer 4: Temporal Tool Control
+layer4:
+  enabled: true                     # Enable temporal action routing
+  strict_security: true             # Block on security concerns
+  timing_threshold: 0.5             # Threshold for action emission
+
+# Emotional system (amygdala-like valence/arousal)
+emotional_system:
+  enabled: true
+  valence_decay_rate: 0.05          # How fast valence returns to neutral
+  arousal_decay_rate: 0.1           # How fast arousal decays
+  emotional_memory_weight: 0.3      # How much emotion biases memory retrieval
+  fear_threshold: 0.7               # Arousal above this + negative valence = fear response
+  reward_threshold: 0.7             # Arousal above this + positive valence = reward boost
+
+# Homeostatic regulation (energy/fatigue/sleep)
+homeostatic:
+  enabled: true
+  energy_per_task: 0.02             # Energy consumed per task
+  energy_recovery_rate: 0.01        # Energy recovered per idle tick
+  energy_rest_recovery: 0.3         # Energy recovered during dream mode
+  fatigue_per_task: 0.015           # Fatigue accumulated per task
+  fatigue_decay_rate: 0.005         # Fatigue recovered per idle tick
+  fatigue_complexity_multiplier: 1.5  # Extra fatigue for complex tasks
+  sleep_accumulation_rate: 0.001    # Sleep pressure per tick
+  sleep_dream_reduction: 0.5        # Sleep pressure reduced by dream mode
+  sleep_threshold: 0.8              # Trigger forced dream above this
+  stress_threshold: 0.5             # Above this, performance degrades faster
+  low_energy_threshold: 0.3         # Below this, temperature increases
+  high_fatigue_threshold: 0.7       # Above this, attention degrades
+
+# Sensory preprocessing
+sensory:
+  enabled: true                     # Enable multi-channel feature extraction
+
+# Neuromodulation system (P5.66)
+neuromodulation:
+  enabled: true
+  baseline_dopamine: 0.5            # Baseline dopamine level (0-1)
+  baseline_serotonin: 0.5           # Baseline serotonin level (0-1)
+  baseline_norepinephrine: 0.5      # Baseline norepinephrine level (0-1)
+  decay_rate: 0.05                  # How fast levels return to baseline per tick
+  sensitivity: 1.0                  # Global sensitivity multiplier
+  history_size: 50                  # Number of historical states to keep
+
+# Consciousness metrics (P5.67)
+consciousness:
+  enabled: true
+  state_history_size: 100           # History of cognitive states to maintain
+  calibration_window: 50            # Window size for calibration statistics
+  awareness_threshold: 0.5          # Threshold for self-awareness detection
+  uncertainty_sensitivity: 0.3      # How sensitive uncertainty detection is
+
+# Memory systems (P5.68)
+memory:
+  enabled: true
+  working_memory_capacity: 10       # Max items in working memory
+  episodic_max_size: 1000           # Max episodic memories stored
+  similarity_threshold: 0.3         # Min similarity score for retrieval
+  gate_weight: 0.7                  # Weight of gate similarity in retrieval
+  context_cache_ttl: 5.0            # Cache TTL in seconds for get_context()
+  persistence_dir: "data/episodic_memory"  # Directory for persistent storage
+
+# CTM Ensemble (P5.69)
+ctm_ensemble:
+  enabled: true
+  enable_logic_ctm: true            # Enable logic/analytical CTM
+  enable_temporal_ctm: true         # Enable temporal/sequential CTM
+  enable_value_ctm: true            # Enable value/reward CTM
+  enable_evolution: true            # Enable evolutionary improvement
+  consciousness_threshold: 0.85     # Min consciousness for convergence
+  max_reasoning_steps: 50           # Max steps per CTM reasoning
+  max_concurrent_per_ctm: 2         # Max concurrent tasks per CTM
+  mixed_domain_threshold: 0.70      # Threshold for mixed-domain routing
+  evolution_population_size: 20     # Population for evolutionary algo
+  evolution_trigger_count: 10       # Tasks before triggering evolution
+  feature_dim: 256                  # Feature dimension for CTM
+  fallback_strategy: "primary_only" # Fallback: "primary_only", "ensemble_vote", "abstain"
+
+# Goal graph (P5.70)
+goal_graph:
+  enabled: true
+  max_goals: 50                     # Maximum concurrent goals
+  priority_decay_rate: 0.01         # Priority decays per tick
+  critical_path_algorithm: "longest" # "longest" or "shortest"
+  auto_cleanup_completed: true      # Remove completed goals automatically
+
+# Predictive coding (P5.71)
+predictive_coding:
+  enabled: true
+  prediction_history_size: 100      # Size of prediction history buffer
+  error_threshold: 0.5              # Above this, prediction is "wrong"
+  curiosity_weight: 0.3             # Weight of curiosity in exploration
+  learning_rate_generative: 0.01    # LR for generative model updates
+  surprise_history_min: 5           # Min history for surprise computation
+
+# Dream mode (P5.72)
+dream_mode:
+  enabled: true
+  replay_rate: 0.3                  # Probability of replaying a memory
+  counterfactual_rate: 0.2          # Probability of counterfactual generation
+  consolidation_threshold: 0.7      # Importance threshold for consolidation
+  pattern_min_support: 3            # Min occurrences for pattern detection
+  max_dreams_per_cycle: 5           # Max dream episodes per cycle
+
+# Phase 6: Theory of Mind (P6.76-77)
+theory_of_mind:
+  enabled: true
+  state_dim: 64                       # Agent state dimension
+  action_dim: 16                      # Action space dimension
+  belief_dim: 32                      # Belief state dimension
+  goal_dim: 16                        # Goal representation dimension
+  hidden_dim: 64                      # Hidden layer dimension
+
+# Phase 6: Causal Reasoning (P6.78-79)
+causal_reasoning:
+  enabled: true
+  max_nodes: 100                      # Max nodes in causal DAG
+  intervention_threshold: 0.5         # Min confidence for intervention
+
+# Phase 6: Intrinsic Curiosity (P6.81)
+intrinsic_curiosity:
+  enabled: true
+  state_dim: 64                       # State representation dimension
+  action_dim: 16                      # Action space dimension
+  feature_dim: 64                     # Feature extraction dimension
+  hidden_dim: 64                      # Hidden layer dimension
+  curiosity_scale: 1.0                # Scale factor for curiosity reward
+
+# Phase 6: Safety Layer (P6.85)
+safety_layer:
+  enabled: true
+  action_dim: 16                      # Action space dimension
+  block_threshold: 0.8                # Risk above this blocks action
+
+# Phase 6: Explanation Generator (P6.87)
+explanation_generator:
+  enabled: true
+  max_feature_contributions: 5        # Top features shown in explanation
+
+# Phase 6: Self-Improvement (P6.80)
+self_improvement:
+  enabled: true
+  window_size: 100                    # Performance tracking window
+  degradation_threshold: 0.1          # Performance drop to trigger alert
+
+# Phase 6: Autonomous Goals (P6.82)
+autonomous_goals:
+  enabled: true
+  max_concurrent_goals: 5             # Max autonomous goals at once
+
+# Phase 6: Multimodal Fusion (P6.83)
+multimodal_fusion:
+  enabled: true
+  unified_dim: 64                     # Unified representation dimension
+  fusion_type: "gated"                # "attention", "gated", "concat"
+  use_modality_dropout: true          # Enable modality dropout
+  dropout_prob: 0.2                   # Dropout probability
+
+# Phase 6: Sensorimotor Integration (P6.84)
+sensorimotor:
+  enabled: true
+  sensory_dim: 64                     # Sensory state dimension
+  motor_dim: 16                       # Motor/action dimension
+  hidden_dim: 32                      # Hidden layer dimension
+  learning_rate: 0.01                 # Forward/inverse model learning rate
+
+# Phase 6: Formal Verifier (P6.86)
+formal_verifier:
+  enabled: true
+  state_dim: 64                       # State vector dimension
+  action_dim: 16                      # Action vector dimension
+  timeout_ms: 5000                    # Z3 solver timeout (ms)
+
+# Phase 6: Thought Decoder (P6.88)
+thought_decoder:
+  enabled: true
+  thought_dim: 64                     # Internal thought vector dimension
+  num_prefix_tokens: 4                # Prefix tokens for decoding
+  max_length: 32                      # Max decoded text length
+  device: "cpu"                       # Device for inference
+
+# V2 Phase 3: Agent Loop (P3.31-45)
+agent_loop:
+  active_tick_interval: 1.0           # Seconds between ticks when tasks pending
+  idle_tick_interval: 30.0            # Seconds between ticks when idle
+  dream_tick_interval: 60.0           # Seconds between ticks during dream mode
+  idle_threshold_seconds: 300.0       # Seconds idle before entering dream mode
+  dream_duration_seconds: 120.0       # How long to dream (memory consolidation)
+  sleep_pressure_threshold: 0.7       # Homeostatic sleep pressure to force dreams
+  low_energy_threshold: 0.2           # Reduce activity below this energy level
+  max_pending_tasks: 50               # Maximum tasks in queue
+  max_concurrent_actions: 1           # Sequential execution (safety)
+  task_timeout_seconds: 300.0         # Max time per task (5 min)
+  interrupt_grace_period: 2.0         # Seconds before interrupting current task
+  max_autonomous_actions_per_hour: 50 # Autonomy budget
+  require_approval_above_risk: "high" # Risk level needing user approval
+  max_consecutive_errors: 5           # Errors before cooldown
+  error_cooldown_seconds: 30.0        # Cooldown after max errors
+
+# V2 Phase 3: Motivation Drives (P3.34-36)
+motivation:
+  # CuriosityDrive (P3.34)
+  curiosity_exploration_threshold: 0.3   # PE above this triggers exploration
+  curiosity_cooldown_seconds: 120.0      # Time between same-domain explorations
+  curiosity_novelty_weight: 0.6          # Weight for novelty signal
+  curiosity_surprise_weight: 0.4         # Weight for surprise signal
+  # CompetenceDrive (P3.35)
+  competence_zpd_lower: 0.40             # Below this success rate = too hard
+  competence_zpd_upper: 0.70             # Above this = mastered (for ZPD)
+  competence_mastery_threshold: 0.95     # Above this = fully mastered
+  competence_min_attempts: 5             # Min attempts before ZPD applies
+  competence_cooldown_seconds: 180.0     # Time between practice suggestions
+  # HomeostaticDrives (P3.36)
+  homeostatic_sleep_threshold: 0.6       # Above this → suggest dreaming
+  homeostatic_low_dopamine: 0.3          # Below this → suggest exploration
+  homeostatic_high_stress: 0.5           # Above this → suggest routine tasks
+  homeostatic_low_energy: 0.3            # Below this → suggest rest
+  homeostatic_high_fatigue: 0.7          # Above this → suggest breaks
+  homeostatic_cooldown_seconds: 60.0     # Min time between same-type impulses
+  # MotivationSystem
+  max_impulses_per_tick: 5               # Max impulses generated per tick
+
+# V2 Phase 3: Goal Management (P3.37-40)
+goal_management:
+  max_goals: 100                         # Maximum goals in hierarchy
+  failure_threshold: 3                   # Repeated failures before root-cause goal
+  curiosity_pe_threshold: 0.5            # Prediction error above this triggers curiosity goal
+  max_goals_per_tick: 3                  # Max new goals generated per tick
+  generation_cooldown_seconds: 60.0      # Cooldown between same-source generations
+  dopamine_risk_weight: 0.3              # High DA -> boost risky/high-reward goals
+  ne_urgency_weight: 0.3                 # High NE -> boost urgent goals
+  serotonin_stability_weight: 0.2        # High 5-HT -> prefer low-effort goals
+  resource_conflict_threshold: 0.8       # Threshold for resource conflict detection
+  auto_resolve_severity: 0.7             # Auto-resolve conflicts below this severity
+  max_tasks_per_tick: 3                  # Max goal-tasks returned per tick
+
+# V2 Phase 3: Proactive Behavior (P3.41-43)
+proactive_behavior:
+  # ProactiveTaskGenerator (P3.41)
+  error_threshold: 0.7                   # Error signal above this → generate task
+  failure_window_seconds: 300.0          # Window for counting job failures
+  failure_count_threshold: 2             # Failures within window → diagnostic task
+  health_degradation_threshold: 0.5      # Health below this → investigation task
+  generator_cooldown_seconds: 120.0      # Min time between same-type task generation
+  generator_max_tasks_per_tick: 3        # Max proactive tasks per tick
+  # ScheduledActions (P3.42)
+  memory_consolidation_interval: 14400.0 # 4 hours between consolidations
+  health_check_interval: 900.0           # 15 minutes between health checks
+  git_scan_interval: 300.0               # 5 minutes between git scans
+  dream_idle_threshold: 1800.0           # 30 minutes idle → dream mode
+  cleanup_interval: 3600.0              # 1 hour between cleanups
+  metrics_snapshot_interval: 600.0       # 10 minutes between metrics snapshots
+  # ReactivePatterns (P3.43)
+  max_patterns: 100                      # Maximum reactive patterns
+  max_fires_per_tick: 5                  # Max patterns firing per tick
+  learning_enabled: true                 # Learn new patterns from behavior
+  # Combined
+  max_tasks_per_tick: 5                  # Max proactive tasks per tick (all sources)
+
+# V2 Phase 3: Safety Regulation (P3.44-45)
+safety_regulation:
+  # AutonomyBudget limits (P3.44)
+  budget_limits:
+    shell_command:
+      max_count: 50
+      period: hour
+    file_write:
+      max_count: 10
+      period: hour
+    coding_job:
+      max_count: 5
+      period: day
+    llm_token:
+      max_count: 1000
+      period: minute
+    network_call:
+      max_count: 30
+      period: hour
+    task_execution:
+      max_count: 50
+      period: hour
+  escalation_threshold: 0.8              # % of budget used before escalation warning
+  # SafetyGovernor settings (P3.45)
+  check_destructive: true                # Check for destructive commands
+  check_paths: true                      # Enforce allowed paths
+  check_hosts: true                      # Enforce allowed network hosts
+  check_sensitive_data: true             # Check for sensitive data leaks
+  max_cpu_seconds: 300.0                 # Max CPU time per action
+  allowed_paths:                         # Whitelist of safe paths
+    - "C:\\Users\\User\\Desktop\\the_brain"
+    - "C:\\Users\\User\\AppData\\Local\\Programs\\Python"
+  allowed_hosts:                         # Whitelist of safe network hosts
+    - "localhost"
+    - "127.0.0.1"
+    - "github.com"
+    - "api.github.com"
+    - "pypi.org"
+
+# ── Phase 4: Language & Communication (P4.46-60) ──
+
+language_center:
+  max_context_tokens: 2000            # Max tokens for brain context window
+  default_abstraction: "standard"     # brief | standard | technical | conversational
+  enable_llm: false                   # Enable LLM-based response generation
+  llm_timeout_ms: 5000               # LLM call timeout
+  template_fallback: true             # Use templates when LLM unavailable
+
+personality:
+  traits:
+    openness: 0.8                     # Curious, creative (Tahlamus default)
+    conscientiousness: 0.9            # Precise, thorough
+    extraversion: 0.4                 # Reserved, concise
+    agreeableness: 0.7                # Cooperative, supportive
+    neuroticism: 0.3                  # Calm, stable
+
+communication_style:
+  default_mode: "technical"           # technical | chat | report | alarm
+  user_preference: null               # Override: user's preferred style
+  feedback_learning_rate: 0.05        # How fast style adapts to feedback
+
+status_updater:
+  verbosity: "important"              # silent | important | all
+  max_queue_size: 50                  # Max pending status updates
+
+suggestion_engine:
+  confidence_threshold: 0.7           # Min confidence to surface suggestion
+  cooldown_seconds: 300               # Cooldown between same-type suggestions
+  max_suggestions: 10                 # Max stored suggestions
+
+dialogue_manager:
+  max_context_depth: 10               # Max topic context stack depth
+  conversation_memory:
+    max_turns_per_session: 100        # Max turns before auto-session-end
+    max_sessions: 50                  # Max stored session summaries
+  clarification:
+    max_open_clarifications: 5        # Max concurrent open questions
+
+# ── Phase 5: Learning Systems (P5.61-75) ──
+
+experience_replay:
+  max_buffer_size: 5000               # Max stored experiences
+  sample_batch_size: 32               # Default batch size for replay
+  min_priority: 0.1                   # Min priority threshold
+
+transfer_learning:
+  min_similarity: 0.5                 # Min domain similarity for transfer
+  max_transfers: 200                  # Max tracked transfer records
+
+skill_library:
+  max_skills: 500                     # Max skills in library
+  deprecation_threshold: 0.3          # Success rate below this → deprecated
+  min_executions_to_evaluate: 10      # Min executions before evaluation
+
+world_model:
+  max_entities: 500                   # Max tracked entities
+  max_anomalies: 1000                # Max stored anomalies
+  baseline_alpha: 0.1                 # EMA smoothing for baselines
+
+causal_world_model:
+  min_observations: 3                 # Min observations for a causal link
+  min_strength: 0.4                   # Min strength for a causal link
+  max_links: 1000                     # Max tracked causal links
+
+predictive_world_model:
+  min_confidence: 0.3                 # Min confidence to surface prediction
+  max_predictions: 500                # Max stored predictions
+
+knowledge_gaps:
+  failure_threshold: 3                # Failures before gap detected
+  decay_days: 7                       # Window for failure counting
+  max_gaps: 200                       # Max tracked gaps
+
+collaborative_learning:
+  max_strategies: 500                 # Max learned strategies
+  min_confidence: 0.3                 # Min confidence to apply strategy
+
+# ── Phase 6: Identity Systems (P6.76-85) ──
+
+self_model:
+  max_capabilities: 200               # Max system-domain pairs to track
+  max_strategies: 100                  # Max strategies to remember
+  max_tools: 50                        # Max tools to remember
+  max_weaknesses: 100                  # Max weaknesses to track
+  weakness_auto_resolve_threshold: 5   # Consecutive successes to resolve weakness
+
+value_system:
+  values:
+    reliability: 0.95
+    transparency: 0.90
+    caution: 0.80
+    helpfulness: 0.85
+    growth: 0.70
+  min_value: 0.0
+  max_value: 1.0
+
+emotional_memory_system:
+  max_memories: 500                    # Max emotional memories
+  similarity_threshold: 0.3           # Min similarity for bias lookup
+  caution_decay_hours: 24.0           # Half-life of emotional markers
+
+mood_system:
+  inertia: 0.85                        # How much previous mood carries forward
+  valence_sensitivity: 0.5
+  arousal_sensitivity: 0.4
+  history_window: 100
+
+stress_response:
+  max_concurrent_tasks: 10
+  error_window_minutes: 30.0
+  chronic_threshold_hours: 2.0
+  recovery_threshold: 0.85
+  event_buffer_size: 1000
+
+user_model:
+  max_interactions: 1000
+  expertise_window: 50
+  activity_smoothing: 0.1
+  default_preferences:
+    technical: 0.5
+    verbose: 0.5
+    direct: 0.5
+    language: "en"
+    detail_level: "standard"
+
+# ── Phase 1: Sensor Systems (P1.3-6, P1.9-15) ──
+
+system_vitals_sensor:
+  poll_interval_seconds: 10
+  anomaly_window: 30
+  sigma_threshold: 2.0
+
+file_system_sensor:
+  watch_paths: []
+  poll_interval: 5
+  max_events: 1000
+
+process_sensor:
+  monitored_ports:
+    tahlamus: 5003
+    automation_ui: 8007
+    coding_engine: 8000
+    moire_server: 8766
+  check_interval: 15
+
+log_sensor:
+  log_paths: []
+  tail_lines: 100
+
+git_activity_sensor:
+  repo_paths: []
+  check_interval: 300
+  since_minutes: 60
+
+sensor_registry:
+  max_events_per_second: 100
+  event_buffer_size: 10000
+
+sensor_fusion:
+  correlation_window_seconds: 5.0
+  min_events_for_fusion: 2
+
+perception_pipeline:
+  pipeline_enabled: true
+  batch_size: 10
+
+attention_sampling:
+  base_multiplier: 1.0
+  max_multiplier: 5.0
+  min_multiplier: 0.2
+
+novelty_filter:
+  novelty_threshold: 0.3
+  history_window: 100
+
+sensory_memory:
+  buffer_size: 1000
+  retention_seconds: 60
+
+# ── Phase 2: Action Systems (P2.18, P2.25-30) ──
+
+approval_gate:
+  default_timeout: 60
+  auto_reject_on_timeout: true
+  risk_threshold: "high"
+
+action_planner:
+  max_plan_depth: 10
+  max_actions_per_plan: 50
+  default_risk: "low"
+
+action_validator:
+  blocked_patterns:
+    - "rm\\s+-rf"
+    - "DROP\\s+TABLE"
+    - "FORMAT\\s+C:"
+    - "del\\s+/s"
+  max_resource_cost: 100
+
+action_monitor:
+  default_timeout_seconds: 300
+  max_retries: 3
+  escalation_threshold: 0.9
+
+action_outcome_detector:
+  unknown_timeout: 60
+
+action_replay_memory:
+  max_memories: 5000
+  priority_boost_on_failure: 2.0
+  replay_batch_size: 32
+
+action_learning:
+  learning_rate: 0.1
+  min_samples: 5
+  decay_factor: 0.95
+
+# ── Phase 7: Resilience Systems (P7.86-92) ──
+
+graceful_degradation:
+  fallback_chains:
+    automation_ui: ["shell_commands"]
+    coding_engine: ["llm_direct"]
+    requirements_engine: ["logic_ctm"]
+    llm: ["keyword_routing"]
+
+resource_awareness:
+  tokens_per_minute: 1000
+  tokens_per_hour: 50000
+  cpu_high_threshold: 80.0
+  ram_high_threshold: 85.0
+  max_concurrent_base: 4
+  history_size: 120
+
+# ── Phase 8: Ecosystem Intelligence (P8.96-100) ──
+
+ecosystem_intelligence:
+  orchestrator_of_orchestrators:
+    max_history: 500
+    degraded_threshold: 0.3
+
+# ── Neuroscience Architecture Extensions ──
+
+cerebellum:
+  state_dim: 16
+  action_dim: 8
+  granule_expansion: 4
+  n_purkinje: 32
+  learning_rate: 0.01
+  timing_resolution: 10
+
+prefrontal_cortex:
+  state_dim: 16
+  working_memory_capacity: 7
+  n_rules: 10
+  switch_cost: 0.1
+  inhibition_threshold: 0.6
+
+hypothalamus:
+  stress_threshold: 0.6
+  circadian_period: 86400
+  recovery_rate: 0.05
+
+default_mode_network:
+  state_dim: 16
+  activation_threshold: 0.3
+  creativity_temperature: 1.5
+  mind_wandering_rate: 0.1
+
+insular_cortex:
+  salience_threshold: 0.5
+  n_interoceptive_channels: 6
+
+superior_colliculus:
+  map_size: 8
+  orientation_threshold: 0.3
+
+entorhinal_cortex:
+  n_grid_modules: 4
+  grid_resolution: 16
+  spatial_dim: 2
+  cortical_dim: 16
+  hippocampal_dim: 16
+
+nucleus_accumbens:
+  approach_threshold: 0.3
+
+anterior_cingulate:
+  n_responses: 8
+  conflict_threshold: 0.5
+
+# ── Phase D: Tier 1 Brain Structures ──
+
+amygdala:
+  n_features: 10
+  learning_rate: 0.05
+  extinction_rate: 0.02
+  threat_threshold: 0.6
+  output_gain: 1.0
+  social_sensitivity: 0.5
+
+vta:
+  tonic_baseline: 0.5
+  phasic_gain: 1.0
+  learning_rate: 0.1
+  discount: 0.95
+  inhibition_strength: 0.5
+  salience_threshold: 0.3
+
+locus_coeruleus:
+  tonic_baseline: 0.5
+  performance_threshold: 0.6
+  adaptation_rate: 0.05
+  optimal_arousal: 0.6
+  reset_threshold: 0.7
+
+raphe_nuclei:
+  baseline_5ht: 0.5
+  patience_gain: 1.0
+  mood_inertia: 0.9
+  theta_baseline: 0.5
+  inhibition_gain: 0.6
+
+lateral_habenula:
+  sensitivity: 1.0
+  omission_weight: 0.8
+  vta_inhibition_gain: 0.7
+  drn_inhibition_gain: 0.5
+  avoidance_learning_rate: 0.1
+  depression_threshold: 0.7
+
+periaqueductal_gray:
+  fight_threshold: 0.5
+  flight_threshold: 0.5
+  freeze_threshold: 0.6
+  autonomic_gain: 0.7
+  emergency_threshold: 0.8
+
+# ── Phase E: Tier 2 Brain Structures ──
+
+claustrum:
+  n_modalities: 6
+  signal_dim: 16
+  consciousness_threshold: 0.5
+  binding_learning_rate: 0.01
+  attention_budget: 1.0
+
+reticular_formation:
+  arousal_decay: 0.05
+  sensory_gain: 1.0
+  circadian_period: 86400
+  hysteresis: 0.05
+
+basal_forebrain:
+  ach_baseline: 0.5
+  attention_gain: 1.0
+  plasticity_gain: 1.5
+  snr_gain: 0.5
+  encoding_threshold: 0.6
+  retrieval_threshold: 0.4
+
+septal_nuclei:
+  theta_baseline: 6.0
+  theta_power_baseline: 0.5
+  gamma_capacity: 7
+  arousal_gain: 1.0
+  dt: 0.01
+
+inferior_olive:
+  oscillation_freq: 10.0
+  coupling_strength: 0.3
+  error_threshold: 0.1
+  dt: 0.01
+
+mammillary_bodies:
+  relay_dim: 16
+  spatial_dim: 8
+  consolidation_threshold: 0.5
+  emotional_gain: 1.0
+
+bnst:
+  integration_rate: 0.05
+  decay_rate: 0.02
+  uncertainty_gain: 1.0
+  stress_threshold: 0.6
+  vigilance_gain: 1.0
+
+parabrachial_nucleus:
+  pain_threshold: 0.4
+  temperature_threshold: 0.6
+  visceral_threshold: 0.5
+  alarm_gain: 1.0
+  teaching_rate: 0.1
+
+orbitofrontal_cortex:
+  n_features: 8
+  learning_rate: 0.1
+  risk_aversion: 0.5
+  reversal_sensitivity: 2.0
+  value_decay: 0.01
+
+# ── Phase F: Tier 3 Brain Structures ──
+substantia_nigra:
+  snc_baseline: 0.5
+  snr_threshold: 0.4
+  learning_rate: 0.05
+
+zona_incerta:
+  n_targets: 6
+  inhibition_strength: 0.6
+  motivation_threshold: 0.3
+
+red_nucleus:
+  compensation_gain: 0.8
+  primary_threshold: 0.5
+
+tuberomammillary_nucleus:
+  histamine_baseline: 0.5
+  circadian_weight: 0.4
+  sleep_suppression: 0.6
+
+pedunculopontine_nucleus:
+  cholinergic_baseline: 0.5
+  locomotion_threshold: 0.3
+  rem_threshold: 0.6
+
+ventral_pallidum:
+  hedonic_gain: 1.5
+  opioid_sensitivity: 0.8
+  motor_threshold: 0.3
+
+nts:
+  n_channels: 5
+  reflex_threshold: 0.7
+  integration_rate: 0.1
+
+olfactory_system:
+  n_receptors: 32
+  n_glomeruli: 16
+  sparsity: 0.2
+  familiarity_threshold: 0.7
+
+fusiform_gyrus:
+  n_features: 16
+  face_threshold: 0.5
+  text_threshold: 0.5
+
+temporoparietal_junction:
+  tom_sensitivity: 0.5
+  agency_threshold: 0.6
+  reorienting_threshold: 0.3
+
+posterior_parietal_cortex:
+  map_size: 16
+  n_frames: 4
+  attention_decay: 0.95
+
+cortical_column:
+  n_layers: 6
+  n_columns: 4
+  input_dim: 16
+  learning_rate: 0.01
+
+pineal_gland:
+  melatonin_baseline: 0.5
+  light_sensitivity: 0.8
+  circadian_period: 24.0
+
+corpus_callosum:
+  n_channels: 8
+  transfer_speed: 0.8
+  lateralization_bias: 0.5
+
+# Service ports (override with env vars)
+ports:
+  unified_brain: 5003
+  dashboard: 5004
+  swarm: 5002
+  api: 5001
+  memory: 8001
+  oscillator: 5005
+
+# Directory paths (override with env vars)
+directories:
+  session_logs: "data/logs/sessions"
+  episodic_memory: "data/episodic_memory"
+  trained_matrices: "production/trained_matrices"
+  feedback: "production/feedback"
+  ctm_checkpoints: "data/ctm_checkpoints"
+
+# Moltbook — Decentralized Knowledge & Thinking System
+moltbook:
+  # Core settings
+  max_entries: 50000
+  embedding_dim: 384
+  similarity_threshold: 0.7
+
+  # Thought stream
+  thought_stream_interval_ms: 200
+  thought_buffer_size: 100
+
+  # Retrieval
+  speculative_retrieval_depth: 3
+  markov_lookahead: 2
+  top_k_entries: 10
+  workspace_capacity: 7        # Lisman-Jensen 7±2
+
+  # Decay (Ebbinghaus-inspired)
+  decay_rate: 0.001
+  emotional_decay_multiplier: 0.3
+  access_boost: 0.1
+
+  # Performance targets
+  retrieval_timeout_ms: 5
+  think_budget_ms: 500
+  speak_budget_ms: 200
+
+  # Forgetting (activation-based eviction)
+  eviction_threshold: 0.01          # Entries below this activation are forgotten
+  max_tombstones: 1000              # In-memory tombstone log cap
+
+  # Persistence
+  store_path: "data/moltbook/store.jsonl"
+  index_path: "data/moltbook/index.faiss"
+  graph_path: "data/moltbook/graph.json"
+  markov_path: "data/moltbook/markov.json"
+  tombstone_path: "data/moltbook/tombstones.jsonl"
+
+  # Agents
+  enable_background_agents: true
+  agent_schedule_interval_s: 60
+  max_agent_searches_per_day: 100
+
+  # Debug
+  enable_debug_stream: false
+
+# Radial Attention Network — learned intelligence core
+radial_attention:
+  seed_dim: 384
+  thalamic_dim: 128
+  dropout: 0.1
+  hebbian_learning_rate: 0.001
+  hebbian_decay: 0.0001
+  sleep_training_lr: 0.001
+  ewc_lambda: 100.0
+  experience_buffer_size: 5000
+  conflict_threshold: 0.3
+  enable_radial: true
+
+# Neuromodulation Bridge — connects brain modules to Radial Attention
+neuromodulation_bridge:
+  enabled: true
+
+# Cortex Bridge — connects PFC + ACC + OFC to Radial Attention
+cortex_bridge:
+  enabled: true
+
+limbic_bridge:
+  enabled: true
+
+sleep_wake_bridge:
+  enabled: true
+
+motor_bridge:
+  enabled: true
+
+defense_bridge:
+  enabled: true
+
+memory_bridge:
+  enabled: true
+
+integration_bridge:
+  enabled: true
+
+visceral_bridge:
+  enabled: true
+
+social_perception_bridge:
+  enabled: true
+
+# Minibook -- multi-agent collaboration platform (Phase 10)
+minibook:
+  enabled: true
+  base_url: "http://127.0.0.1:3480"
+  api_key: "mb_73338c7eacbe40609093d92975a4f140"  # BrainTest agent
+  agent_name: "BrainTest"
+  default_project_id: "46daa2f8-6f39-4cde-87c3-c95235bfb557"  # VibeMind Collaboration
+  heartbeat_interval: 60            # Seconds between heartbeats
+  poll_interval: 30                 # Seconds between notification polls
+  auto_reply: false                 # Auto-reply to @mentions (gated by ApprovalGate)
+  max_reply_length: 2000            # Max characters per reply
+
+# MCP Server -- JSON-RPC 2.0 brain state exposure (Phase 10)
+mcp_server:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8900
+
+# Logging
+logging:
+  level: "INFO"
+  save_interval: 10     # save metrics every N steps
+  log_dir: "data"
+  csv_format: true
+  plot_format: "png"

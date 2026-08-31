@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install AutoGen with gRPC support
+RUN pip install --no-cache-dir \
+    "autogen-core==0.7.5" \
+    "autogen-ext[grpc]==0.7.5" \
+    "grpcio>=1.62.0"
+
+COPY host.py .
+
+CMD ["python", "-u", "host.py"]

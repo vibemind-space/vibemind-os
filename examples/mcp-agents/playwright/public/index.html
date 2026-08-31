@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MCP Live Viewer</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background:#0b0f12; color:#e6edf3; }
+    header { padding: 12px 16px; background:#11181f; border-bottom:1px solid #26313a; }
+    .row { display:flex; gap:12px; padding:12px; }
+    .col { flex:1; background:#0f1419; border:1px solid #26313a; border-radius:8px; overflow:auto; min-height: 60vh; }
+    .col h3 { margin: 0; padding:10px 12px; border-bottom:1px solid #26313a; background:#0b1116; position:sticky; top:0; }
+    pre { white-space: pre-wrap; word-wrap: break-word; margin: 0; padding:10px 12px; }
+    .foot { padding:8px 12px; color:#9fb3c8; font-size:12px; border-top:1px solid #26313a; }
+    .ok { color:#5bd6a3; } .err { color:#ff7b72; } .tool { color:#91a7ff; }
+    img.preview { max-width:100%; height:auto; display:block; border-radius:6px; border:1px solid #26313a; background:#0b1116; }
+    .badge { display:inline-block; margin-left:10px; padding:2px 8px; font-size:12px; border-radius:999px; border:1px solid #26313a; background:#0b1116; color:#9fb3c8; }
+    .badge-ok { color:#0fd88f; border-color:#155e42; background:#0b1512; }
+    .badge-warn { color:#e0b400; border-color:#5a4a00; background:#141107; }
+    .badge-err { color:#ff7b72; border-color:#5a1e1b; background:#190e0d; }
+    .badge-info { color:#91a7ff; border-color:#2b3f63; background:#0b1116; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>MCP Live Viewer</strong>
+    <span style="margin-left:10px; color:#9fb3c8">Server: Playwright</span>
+    <span id="connstatus" class="badge badge-warn" title="Connection Status">Connecting…</span>
+    <span id="sessionmeta" class="badge badge-info" title="Session Info" style="margin-left:6px"></span>
+  </header>
+  <div class="row">
+    <div class="col" id="stream">
+      <h3>Model Stream</h3>
+      <pre id="streamlog"></pre>
+    </div>
+    <div class="col" id="events">
+      <h3>Tool Events</h3>
+      <pre id="eventlog"></pre>
+    </div>
+    <div class="col" id="browser">
+      <h3>Browser Preview</h3>
+      <div style="padding:10px 12px;">
+        <img id="browserimg" class="preview" alt="Live browser preview" />
+      </div>
+    </div>
+  </div>
+  <div class="foot">Live updates via SSE. This page auto-connects.</div>
+  <script>
+    (function(){
+      try{
+        var el = document.getElementById('eventlog');
+        var add = function(text, cls){
+          try{
+            if(!el) return;
+            var span = document.createElement('span');
+            if (cls) span.className = cls;
+            span.textContent = '[' + new Date().toLocaleTimeString() + '] ' + String(text || '');
+            el.appendChild(span);
+            el.appendChild(document.createTextNode('\n'));
+            el.scrollTop = el.scrollHeight;
+          }catch(_e){}
+        };
+        add('Bootstrapping viewer...', 'ok');
+        var s = document.createElement('script');
+        // Use relative path for session-specific routing compatibility
+        s.src = './public/app.js';
+        s.defer = true;
+        s.onerror = function(){
+          try {
+            add('Failed to load ./app.js. Retrying /mcp/playwright/app.js…', 'warn');
+            var s2 = document.createElement('script');
+            s2.src = '/mcp/playwright/app.js';
+            s2.defer = true;
+            s2.onerror = function(){ 
+              try {
+                add('Failed to load /mcp/playwright/app.js. Retrying /app.js…', 'warn');
+                var s3 = document.createElement('script');
+                s3.src = '/app.js';
+                s3.defer = true;
+                s3.onerror = function(){ add('Failed to load /app.js. SSE viewer may not run.', 'err'); };
+                document.body.appendChild(s3);
+              } catch(_e){ add('Script load error. SSE viewer may not run.', 'err'); }
+            };
+            document.body.appendChild(s2);
+          } catch(_e){ add('Script load error. SSE viewer may not run.', 'err'); }
+        };
+        document.body.appendChild(s);
+      }catch(e){}
+    })();
+  </script>
+</body>
+</html>

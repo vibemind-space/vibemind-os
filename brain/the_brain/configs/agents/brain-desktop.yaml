@@ -1,0 +1,18 @@
+agent: brain-desktop
+description: Auto-seeded for desktop.* events
+default_namespace: desktop
+events:
+- desktop.click
+- desktop.moire.find
+- desktop.moire.scan
+- desktop.open_app
+- desktop.press_key
+- desktop.screenshot
+- desktop.scroll
+- desktop.task
+- desktop.task.create
+- desktop.task.list
+- desktop.task.update
+- desktop.type
+fallback_agent: ''
+notes: Auto-seeded from namespace='desktop'.

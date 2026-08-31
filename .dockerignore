@@ -1,0 +1,52 @@
+# =============================================================================
+# .dockerignore for parent-context builds rooted at vibemind-os/
+# =============================================================================
+# The Brain image (brain/the_brain/Dockerfile) builds with context=vibemind-os/
+# so it can reach the local `shared/` package. Without this file the context
+# would include coding-engine (~913M), spaces, voice, openfang, etc. — making
+# every build pull >1.5GB. Whitelist ONLY what the Brain build needs.
+#
+# .dockerignore is relative to the build context root, so this file (at
+# vibemind-os/) supersedes brain/the_brain/.dockerignore for these builds.
+# =============================================================================
+
+# Exclude everything by default …
+*
+
+# … then re-include only the two trees the Brain image needs.
+!brain/
+!shared/
+
+# Build artefacts / caches inside the re-included trees (these patterns are
+# matched at any depth, so they prune the kept subtrees too).
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/.mypy_cache/
+**/.venv/
+**/venv/
+**/node_modules/
+**/dist/
+**/build/
+**/*.egg-info/
+**/.git/
+**/.github/
+**/.vscode/
+**/.idea/
+
+# Secrets never go into an image layer (provided at runtime via env_file).
+**/.env
+**/.env.local
+**/.env.bak
+
+# Brain runtime logs (the persistent ./data volume is mounted at run time;
+# logs would just bloat the context).
+brain/the_brain/data/logs/
+brain/the_brain/logs/
+
+# Bulky non-essential
+**/*.zip
+**/*.tar.gz
+**/*.sqlite
+**/*.db

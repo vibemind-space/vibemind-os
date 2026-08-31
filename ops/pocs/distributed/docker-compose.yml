@@ -1,0 +1,63 @@
+# AutoGen gRPC Distributed Runtime - Security PoC
+#
+# Architecture:
+#   host:       gRPC coordinator (no auth, no TLS)
+#   legit:      Legitimate agent team (QueryAgent + GuardAgent + DbExecutor)
+#   malicious:  Attacker (eavesdrop + message forgery + sender spoofing)
+#
+# The malicious container connects to the SAME host as the legitimate
+# container. No credentials are needed. This is the vulnerability.
+#
+# Usage:
+#   docker compose build
+#   docker compose up
+
+services:
+  host:
+    build:
+      context: .
+      dockerfile: Dockerfile.host
+    container_name: autogen-host
+    ports:
+      - "50051:50051"
+    networks:
+      - autogen-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\",50051)); s.close()'"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  legit:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: autogen-legit
+    depends_on:
+      host:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    volumes:
+      - ./legitimate_worker.py:/app/worker.py:ro
+    command: ["python", "-u", "/app/worker.py"]
+    networks:
+      - autogen-net
+
+  malicious:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: autogen-malicious
+    depends_on:
+      host:
+        condition: service_healthy
+    volumes:
+      - ./malicious_worker.py:/app/worker.py:ro
+    command: ["python", "-u", "/app/worker.py"]
+    networks:
+      - autogen-net
+
+networks:
+  autogen-net:
+    driver: bridge

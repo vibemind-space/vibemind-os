@@ -1,0 +1,247 @@
+{
+  "name": "marketing-inbound-classifier-v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-inbound-classifier",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (inbound_received)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "marketing-inbound-classifier"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.event_kind }}",
+              "operation": "equals",
+              "value2": "inbound_received"
+            }
+          ]
+        }
+      },
+      "name": "Filter: inbound_received",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.data && $json.data.needs_review === false }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Skip if needs_review=false",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data && $json.data.pre_classification }}",
+              "operation": "regex",
+              "value2": "^(bounce|opt-out)$"
+            }
+          ]
+        }
+      },
+      "name": "Skip if pre is bounce/opt-out",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/classify_helper/ollama",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"inbound_id\": \"{{ $('Webhook (inbound_received)').first().json.data.inbound_id }}\" }",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Ollama classify (local)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "marketing-n8n-key",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/inbound_messages/{{ $('Webhook (inbound_received)').first().json.data.inbound_id }}/classify",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "PATCH",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"classification\": \"{{ $('Ollama classify (local)').first().json.data.classification }}\", \"confidence\": {{ $('Ollama classify (local)').first().json.data.confidence || 0.5 }} }",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-Workflow",
+              "value": "inbound-classifier-v1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Record classification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "marketing-n8n-key",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"classified\", \"by\": \"ollama\" }"
+      },
+      "name": "Respond OK (classified)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 240]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"skipped\", \"reason\": \"pre_classification handled\" }"
+      },
+      "name": "Respond OK (skipped)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 420]
+    }
+  ],
+  "connections": {
+    "Webhook (inbound_received)": {
+      "main": [
+        [
+          {
+            "node": "Filter: inbound_received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: inbound_received": {
+      "main": [
+        [
+          {
+            "node": "Skip if needs_review=false",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip if needs_review=false": {
+      "main": [
+        [
+          {
+            "node": "Skip if pre is bounce/opt-out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond OK (skipped)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip if pre is bounce/opt-out": {
+      "main": [
+        [
+          {
+            "node": "Respond OK (skipped)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ollama classify (local)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama classify (local)": {
+      "main": [
+        [
+          {
+            "node": "Record classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record classification": {
+      "main": [
+        [
+          {
+            "node": "Respond OK (classified)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Marketing inbound classifier. Receives 'inbound_received' webhook events from marketing-API, skips bounces/opt-outs (already pre-classified by Worker C), and uses local Ollama for the rest. Records final classification back to marketing-API.",
+    "dsvgo_notes": [
+      "All inference runs on localhost via Ollama (MARKETING_CLASSIFIER_ALLOW_OLLAMA=true).",
+      "n8n receives only sanitized webhook payload (from_email + pre_classification + subject + inbound_id), never full body or headers.",
+      "Body classification happens server-side in marketing-API which holds the full message.",
+      "Audit-trail in marketing.n8n_api_audit (route, method, status, workflow_hint), NEVER api_key or payload."
+    ],
+    "imports_required": {
+      "credential_type": "Header Auth",
+      "credential_name": "Marketing n8n API key",
+      "header_name": "Authorization",
+      "header_value_template": "Bearer ${MARKETING_N8N_API_KEY}"
+    },
+    "subscription_setup": "After importing this workflow, register the webhook URL via marketing-API:\nPOST /api/webhook_subscriptions {api_key: '<PROPOSAL_API_KEY>', name: 'n8n-inbound-classifier', url: 'http://host.docker.internal:5678/webhook/marketing-inbound-classifier', events: ['inbound_received'], secret: '<32+ chars>'}\n\nThe marketing-API will then POST every inbound_received event to this workflow."
+  }
+}

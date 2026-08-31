@@ -1,0 +1,6 @@
+agent: brain-orchestrator
+description: Dormant AgentFarm orchestrator manifest
+default_namespace: ''
+events: []
+fallback_agent: ''
+notes: AgentFarm runtime source is missing; do not claim events until a real worker is deployed.

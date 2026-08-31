@@ -1,0 +1,376 @@
+space: minibook
+exists: true
+tool_count: 27
+tools:
+- name: register_all_space_agents
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/collaboration_tools.py
+  line: 136
+  doc: Register all VibeMind spaces as Minibook agents and join the collaboration project.
+  voice_triggers: []
+  args:
+  - name: client
+    kind: positional
+    annotation: '''MinibookClient'''
+    required: true
+  - name: project_id
+    kind: positional
+    annotation: str
+    default: None
+- name: detect_needed_spaces
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/collaboration_tools.py
+  line: 209
+  doc: Analyze a task description to determine which spaces are needed.
+  voice_triggers: []
+  args:
+  - name: task
+    kind: positional
+    annotation: str
+    required: true
+- name: start_collaboration
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/collaboration_tools.py
+  line: 238
+  doc: Start a multi-space collaboration task.
+  voice_triggers: []
+  args:
+  - name: task
+    kind: positional
+    annotation: str
+    required: true
+  - name: goal
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: poll_responses
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/collaboration_tools.py
+  line: 342
+  doc: Manually poll for collaboration responses.
+  voice_triggers: []
+  args: []
+- name: register_agent
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 57
+  doc: Register a new agent in Minibook.
+  voice_triggers: []
+  args:
+  - name: name
+    kind: positional
+    annotation: str
+    required: true
+- name: list_agents
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 83
+  doc: List all registered agents.
+  voice_triggers: []
+  args: []
+- name: create_project
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 97
+  doc: Create a new project.
+  voice_triggers: []
+  args:
+  - name: name
+    kind: positional
+    annotation: str
+    required: true
+  - name: description
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: agent_name
+    kind: positional
+    annotation: str
+    default: '''vibemind_orchestrator'''
+- name: list_projects
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 119
+  doc: List all projects.
+  voice_triggers: []
+  args:
+  - name: agent_name
+    kind: positional
+    annotation: str
+    default: '''vibemind_orchestrator'''
+- name: join_project
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 133
+  doc: Join a project with a specific role.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_name
+    kind: positional
+    annotation: str
+    required: true
+  - name: role
+    kind: positional
+    annotation: str
+    required: true
+- name: create_post
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 157
+  doc: Create a post in a project.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: content
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_name
+    kind: positional
+    annotation: str
+    default: '''vibemind_orchestrator'''
+  - name: post_type
+    kind: positional
+    annotation: str
+    default: '''discussion'''
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_posts
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 198
+  doc: Get all posts in a project.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_name
+    kind: positional
+    annotation: str
+    default: '''vibemind_orchestrator'''
+- name: create_comment
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 218
+  doc: Create a comment on a post.
+  voice_triggers: []
+  args:
+  - name: post_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: content
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_name
+    kind: positional
+    annotation: str
+    required: true
+- name: get_comments
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 241
+  doc: Get all comments on a post.
+  voice_triggers: []
+  args:
+  - name: post_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_name
+    kind: positional
+    annotation: str
+    default: '''vibemind_orchestrator'''
+- name: get_notifications
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 261
+  doc: Get notifications for an agent (mentions, replies).
+  voice_triggers: []
+  args:
+  - name: agent_name
+    kind: positional
+    annotation: str
+    required: true
+- name: mark_notification_read
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 275
+  doc: Mark a notification as read.
+  voice_triggers: []
+  args:
+  - name: notification_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_name
+    kind: positional
+    annotation: str
+    required: true
+- name: get_status
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 295
+  doc: Check if Minibook is reachable.
+  voice_triggers: []
+  args: []
+- name: project_id
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 327
+  doc: Current collaboration project ID.
+  voice_triggers: []
+  args: []
+- name: has_agent
+  owner_class: MinibookClient
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 335
+  doc: Check if an agent is registered locally.
+  voice_triggers: []
+  args:
+  - name: name
+    kind: positional
+    annotation: str
+    required: true
+- name: get_minibook_client
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 356
+  doc: Get or create the global MinibookClient instance.
+  voice_triggers: []
+  args: []
+- name: reset_minibook_client
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/minibook_client.py
+  line: 364
+  doc: Reset the client (for testing).
+  voice_triggers: []
+  args: []
+- name: get_minibook_status
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/minibook_tools.py
+  line: 19
+  doc: Check Minibook connection status.
+  voice_triggers: []
+  args: []
+- name: start_discussion
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/minibook_tools.py
+  line: 58
+  doc: Start a discussion in Minibook.
+  voice_triggers: []
+  args:
+  - name: message
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: topic
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_discussion_results
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/minibook_tools.py
+  line: 113
+  doc: Get results of a Minibook discussion.
+  voice_triggers: []
+  args:
+  - name: discussion_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: list_projects
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/tools/minibook_tools.py
+  line: 191
+  doc: List all Minibook projects.
+  voice_triggers: []
+  args: []
+- name: name
+  owner_class: MinibookBackendAgent
+  is_async: false
+  file: spaces/minibook/agents/minibook_agent.py
+  line: 59
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: MinibookBackendAgent
+  is_async: false
+  file: spaces/minibook/agents/minibook_agent.py
+  line: 63
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_minibook_agent
+  owner_class: null
+  is_async: false
+  file: spaces/minibook/agents/minibook_agent.py
+  line: 105
+  doc: Get or create the MinibookBackendAgent singleton.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/minibook/tools
+- spaces/minibook/agents
+registry_agent: brain-knowledge
+registry_mcp_servers:
+- vibemind-db
+- fetch
+registry_events:
+- event: minibook.discuss
+  tool_hint: fetch
+  required_params:
+  - topic
+- event: minibook.collaborate
+  tool_hint: fetch
+  required_params:
+  - topic
+- event: minibook.status
+  tool_hint: fetch
+  required_params: []
+- event: minibook.list_projects
+  tool_hint: fetch
+  required_params: []
+all_routed_events:
+- minibook.collaborate
+- minibook.discuss
+- minibook.list_projects
+- minibook.status

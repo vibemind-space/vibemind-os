@@ -1,0 +1,13 @@
+agent: brain-forecaster
+description: Auto-seeded for mirofish.* events
+default_namespace: mirofish
+events:
+- mirofish.evaluate
+- mirofish.graph.build
+- mirofish.graph.search
+- mirofish.interview
+- mirofish.predict
+- mirofish.simulate
+- mirofish.status
+fallback_agent: ''
+notes: Auto-seeded from namespace='mirofish'.

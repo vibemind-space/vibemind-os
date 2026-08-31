@@ -1,0 +1,253 @@
+{
+  "name": "marketing-discord-broadcast-v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-discord-broadcast",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (broadcast_approved)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ],
+      "webhookId": "marketing-discord-broadcast"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/broadcast_proposals/{{ $json.proposal_id }}/verify_and_consume",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-Workflow",
+              "value": "discord-broadcast-v2"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "ignoreHttpStatusErrors": true
+        }
+      },
+      "name": "Claim: verify_and_consume",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xtxUWUeJ4zpdkXXJ",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success === true }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "IF claimed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://discord.com/api/v10/channels/{{ $('Webhook (broadcast_approved)').first().json.channel_params.discord_channel_id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"content\": {{ JSON.stringify($('Webhook (broadcast_approved)').first().json.body_text.slice(0, 2000)) }} }",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Discord: send message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        880,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_ME_DISCORD_CREDENTIAL",
+          "name": "Discord Bot Token (placeholder)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/broadcast_proposals/{{ $('Webhook (broadcast_approved)').first().json.proposal_id }}/record_result",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"sent_external_id\": \"{{ $('Discord: send message').first().json.id || 'unknown' }}\" }",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-Workflow",
+              "value": "discord-broadcast-v2"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "ignoreHttpStatusErrors": true
+        }
+      },
+      "name": "Record result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1100,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xtxUWUeJ4zpdkXXJ",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"posted\" }"
+      },
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"skipped\", \"reason\": \"claim failed (already consumed or not approved)\" }"
+      },
+      "name": "Respond skipped",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        880,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook (broadcast_approved)": {
+      "main": [
+        [
+          {
+            "node": "Claim: verify_and_consume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim: verify_and_consume": {
+      "main": [
+        [
+          {
+            "node": "IF claimed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF claimed": {
+      "main": [
+        [
+          {
+            "node": "Discord: send message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: send message": {
+      "main": [
+        [
+          {
+            "node": "Record result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record result": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "_meta": {
+    "version": "2.0.0",
+    "description": "discord broadcast (Schicht 8.0). Receives the broadcast_approved bus event (payload: proposal_id, channel, body_text, subject, media_url, channel_params, bubble_id) — routing is channel-aware in the webhook bus (migration 038), so there is NO channel IF-filter here. verify_and_consume is the atomic exactly-once claim; a 409 (already consumed) exits via 'Respond skipped'.",
+    "todo": "send-error branch (record_result with {error, status:'failed'}) not wired yet — a failed send surfaces as failed n8n execution.",
+    "test_payload": {
+      "proposal_id": "00000000-0000-0000-0000-000000000000",
+      "channel": "discord",
+      "body_text": "Test broadcast body",
+      "subject": null,
+      "media_url": null,
+      "channel_params": {},
+      "bubble_id": "test-bubble"
+    },
+    "imports_required": {
+      "credential_header_bot": "httpHeaderAuth 'Authorization: Bot <DISCORD_BOT_TOKEN>' — token is in repo .env; replace REPLACE_ME_DISCORD_CREDENTIAL",
+      "credential_header": "Marketing n8n API key"
+    },
+    "note": "requires channel_params.discord_channel_id on the proposal (dispatcher/curator sets it). 2000-char Discord limit enforced."
+  }
+}

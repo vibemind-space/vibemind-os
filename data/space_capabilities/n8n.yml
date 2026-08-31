@@ -1,0 +1,488 @@
+space: n8n
+exists: true
+tool_count: 36
+tools:
+- name: health_check
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 122
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: list_workflows
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 129
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_workflow
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 135
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    required: true
+- name: create_workflow
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 138
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: workflow_json
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: update_workflow
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 141
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: workflow_json
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: delete_workflow
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 144
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    required: true
+- name: activate_workflow
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 147
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    required: true
+- name: deactivate_workflow
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 150
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    required: true
+- name: execute_workflow
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 153
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: data
+    kind: positional
+    annotation: Dict
+    default: None
+- name: get_executions
+  owner_class: N8nApiClient
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 156
+  doc: ''
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: limit
+    kind: positional
+    annotation: int
+    default: '10'
+- name: get_n8n_client
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_api_client.py
+  line: 172
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: generate_workflow
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_workflow_tools.py
+  line: 26
+  doc: Generate an n8n workflow from a natural language description and push it to n8n.
+  voice_triggers: []
+  args:
+  - name: description
+    kind: positional
+    annotation: str
+    required: true
+- name: list_workflows
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_workflow_tools.py
+  line: 219
+  doc: List all workflows in the n8n instance.
+  voice_triggers: []
+  args: []
+- name: get_n8n_status
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_workflow_tools.py
+  line: 255
+  doc: Check if the n8n instance is online and reachable.
+  voice_triggers: []
+  args: []
+- name: activate_workflow
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_workflow_tools.py
+  line: 279
+  doc: Activate a workflow by ID or name.
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    default: None
+  - name: name
+    kind: positional
+    annotation: str
+    default: None
+- name: deactivate_workflow
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_workflow_tools.py
+  line: 294
+  doc: Deactivate a workflow by ID or name.
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    default: None
+  - name: name
+    kind: positional
+    annotation: str
+    default: None
+- name: delete_workflow
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_workflow_tools.py
+  line: 309
+  doc: Delete a workflow by ID or name.
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    default: None
+  - name: name
+    kind: positional
+    annotation: str
+    default: None
+- name: execute_workflow
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_workflow_tools.py
+  line: 324
+  doc: Execute a workflow manually.
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    default: None
+  - name: name
+    kind: positional
+    annotation: str
+    default: None
+  - name: data
+    kind: positional
+    annotation: Dict
+    default: None
+- name: describe_workflow
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/n8n_workflow_tools.py
+  line: 343
+  doc: Get detailed information about a workflow.
+  voice_triggers: []
+  args:
+  - name: workflow_id
+    kind: positional
+    annotation: str
+    default: None
+  - name: name
+    kind: positional
+    annotation: str
+    default: None
+- name: to_dict
+  owner_class: WorkflowChatSession
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 230
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: create_session
+  owner_class: WorkflowChatManager
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 250
+  doc: Create a new session starting in checklist phase.
+  voice_triggers: []
+  args:
+  - name: description
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: answer_checklist
+  owner_class: WorkflowChatManager
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 270
+  doc: Answer a single checklist item.
+  voice_triggers: []
+  args:
+  - name: session_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: item_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: value
+    kind: positional
+    annotation: str
+    required: true
+- name: complete_checklist
+  owner_class: WorkflowChatManager
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 311
+  doc: Finish checklist phase, run auto-checks, transition to chat.
+  voice_triggers: []
+  args:
+  - name: session_id
+    kind: positional
+    annotation: str
+    required: true
+- name: send_message
+  owner_class: WorkflowChatManager
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 360
+  doc: Send a user message in the chat phase.
+  voice_triggers: []
+  args:
+  - name: session_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: user_message
+    kind: positional
+    annotation: str
+    required: true
+- name: get_session
+  owner_class: WorkflowChatManager
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 440
+  doc: Get session info and history.
+  voice_triggers: []
+  args:
+  - name: session_id
+    kind: positional
+    annotation: str
+    required: true
+- name: list_sessions
+  owner_class: WorkflowChatManager
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 447
+  doc: List all active sessions.
+  voice_triggers: []
+  args: []
+- name: deploy_workflow
+  owner_class: WorkflowChatManager
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 456
+  doc: Deploy the current session's workflow to n8n.
+  voice_triggers: []
+  args:
+  - name: session_id
+    kind: positional
+    annotation: str
+    required: true
+- name: claude_build
+  owner_class: WorkflowChatManager
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 532
+  doc: Build and deploy an n8n workflow by delegating to Claude CLI with n8n-MCP.
+  voice_triggers: []
+  args:
+  - name: session_id
+    kind: positional
+    annotation: str
+    required: true
+- name: get_workflow_chat_manager
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/workflow_chat.py
+  line: 800
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: plan_workflow
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/workflow_generator.py
+  line: 138
+  doc: 'Phase 1: Use LLM to create a structured workflow plan from NL description.'
+  voice_triggers: []
+  args:
+  - name: description
+    kind: positional
+    annotation: str
+    required: true
+- name: assemble_workflow
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/workflow_generator.py
+  line: 213
+  doc: 'Phase 2: Assemble valid n8n workflow JSON from a structured plan.'
+  voice_triggers: []
+  args:
+  - name: plan
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: generate_workflow_json
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/workflow_generator.py
+  line: 343
+  doc: Generate complete n8n workflow JSON from natural language description.
+  voice_triggers: []
+  args:
+  - name: description
+    kind: positional
+    annotation: str
+    required: true
+- name: generate_workflow_json_society
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/tools/workflow_generator.py
+  line: 401
+  doc: Generate n8n workflow using the Society of Mind multi-agent system.
+  voice_triggers: []
+  args:
+  - name: description
+    kind: positional
+    annotation: str
+    required: true
+- name: name
+  owner_class: N8nBackendAgent
+  is_async: false
+  file: spaces/n8n/agents/n8n_agent.py
+  line: 81
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: N8nBackendAgent
+  is_async: false
+  file: spaces/n8n/agents/n8n_agent.py
+  line: 85
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_n8n_agent
+  owner_class: null
+  is_async: false
+  file: spaces/n8n/agents/n8n_agent.py
+  line: 129
+  doc: Get or create the N8nBackendAgent singleton.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/n8n/tools
+- spaces/n8n/agents
+registry_agent: brain-n8n
+registry_mcp_servers:
+- vibemind-db
+- n8n
+registry_events:
+- event: n8n.generate
+  tool_hint: n8n_generate_workflow
+  required_params:
+  - description
+- event: n8n.list
+  tool_hint: n8n_list_workflows
+  required_params: []
+- event: n8n.status
+  tool_hint: n8n_health_check
+  required_params: []
+- event: n8n.activate
+  tool_hint: n8n_update_partial_workflow
+  required_params:
+  - name
+- event: n8n.deactivate
+  tool_hint: n8n_update_partial_workflow
+  required_params:
+  - name
+- event: n8n.delete
+  tool_hint: n8n_delete_workflow
+  required_params:
+  - name
+- event: n8n.execute
+  tool_hint: n8n_test_workflow
+  required_params:
+  - name
+- event: n8n.describe
+  tool_hint: n8n_get_workflow
+  required_params:
+  - name
+all_routed_events:
+- n8n.activate
+- n8n.deactivate
+- n8n.delete
+- n8n.describe
+- n8n.execute
+- n8n.generate
+- n8n.list
+- n8n.status

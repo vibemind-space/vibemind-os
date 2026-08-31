@@ -1,0 +1,83 @@
+# Phase 8.3 — Cluster → Capability mapping for the Self-Steerer.
+#
+# When a cluster's activation crosses CLUSTER_DISPATCH_THRESHOLD (default 0.7)
+# for ≥2 consecutive ticks, the SelfSteerer looks up here which capability
+# to fire. Match priority: (1) exact dominant_topic match, (2) substring
+# fallback (cluster topic CONTAINS map key), (3) no-op + log.
+#
+# Schema per entry:
+#   - dominant_topic: <string>      keyword to match cluster's dominant_topic
+#     capability: <string>          either a capability-name from capabilities.yaml
+#                                   OR a Phase 4 execution_target string
+#     prompt: <string>              optional override (else generic)
+#     cooldown_s: <number>          optional override (default 600s)
+
+- dominant_topic: code
+  capability: openfang:brain-coder
+  prompt: "Cluster '{label}' is highly active (act={act:.2f}). Recent thoughts: {top_thoughts}. Investigate possible code patterns or refactor opportunities."
+
+- dominant_topic: python
+  capability: openfang:brain-coder
+  prompt: "Python cluster active. Top thoughts: {top_thoughts}. Suggest improvements or implementations."
+
+- dominant_topic: research
+  capability: openfang:fungus-search
+  prompt: "Research cluster active. Top thoughts: {top_thoughts}. Search the codebase for related implementations."
+
+- dominant_topic: memory
+  capability: knowledge_query
+  prompt: "Memory cluster active. Surface relevant past knowledge for: {top_thoughts}"
+
+- dominant_topic: security
+  capability: openfang:poc-security-scanner
+  prompt: "Security cluster active. Top concerns: {top_thoughts}. Scan for vulnerabilities."
+
+- dominant_topic: bubble
+  capability: openfang:rowboat-knowledge
+  prompt: "Bubble/idea cluster active. Top items: {top_thoughts}. Summarise and look for gaps."
+
+- dominant_topic: routing
+  capability: architecture_question
+  prompt: "Routing-related cluster active. Top thoughts: {top_thoughts}. Explain the relevant architecture."
+
+- dominant_topic: error
+  capability: incident_response
+  prompt: "Error/failure cluster active. Recent issues: {top_thoughts}. Investigate root cause."
+  cooldown_s: 300
+
+- dominant_topic: discourse
+  capability: architecture_question
+  prompt: "Discourse cluster active. Reflect on: {top_thoughts}"
+
+# Phase 8 fallback-cluster categories (CTE _thoughts deque buckets):
+# When ThoughtEvolutionEngine is empty, ClusterEngine buckets thoughts by
+# their `category` field — these mappings cover those category names so
+# the loop can fire even before the manifold warms up.
+
+- dominant_topic: explore
+  capability: architecture_question
+  prompt: "Exploration cluster active (act={act:.2f}). Recent musings: {top_thoughts}. Pick the most promising direction and investigate."
+
+- dominant_topic: reflect
+  capability: knowledge_query
+  prompt: "Reflection cluster active. Brain is mulling: {top_thoughts}. Surface relevant past knowledge."
+
+- dominant_topic: plan_reflection
+  capability: architecture_question
+  prompt: "Brain just reflected on a plan: {top_thoughts}. What should be the next step or improvement?"
+
+- dominant_topic: reward_reflection
+  capability: knowledge_query
+  prompt: "User feedback came back as: {top_thoughts}. What pattern is being reinforced?"
+
+- dominant_topic: curator_reflection
+  capability: knowledge_query
+  prompt: "Coverage gap detected: {top_thoughts}. Look up what kind of capability would close this."
+
+- dominant_topic: synthesize
+  capability: architecture_question
+  prompt: "Synthesis active. Joining concepts: {top_thoughts}"
+
+- dominant_topic: connect
+  capability: architecture_question
+  prompt: "Connection-making active. Bridging: {top_thoughts}"

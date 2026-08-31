@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tahlamus Brain + Swarm Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .panel h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+
+        /* Brain Features */
+        .brain-features {
+            display: grid;
+            gap: 10px;
+        }
+
+        .brain-feature {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #666;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .brain-feature:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .brain-feature.active {
+            background: rgba(76, 175, 80, 0.3);
+            border-left-color: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .feature-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .feature-status {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Conversation Flow */
+        .conversation-flow {
+            height: 600px;
+            overflow-y: auto;
+        }
+
+        .message {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #2196F3;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .message.user {
+            border-left-color: #9C27B0;
+            background: rgba(156, 39, 176, 0.1);
+        }
+
+        .message.brain {
+            border-left-color: #FF9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .message.agent {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .message.handoff {
+            border-left-color: #F44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .message-sender {
+            color: #fff;
+        }
+
+        .message-time {
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+
+        .message-content {
+            line-height: 1.6;
+        }
+
+        /* Agents Grid */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .agent-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .agent-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .agent-card.active {
+            background: rgba(33, 150, 243, 0.3);
+            border-color: #2196F3;
+            box-shadow: 0 0 30px rgba(33, 150, 243, 0.6);
+            transform: scale(1.05);
+        }
+
+        .agent-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .agent-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .agent-status {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        button.primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        /* Step indicator */
+        .step-indicator {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .step-number {
+            font-weight: bold;
+            color: #4CAF50;
+            font-size: 1.5em;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Tahlamus Brain + AutoGen Swarm</h1>
+        <div class="subtitle">Interactive Step-by-Step Visualization</div>
+
+        <div class="step-indicator">
+            Step <span class="step-number" id="stepNumber">0</span> / <span id="totalSteps">12</span>
+            <div id="stepDescription" style="margin-top: 10px; opacity: 0.9;"></div>
+        </div>
+
+        <div class="controls">
+            <button class="primary" onclick="startDemo()">▶ Start Demo</button>
+            <button onclick="previousStep()" id="prevBtn" disabled>◀ Previous</button>
+            <button onclick="nextStep()" id="nextBtn" disabled>Next ▶</button>
+            <button onclick="resetDemo()">↻ Reset</button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(156, 39, 176, 0.5);"></div>
+                <span>User Input</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(255, 152, 0, 0.5);"></div>
+                <span>Brain Analysis</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(76, 175, 80, 0.5);"></div>
+                <span>Agent Action</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(244, 67, 54, 0.5);"></div>
+                <span>Handoff</span>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Brain Features Panel -->
+            <div class="panel">
+                <h2>🧠 Brain Features (13)</h2>
+                <div class="brain-features" id="brainFeatures"></div>
+            </div>
+
+            <!-- Conversation Flow Panel -->
+            <div class="panel">
+                <h2>💬 Conversation Flow</h2>
+                <div class="conversation-flow" id="conversationFlow"></div>
+            </div>
+        </div>
+
+        <!-- Agents Panel -->
+        <div class="panel">
+            <h2>🤖 Swarm Agents (15)</h2>
+            <div class="agents-grid" id="agentsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Brain features (13 cognitive systems)
+        const brainFeatures = [
+            { id: 'memory', name: '🧩 Memory Systems', status: 'Idle' },
+            { id: 'predictive', name: '🔮 Predictive Coding', status: 'Idle' },
+            { id: 'attention', name: '👁️ Attention Mechanisms', status: 'Idle' },
+            { id: 'meta', name: '🎯 Meta-Learning', status: 'Idle' },
+            { id: 'neuro', name: '⚡ Neuromodulation', status: 'Idle' },
+            { id: 'temporal', name: '⏰ Temporal Memory', status: 'Idle' },
+            { id: 'active', name: '❓ Active Inference', status: 'Idle' },
+            { id: 'compositional', name: '🧱 Compositional Reasoning', status: 'Idle' },
+            { id: 'tool', name: '🔧 Tool Creation', status: 'Idle' },
+            { id: 'consciousness', name: '🌟 Consciousness Metrics', status: 'Idle' },
+            { id: 'infinite', name: '♾️ Infinite Chat', status: 'Idle' },
+            { id: 'semantic', name: '🔍 Semantic Coherence', status: 'Idle' },
+            { id: 'ctm', name: '🧠 CTM Async', status: 'Idle' }
+        ];
+
+        // Swarm agents (15)
+        const agents = [
+            { id: 'coordinator', name: 'Coordinator', icon: '🎯', status: 'Idle' },
+            { id: 'docker', name: 'Docker Agent', icon: '🐳', status: 'Idle' },
+            { id: 'database', name: 'Database Agent', icon: '🗄️', status: 'Idle' },
+            { id: 'api', name: 'API Agent', icon: '🌐', status: 'Idle' },
+            { id: 'debugging', name: 'Debugging Agent', icon: '🐛', status: 'Idle' },
+            { id: 'monitoring', name: 'Monitoring Agent', icon: '📊', status: 'Idle' },
+            { id: 'deployment', name: 'Deployment Agent', icon: '🚀', status: 'Idle' },
+            { id: 'testing', name: 'Testing Agent', icon: '✅', status: 'Idle' },
+            { id: 'refactoring', name: 'Refactoring Agent', icon: '♻️', status: 'Idle' },
+            { id: 'documentation', name: 'Documentation Agent', icon: '📝', status: 'Idle' },
+            { id: 'security', name: 'Security Agent', icon: '🔒', status: 'Idle' },
+            { id: 'active_inference', name: 'Active Inference', icon: '❓', status: 'Idle' },
+            { id: 'ctm_reasoning', name: 'CTM Reasoning', icon: '🧠', status: 'Idle' },
+            { id: 'memory_agent', name: 'Memory Agent', icon: '💾', status: 'Idle' },
+            { id: 'general', name: 'General Execution', icon: '⚙️', status: 'Idle' }
+        ];
+
+        // Demo steps
+        const demoSteps = [
+            {
+                description: "User submits task",
+                message: { type: 'user', sender: 'User', content: 'Deploy Docker container with Redis and health monitoring' },
+                brainActive: [],
+                agentsActive: []
+            },
+            {
+                description: "Brain analyzes task (Memory Systems retrieves past Docker deployments)",
+                message: { type: 'brain', sender: 'Brain - Memory Systems', content: '🧩 Retrieved 2 past Redis deployments from episodic memory. Success rate: 100%' },
+                brainActive: ['memory'],
+                agentsActive: []
+            },
+            {
+                description: "Brain analyzes task (Predictive Coding detects patterns)",
+                message: { type: 'brain', sender: 'Brain - Predictive Coding', content: '🔮 Low novelty detected. Prediction error: 0.12. Confidence: HIGH' },
+                brainActive: ['memory', 'predictive'],
+                agentsActive: []
+            },
+            {
+                description: "Brain analyzes task (Attention focuses on relevant signals)",
+                message: { type: 'brain', sender: 'Brain - Attention', content: '👁️ Focus: tool_trace modality. Ignoring irrelevant signals.' },
+                brainActive: ['memory', 'predictive', 'attention'],
+                agentsActive: []
+            },
+            {
+                description: "Brain analyzes task (Compositional breaks down into subtasks)",
+                message: { type: 'brain', sender: 'Brain - Compositional', content: '🧱 Task breakdown: [pull_redis_image, create_container, configure_health_check]' },
+                brainActive: ['memory', 'predictive', 'attention', 'compositional'],
+                agentsActive: []
+            },
+            {
+                description: "Brain analysis complete - Routes to Coordinator",
+                message: { type: 'brain', sender: 'Brain', content: '✅ Task Type: docker | Confidence: 0.85 | Suggested Agent: docker_execution_agent' },
+                brainActive: ['memory', 'predictive', 'attention', 'compositional', 'consciousness', 'semantic'],
+                agentsActive: ['coordinator']
+            },
+            {
+                description: "Coordinator receives brain context and routes to Docker Agent",
+                message: { type: 'handoff', sender: 'Coordinator', content: '🎯 Routing to docker_execution_agent based on brain recommendation (task_type=docker)' },
+                brainActive: [],
+                agentsActive: ['coordinator', 'docker']
+            },
+            {
+                description: "Docker Agent executes with brain guidance",
+                message: { type: 'agent', sender: 'Docker Agent', content: '🐳 Executing Docker deployment using brain recommendations:\n• Tool: docker-compose\n• Memory: 2GB limit (from past success)\n• Compositional: Following 3-step breakdown' },
+                brainActive: ['memory', 'compositional', 'tool'],
+                agentsActive: ['docker']
+            },
+            {
+                description: "Docker Agent completes deployment, hands off to Monitoring",
+                message: { type: 'handoff', sender: 'Docker Agent', content: '✅ Container created: redis_1\n🔄 Handing to monitoring_agent for health checks' },
+                brainActive: [],
+                agentsActive: ['docker', 'monitoring']
+            },
+            {
+                description: "Monitoring Agent sets up health checks",
+                message: { type: 'agent', sender: 'Monitoring Agent', content: '📊 Health monitoring configured:\n• Interval: 30 seconds\n• Endpoint: redis_1:6379\n• Status: HEALTHY' },
+                brainActive: ['temporal'],
+                agentsActive: ['monitoring']
+            },
+            {
+                description: "Monitoring Agent hands back to Coordinator",
+                message: { type: 'handoff', sender: 'Monitoring Agent', content: '✅ Health checks active. Handing back to coordinator.' },
+                brainActive: [],
+                agentsActive: ['monitoring', 'coordinator']
+            },
+            {
+                description: "Coordinator completes task - Brain learns from feedback",
+                message: { type: 'brain', sender: 'Brain - Meta-Learning', content: '🎯 Task completed successfully!\n🧠 Learning from feedback:\n• Success rate updated: 100% (3/3 Redis deployments)\n• Routing matrix updated (LR=0.005)\n• Memory consolidated' },
+                brainActive: ['memory', 'meta', 'neuro'],
+                agentsActive: ['coordinator']
+            }
+        ];
+
+        let currentStep = 0;
+
+        // Initialize UI
+        function initUI() {
+            // Render brain features
+            const brainContainer = document.getElementById('brainFeatures');
+            brainContainer.innerHTML = brainFeatures.map(feature => `
+                <div class="brain-feature" id="brain-${feature.id}">
+                    <div class="feature-name">${feature.name}</div>
+                    <div class="feature-status">${feature.status}</div>
+                </div>
+            `).join('');
+
+            // Render agents
+            const agentsContainer = document.getElementById('agentsGrid');
+            agentsContainer.innerHTML = agents.map(agent => `
+                <div class="agent-card" id="agent-${agent.id}">
+                    <div class="agent-icon">${agent.icon}</div>
+                    <div class="agent-name">${agent.name}</div>
+                    <div class="agent-status">${agent.status}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('totalSteps').textContent = demoSteps.length;
+        }
+
+        function startDemo() {
+            currentStep = 0;
+            document.getElementById('conversationFlow').innerHTML = '';
+            showStep(currentStep);
+            document.getElementById('nextBtn').disabled = false;
+            document.getElementById('prevBtn').disabled = true;
+        }
+
+        function showStep(step) {
+            if (step < 0 || step >= demoSteps.length) return;
+
+            currentStep = step;
+            const stepData = demoSteps[step];
+
+            // Update step indicator
+            document.getElementById('stepNumber').textContent = step + 1;
+            document.getElementById('stepDescription').textContent = stepData.description;
+
+            // Add message to conversation
+            const conversationFlow = document.getElementById('conversationFlow');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${stepData.message.type}`;
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender">${stepData.message.sender}</span>
+                    <span class="message-time">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <div class="message-content">${stepData.message.content.replace(/\n/g, '<br>')}</div>
+            `;
+            conversationFlow.appendChild(messageDiv);
+            conversationFlow.scrollTop = conversationFlow.scrollHeight;
+
+            // Update brain features
+            brainFeatures.forEach(feature => {
+                const element = document.getElementById(`brain-${feature.id}`);
+                if (stepData.brainActive.includes(feature.id)) {
+                    element.classList.add('active');
+                    element.querySelector('.feature-status').textContent = 'ACTIVE';
+                } else {
+                    element.classList.remove('active');
+                    element.querySelector('.feature-status').textContent = 'Idle';
+                }
+            });
+
+            // Update agents
+            agents.forEach(agent => {
+                const element = document.getElementById(`agent-${agent.id}`);
+                if (stepData.agentsActive.includes(agent.id)) {
+                    element.classList.add('active');
+                    element.querySelector('.agent-status').textContent = 'ACTIVE';
+                } else {
+                    element.classList.remove('active');
+                    element.querySelector('.agent-status').textContent = 'Idle';
+                }
+            });
+
+            // Update button states
+            document.getElementById('prevBtn').disabled = (step === 0);
+            document.getElementById('nextBtn').disabled = (step === demoSteps.length - 1);
+        }
+
+        function nextStep() {
+            if (currentStep < demoSteps.length - 1) {
+                setTimeout(() => showStep(currentStep + 1), 100);
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                // Remove last message
+                const conversationFlow = document.getElementById('conversationFlow');
+                if (conversationFlow.lastChild) {
+                    conversationFlow.removeChild(conversationFlow.lastChild);
+                }
+                setTimeout(() => showStep(currentStep - 1), 100);
+            }
+        }
+
+        function resetDemo() {
+            currentStep = 0;
+            document.getElementById('conversationFlow').innerHTML = '';
+            document.getElementById('stepNumber').textContent = '0';
+            document.getElementById('stepDescription').textContent = '';
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('prevBtn').disabled = true;
+
+            // Reset all to idle
+            brainFeatures.forEach(feature => {
+                const element = document.getElementById(`brain-${feature.id}`);
+                element.classList.remove('active');
+                element.querySelector('.feature-status').textContent = 'Idle';
+            });
+
+            agents.forEach(agent => {
+                const element = document.getElementById(`agent-${agent.id}`);
+                element.classList.remove('active');
+                element.querySelector('.agent-status').textContent = 'Idle';
+            });
+        }
+
+        // Initialize on load
+        initUI();
+    </script>
+</body>
+</html>

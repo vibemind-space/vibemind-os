@@ -1,0 +1,333 @@
+{
+  "comment": "MCP Server Registry - Docker/Linux paths for container execution",
+  "grpc_config": {
+    "base_port": 50061,
+    "port_range": "50061-50090",
+    "enabled": true
+  },
+  "servers": [
+    {
+      "name": "playwright",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50061,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@playwright/mcp@latest",
+        "--browser=chromium",
+        "--viewport-size=1280,720"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Playwright MCP - Browser automation, DOM interaction, screenshots"
+    },
+    {
+      "name": "github",
+      "active": false,
+      "type": "stdio",
+      "grpc_port": 50062,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env_vars": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "env:GITHUB_TOKEN"
+      },
+      "read_timeout_seconds": 120,
+      "description": "GitHub MCP - Repository management, issues, PRs (needs GITHUB_TOKEN)"
+    },
+    {
+      "name": "docker",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50063,
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_docker"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Docker MCP - Container operations, compose, logs"
+    },
+    {
+      "name": "desktop",
+      "active": false,
+      "type": "stdio",
+      "grpc_port": 50064,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@wonderwhy-er/desktop-commander@latest"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Desktop Commander MCP - Not applicable in Docker"
+    },
+    {
+      "name": "context7",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50065,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@upstash/context7-mcp@latest"
+      ],
+      "read_timeout_seconds": 120,
+      "env_vars": {
+        "DEFAULT_MINIMUM_TOKENS": "10000"
+      },
+      "description": "Context7 MCP - Up-to-date library documentation and code examples"
+    },
+    {
+      "name": "redis",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50066,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@modelcontextprotocol/server-redis"
+      ],
+      "read_timeout_seconds": 120,
+      "env_vars": {
+        "REDIS_URL": "env:REDIS_URL"
+      },
+      "description": "Redis MCP - Key-value store, caching"
+    },
+    {
+      "name": "supabase",
+      "active": false,
+      "type": "stdio",
+      "grpc_port": 50067,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@supabase/mcp-server-supabase@latest"
+      ],
+      "env_vars": {
+        "SUPABASE_ACCESS_TOKEN": "env:SUPABASE_ACCESS_TOKEN"
+      },
+      "read_timeout_seconds": 120,
+      "description": "Supabase MCP - PostgreSQL, auth, storage (needs SUPABASE_ACCESS_TOKEN)"
+    },
+    {
+      "name": "time",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50068,
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_time"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Time MCP - Current time and timezone operations"
+    },
+    {
+      "name": "taskmanager",
+      "active": false,
+      "type": "stdio",
+      "grpc_port": 50069,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@kazuph/mcp-taskmanager"
+      ],
+      "read_timeout_seconds": 120,
+      "env_vars": {
+        "TASK_MANAGER_FILE_PATH": "/data/tasks.json"
+      },
+      "description": "TaskManager MCP - Task tracking"
+    },
+    {
+      "name": "memory",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50071,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Memory MCP - Knowledge graph with entities and relations"
+    },
+    {
+      "name": "filesystem",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50072,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@modelcontextprotocol/server-filesystem",
+        "/app"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Filesystem MCP - File and directory operations scoped to /app"
+    },
+    {
+      "name": "brave-search",
+      "active": false,
+      "type": "stdio",
+      "grpc_port": 50073,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "read_timeout_seconds": 120,
+      "env_vars": {
+        "BRAVE_API_KEY": "env:BRAVE_API_KEY"
+      },
+      "description": "Brave Search MCP (needs BRAVE_API_KEY)",
+      "api_key_required": true
+    },
+    {
+      "name": "fetch",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50074,
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_fetch"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Fetch MCP - HTTP requests and web content retrieval"
+    },
+    {
+      "name": "sequential-thinking",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50077,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Sequential Thinking MCP - Structured problem-solving through thought sequences"
+    },
+    {
+      "name": "git",
+      "active": false,
+      "type": "stdio",
+      "grpc_port": 50079,
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@modelcontextprotocol/server-git"
+      ],
+      "read_timeout_seconds": 120,
+      "description": "Git MCP - DISABLED (npm package not found, git CLI available directly)"
+    },
+    {
+      "name": "npm",
+      "active": true,
+      "type": "custom",
+      "grpc_port": 50080,
+      "command": "python",
+      "args": [
+        "mcp_plugins/servers/npm/agent.py"
+      ],
+      "cwd": "env:PROJECT_ROOT",
+      "read_timeout_seconds": 120,
+      "description": "npm/pnpm MCP agent for package management, scripts, and dependency auditing"
+    },
+    {
+      "name": "prisma",
+      "active": true,
+      "type": "custom",
+      "grpc_port": 50081,
+      "command": "python",
+      "args": [
+        "mcp_plugins/servers/prisma/agent.py"
+      ],
+      "cwd": "env:PROJECT_ROOT",
+      "read_timeout_seconds": 120,
+      "description": "Prisma MCP agent for schema management, migrations, and database operations"
+    },
+    {
+      "name": "postgres",
+      "active": true,
+      "type": "custom",
+      "grpc_port": 50082,
+      "command": "python",
+      "args": [
+        "mcp_plugins/servers/postgres/agent.py"
+      ],
+      "cwd": "env:PROJECT_ROOT",
+      "read_timeout_seconds": 120,
+      "env_vars": {
+        "DATABASE_URL": "env:DATABASE_URL"
+      },
+      "description": "PostgreSQL MCP agent for SQL queries, schema inspection, and database management"
+    },
+    {
+      "name": "qdrant",
+      "active": true,
+      "type": "custom",
+      "grpc_port": 50083,
+      "command": "python",
+      "args": [
+        "mcp_plugins/servers/qdrant/agent.py"
+      ],
+      "cwd": "env:PROJECT_ROOT",
+      "read_timeout_seconds": 120,
+      "env_vars": {
+        "QDRANT_URL": "env:QDRANT_URL"
+      },
+      "description": "Qdrant MCP agent for vector database operations, semantic search, and code indexing"
+    },
+    {
+      "name": "supermemory",
+      "active": true,
+      "type": "custom",
+      "grpc_port": 50084,
+      "command": "python",
+      "args": [
+        "mcp_plugins/servers/supermemory/agent.py"
+      ],
+      "cwd": "env:PROJECT_ROOT",
+      "read_timeout_seconds": 120,
+      "env_vars": {
+        "SUPERMEMORY_API_KEY": "env:SUPERMEMORY_API_KEY"
+      },
+      "description": "Supermemory MCP agent for semantic code pattern search and memory storage"
+    },
+    {
+      "name": "claude-code",
+      "active": true,
+      "type": "custom",
+      "grpc_port": 50086,
+      "command": "python",
+      "args": [
+        "mcp_plugins/servers/claude-code/agent.py"
+      ],
+      "cwd": "env:PROJECT_ROOT",
+      "read_timeout_seconds": 600,
+      "description": "Claude Code MCP - Wraps Claude CLI/SDK for AI code generation"
+    },
+    {
+      "name": "fungus",
+      "active": true,
+      "type": "stdio",
+      "grpc_port": 50087,
+      "command": "python",
+      "args": [
+        "mcp_plugins/servers/fungus_mcp/server.py"
+      ],
+      "env": {
+        "FUNGUS_PROJECT_DIR": "env:OUTPUT_DIR"
+      },
+      "cwd": "env:PROJECT_ROOT",
+      "read_timeout_seconds": 30,
+      "description": "Fungus MCP - Project tree, schema, module templates, file search for code generation context"
+    }
+  ],
+  "inactive_servers_note": "Disabled: github (needs token), desktop (not in Docker), supabase (needs token), brave-search (needs key), taskmanager, youtube, n8n, tavily, puppeteer, huggingface, elevenlabs, mindsdb, gpt-researcher",
+  "active_agents_count": 18,
+  "custom_agents": ["npm", "prisma", "postgres", "qdrant", "supermemory", "claude-code", "fungus"]
+}

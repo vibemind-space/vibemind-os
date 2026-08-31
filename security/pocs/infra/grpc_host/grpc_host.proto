@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package grpc_host;
+
+// Worker registration and management
+service GrpcWorkerAgentRuntimeHost {
+    // Register a worker
+    rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse);
+    
+    // Unregister a worker
+    rpc UnregisterWorker(UnregisterWorkerRequest) returns (UnregisterWorkerResponse);
+    
+    // Distribute a task to a worker
+    rpc DistributeTask(DistributeTaskRequest) returns (DistributeTaskResponse);
+    
+    // Collect task result from worker
+    rpc CollectTaskResult(CollectTaskResultRequest) returns (CollectTaskResultResponse);
+    
+    // Get worker status
+    rpc GetWorkerStatus(GetWorkerStatusRequest) returns (GetWorkerStatusResponse);
+    
+    // Get all workers
+    rpc GetAllWorkers(GetAllWorkersRequest) returns (GetAllWorkersResponse);
+    
+    // Get task statistics
+    rpc GetTaskStatistics(GetTaskStatisticsRequest) returns (GetTaskStatisticsResponse);
+}
+
+// Request messages
+message RegisterWorkerRequest {
+    string worker_id = 1;
+    string worker_type = 2;
+    repeated string capabilities = 3;
+}
+
+message RegisterWorkerResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message UnregisterWorkerRequest {
+    string worker_id = 1;
+}
+
+message UnregisterWorkerResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message DistributeTaskRequest {
+    string task_type = 1;
+    string task_data = 2;  // JSON-encoded task data
+}
+
+message DistributeTaskResponse {
+    bool success = 1;
+    string worker_id = 2;
+    string message = 3;
+}
+
+message CollectTaskResultRequest {
+    string worker_id = 1;
+    string task_id = 2;
+    string result = 3;  // JSON-encoded result
+}
+
+message CollectTaskResultResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message GetWorkerStatusRequest {
+    string worker_id = 1;
+}
+
+message GetWorkerStatusResponse {
+    bool success = 1;
+    string worker_id = 2;
+    string worker_type = 3;
+    string status = 4;
+    repeated string capabilities = 5;
+}
+
+message GetAllWorkersRequest {
+}
+
+message GetAllWorkersResponse {
+    repeated WorkerInfo workers = 1;
+}
+
+message WorkerInfo {
+    string worker_id = 1;
+    string worker_type = 2;
+    string status = 3;
+    repeated string capabilities = 4;
+}
+
+message GetTaskStatisticsRequest {
+}
+
+message GetTaskStatisticsResponse {
+    string statistics = 1;  // JSON-encoded statistics
+}

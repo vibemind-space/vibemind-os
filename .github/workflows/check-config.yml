@@ -1,0 +1,51 @@
+name: Config & Secrets Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml requests pytest python-dotenv
+          pip install -e shared/
+
+      - name: Validate llm_config.yml.example
+        run: |
+          cp llm_config.yml.example llm_config.yml
+          python shared/scripts/validate_config.py
+
+      - name: Check no leaked secrets
+        run: python shared/scripts/sanitize_env.py --root . --check-only
+
+      - name: Run vibemind_shared tests
+        run: python -m pytest shared/tests/ -v
+
+      - name: Audit direct LLM usage (informational)
+        run: |
+          python shared/scripts/audit_llm_usage.py --root . --out LLM_AUDIT_REPORT.md
+          echo "## Migration progress" >> $GITHUB_STEP_SUMMARY
+          grep -E "Files with direct|Files already" LLM_AUDIT_REPORT.md >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+  no-hardcoded-keys:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Grep for raw keys
+        run: |
+          set -e
+          ! git grep -nE "sk-or-v[0-9]+-[A-Za-z0-9]{20,}|sk-proj-[A-Za-z0-9_-]{30,}|sk-ant-[A-Za-z0-9_-]{30,}|gsk_[A-Za-z0-9]{30,}|sm_[a-zA-Z0-9]{30,}|ghp_[A-Za-z0-9]{30,}|AIza[A-Za-z0-9_-]{30,}" -- ':!*.lock' ':!**/dist/**' ':!**/node_modules/**'

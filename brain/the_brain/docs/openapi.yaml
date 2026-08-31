@@ -1,0 +1,1181 @@
+openapi: 3.0.3
+
+info:
+  title: Tahlamus Brain API
+  version: "1.0.0"
+  description: |
+    REST API for the Tahlamus Brain -- a biologically-inspired cognitive
+    architecture featuring a 3-layer routing hierarchy, 10 sensory modalities,
+    13 cognitive features, neuromodulation, emotional appraisal, homeostatic
+    regulation, consciousness metrics, and Conscious Turing Machine (CTM)
+    reasoning.
+
+    The unified brain service exposes prediction, feedback, cognitive-state
+    inspection, frequency-band control, monitoring, marker-based decision
+    replay, CTM ensemble reasoning, and full brain-snapshot management.
+  contact:
+    name: Tahlamus Brain Project
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:5003
+    description: Local unified brain service
+
+tags:
+  - name: Core
+    description: Prediction, feedback, registration, health, and statistics
+  - name: Cognitive State
+    description: Inspection of internal cognitive subsystems
+  - name: Frequency Control
+    description: Brain-wave frequency band management
+  - name: Monitoring
+    description: Metrics, audit trails, error rates, and heatmaps
+  - name: Markers
+    description: Decision-point marker system for replay and analysis
+  - name: CTM Reasoning
+    description: Conscious Turing Machine ensemble reasoning and training
+  - name: Snapshot
+    description: Save, restore, and list full brain snapshots (P7.100)
+
+# ─────────────────────────────────────────────────────────────────────
+# Paths
+# ─────────────────────────────────────────────────────────────────────
+paths:
+
+  # ── Core ──────────────────────────────────────────────────────────
+  /health:
+    get:
+      operationId: getHealth
+      tags: [Core]
+      summary: Health check
+      description: Returns overall service health, per-subsystem status, and a timestamp.
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /subsystem_health:
+    get:
+      operationId: getSubsystemHealth
+      tags: [Core]
+      summary: Per-subsystem health with circuit breaker status
+      responses:
+        "200":
+          description: Subsystem health details
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: "#/components/schemas/SubsystemHealth"
+
+  /subsystem_registry:
+    get:
+      operationId: getSubsystemRegistry
+      tags: [Core]
+      summary: Full subsystem registry state
+      responses:
+        "200":
+          description: Registry state
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /predict:
+    post:
+      operationId: predict
+      tags: [Core]
+      summary: Make a prediction
+      description: |
+        Sends a task string through the full cognitive pipeline
+        (sensory extraction, emotional appraisal, memory retrieval,
+        attention, neuromodulation, reasoning, reflection) and returns the
+        routed prediction with brain-gate weights.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictRequest"
+      responses:
+        "200":
+          description: Prediction result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictResponse"
+        "500":
+          description: Internal prediction error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /predict_batch:
+    post:
+      operationId: predictBatch
+      tags: [Core]
+      summary: Batch prediction
+      description: Submit multiple tasks for prediction in one request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictBatchRequest"
+      responses:
+        "200":
+          description: Batch prediction results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictBatchResponse"
+
+  /feedback:
+    post:
+      operationId: submitFeedback
+      tags: [Core]
+      summary: Submit feedback for a prediction
+      description: |
+        Propagates feedback to six subsystems: Layer 3 routing,
+        neuromodulation, memory, meta-learning, Layer 2, and emotional.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackRequest"
+      responses:
+        "200":
+          description: Feedback accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackResponse"
+        "500":
+          description: Feedback processing error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /statistics:
+    get:
+      operationId: getStatistics
+      tags: [Core]
+      summary: Brain statistics
+      description: Aggregate performance and usage statistics.
+      responses:
+        "200":
+          description: Statistics payload
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /brain_state:
+    get:
+      operationId: getBrainState
+      tags: [Core]
+      summary: Current brain state for visualization
+      responses:
+        "200":
+          description: Brain state
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /register:
+    post:
+      operationId: registerService
+      tags: [Core]
+      summary: Register an external service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: Registration result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service_name:
+                    type: string
+
+  # ── Cognitive State ───────────────────────────────────────────────
+  /cognitive_loop_state:
+    get:
+      operationId: getCognitiveLoopState
+      tags: [Cognitive State]
+      summary: Cognitive loop state
+      description: |
+        Returns the current state of the cognitive loop:
+        perceive, appraise_emotion, remember, attend, modulate, reason,
+        reflect, learn, consolidate.
+      responses:
+        "200":
+          description: Cognitive loop state
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /heartbeat_status:
+    get:
+      operationId: getHeartbeatStatus
+      tags: [Cognitive State]
+      summary: Brain heartbeat status
+      responses:
+        "200":
+          description: Heartbeat status
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /emotional_state:
+    get:
+      operationId: getEmotionalState
+      tags: [Cognitive State]
+      summary: Emotional system state
+      description: Returns valence, arousal, dominant emotion, and history.
+      responses:
+        "200":
+          description: Emotional state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmotionalState"
+
+  /homeostatic_state:
+    get:
+      operationId: getHomeostaticState
+      tags: [Cognitive State]
+      summary: Homeostatic regulation state
+      responses:
+        "200":
+          description: Homeostatic state
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /memory_state:
+    get:
+      operationId: getMemoryState
+      tags: [Cognitive State]
+      summary: Memory system state
+      description: Working memory, episodic memory, and semantic memory status.
+      responses:
+        "200":
+          description: Memory state
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /sensory_extract:
+    post:
+      operationId: sensoryExtract
+      tags: [Cognitive State]
+      summary: Extract sensory features from text
+      description: |
+        Runs the sensory preprocessor on raw text and returns features
+        across all 10 channels (6 sensory + 4 conversation trace).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensoryExtractRequest"
+      responses:
+        "200":
+          description: Extracted sensory features
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /goal_graph_state:
+    get:
+      operationId: getGoalGraphState
+      tags: [Cognitive State]
+      summary: Goal graph state
+      responses:
+        "200":
+          description: Goal graph
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /neuromodulation_state:
+    get:
+      operationId: getNeuromodulationState
+      tags: [Cognitive State]
+      summary: Neuromodulation state
+      description: |
+        Current neuromodulator levels (dopamine, serotonin, norepinephrine,
+        acetylcholine), computed effects, and state description.
+      responses:
+        "200":
+          description: Neuromodulation state
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /consciousness_state:
+    get:
+      operationId: getConsciousnessState
+      tags: [Cognitive State]
+      summary: Consciousness metrics
+      description: |
+        Returns consciousness metrics including total states tracked and
+        known unknowns.
+      responses:
+        "200":
+          description: Consciousness state
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /available_features:
+    get:
+      operationId: getAvailableFeatures
+      tags: [Cognitive State]
+      summary: List brain features as tools
+      description: Returns the 13 cognitive features exposed as callable tools.
+      responses:
+        "200":
+          description: Available features
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /feature_call:
+    post:
+      operationId: callFeature
+      tags: [Cognitive State]
+      summary: Call a brain feature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatureCallRequest"
+      responses:
+        "200":
+          description: Feature call result
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Unknown feature or invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Frequency Control ─────────────────────────────────────────────
+  /frequency_mode:
+    get:
+      operationId: getFrequencyMode
+      tags: [Frequency Control]
+      summary: Current frequency mode
+      responses:
+        "200":
+          description: Active frequency mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode:
+                    type: string
+                  activation:
+                    type: number
+                    format: float
+
+  /set_frequency_mode:
+    post:
+      operationId: setFrequencyMode
+      tags: [Frequency Control]
+      summary: Set frequency mode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetFrequencyModeRequest"
+      responses:
+        "200":
+          description: Mode set successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /auto_frequency:
+    post:
+      operationId: autoFrequency
+      tags: [Frequency Control]
+      summary: Auto-switch frequency mode based on task characteristics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutoFrequencyRequest"
+      responses:
+        "200":
+          description: Frequency auto-selected
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /frequency_bands:
+    get:
+      operationId: getFrequencyBands
+      tags: [Frequency Control]
+      summary: All frequency band info
+      responses:
+        "200":
+          description: Frequency bands
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ── Monitoring ────────────────────────────────────────────────────
+  /metrics:
+    get:
+      operationId: getMetrics
+      tags: [Monitoring]
+      summary: Prometheus-compatible metrics
+      responses:
+        "200":
+          description: Prometheus text format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /metrics_json:
+    get:
+      operationId: getMetricsJson
+      tags: [Monitoring]
+      summary: JSON metrics
+      responses:
+        "200":
+          description: Metrics in JSON
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /audit_trail:
+    get:
+      operationId: getAuditTrail
+      tags: [Monitoring]
+      summary: Prediction audit trail
+      responses:
+        "200":
+          description: Audit trail entries
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /loop_traces:
+    get:
+      operationId: getLoopTraces
+      tags: [Monitoring]
+      summary: Cognitive loop traces
+      responses:
+        "200":
+          description: Loop traces
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /error_rates:
+    get:
+      operationId: getErrorRates
+      tags: [Monitoring]
+      summary: Per-subsystem error rates
+      responses:
+        "200":
+          description: Error rates
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /brain_heatmap:
+    get:
+      operationId: getBrainHeatmap
+      tags: [Monitoring]
+      summary: Brain activity heatmap
+      responses:
+        "200":
+          description: Heatmap data
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ── Markers ───────────────────────────────────────────────────────
+  /markers:
+    get:
+      operationId: getMarkers
+      tags: [Markers]
+      summary: Recent decision-point markers
+      parameters:
+        - name: count
+          in: query
+          description: Number of recent markers to return
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: List of markers
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /set_marker:
+    post:
+      operationId: setMarker
+      tags: [Markers]
+      summary: Set a decision-point marker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetMarkerRequest"
+      responses:
+        "200":
+          description: Marker created
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /jump_to_marker:
+    post:
+      operationId: jumpToMarker
+      tags: [Markers]
+      summary: Jump to a saved marker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JumpToMarkerRequest"
+      responses:
+        "200":
+          description: Jumped to marker
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: Marker not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── CTM Reasoning ─────────────────────────────────────────────────
+  /ctm/trigger:
+    post:
+      operationId: ctmTrigger
+      tags: [CTM Reasoning]
+      summary: Trigger CTM reasoning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CtmTriggerRequest"
+      responses:
+        "200":
+          description: CTM reasoning started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task_id:
+                    type: string
+                  status:
+                    type: string
+
+  /ctm/result/{task_id}:
+    get:
+      operationId: ctmResult
+      tags: [CTM Reasoning]
+      summary: Get CTM reasoning result
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: wait
+          in: query
+          description: Whether to wait for the result
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: timeout
+          in: query
+          description: Max seconds to wait when wait=true
+          required: false
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: CTM result
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /ctm/status:
+    get:
+      operationId: ctmStatus
+      tags: [CTM Reasoning]
+      summary: CTM ensemble status
+      responses:
+        "200":
+          description: Ensemble status
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ctm/complete:
+    post:
+      operationId: ctmComplete
+      tags: [CTM Reasoning]
+      summary: Complete CTM reasoning
+      responses:
+        "200":
+          description: CTM reasoning completed
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ctm/collaborate:
+    post:
+      operationId: ctmCollaborate
+      tags: [CTM Reasoning]
+      summary: Cross-CTM collaborative reasoning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CtmCollaborateRequest"
+      responses:
+        "200":
+          description: Collaboration result
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ctm/training/start:
+    post:
+      operationId: ctmTrainingStart
+      tags: [CTM Reasoning]
+      summary: Start CTM training
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CtmTrainingStartRequest"
+      responses:
+        "200":
+          description: Training started
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ctm/training/status:
+    get:
+      operationId: ctmTrainingStatus
+      tags: [CTM Reasoning]
+      summary: CTM training status
+      responses:
+        "200":
+          description: Training status
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ctm/training/stop:
+    post:
+      operationId: ctmTrainingStop
+      tags: [CTM Reasoning]
+      summary: Stop CTM training
+      responses:
+        "200":
+          description: Training stopped
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ctm/training/checkpoints:
+    get:
+      operationId: ctmTrainingCheckpoints
+      tags: [CTM Reasoning]
+      summary: List training checkpoints
+      responses:
+        "200":
+          description: Checkpoint list
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ── Snapshot ──────────────────────────────────────────────────────
+  /snapshot/save:
+    post:
+      operationId: snapshotSave
+      tags: [Snapshot]
+      summary: Save full brain snapshot
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SnapshotSaveRequest"
+      responses:
+        "200":
+          description: Snapshot saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotSaveResponse"
+
+  /snapshot/restore:
+    post:
+      operationId: snapshotRestore
+      tags: [Snapshot]
+      summary: Restore brain from snapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SnapshotRestoreRequest"
+      responses:
+        "200":
+          description: Snapshot restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotRestoreResponse"
+
+  /snapshot/list:
+    get:
+      operationId: snapshotList
+      tags: [Snapshot]
+      summary: List available snapshots
+      responses:
+        "200":
+          description: Available snapshots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SnapshotListResponse"
+
+  /snapshot/statistics:
+    get:
+      operationId: snapshotStatistics
+      tags: [Snapshot]
+      summary: Snapshot manager statistics
+      responses:
+        "200":
+          description: Snapshot statistics
+          content:
+            application/json:
+              schema:
+                type: object
+
+# ─────────────────────────────────────────────────────────────────────
+# Components
+# ─────────────────────────────────────────────────────────────────────
+components:
+  schemas:
+
+    # ── Generic ────────────────────────────────────────────────────
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+
+    # ── Core request / response ────────────────────────────────────
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: healthy
+        subsystems:
+          type: object
+          additionalProperties:
+            type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    SubsystemHealth:
+      type: object
+      properties:
+        status:
+          type: string
+        circuit_breaker:
+          type: string
+          enum: [closed, open, half_open]
+        error_count:
+          type: integer
+        last_error:
+          type: string
+          nullable: true
+
+    PredictRequest:
+      type: object
+      required: [task]
+      properties:
+        task:
+          type: string
+          description: The task to predict on
+          example: "Classify this customer email as urgent or normal"
+        service_name:
+          type: string
+          description: Optional registered service name
+
+    Prediction:
+      type: object
+      properties:
+        action:
+          type: string
+          description: Recommended action or classification
+        brain_gates:
+          type: array
+          items:
+            type: number
+            format: float
+          description: Gate weights (always sum to 1.0 via softmax)
+        confidence:
+          type: number
+          format: float
+          description: Prediction confidence (0.0 - 1.0)
+        routing_path:
+          type: string
+          description: Path through the 3-layer routing hierarchy
+        emotional_valence:
+          type: number
+          format: float
+        emotional_arousal:
+          type: number
+          format: float
+
+    PredictResponse:
+      type: object
+      properties:
+        task:
+          type: string
+        prediction:
+          $ref: "#/components/schemas/Prediction"
+        timestamp:
+          type: string
+          format: date-time
+
+    PredictBatchRequest:
+      type: object
+      required: [tasks]
+      properties:
+        tasks:
+          type: array
+          items:
+            type: string
+          description: List of task strings
+
+    PredictBatchResponse:
+      type: object
+      properties:
+        predictions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PredictResponse"
+
+    FeedbackRequest:
+      type: object
+      required: [task, prediction, success]
+      properties:
+        task:
+          type: string
+        prediction:
+          type: object
+          description: The prediction object that was returned
+        success:
+          type: boolean
+          description: Whether the prediction was successful
+        user_rating:
+          type: number
+          format: float
+          description: Optional user satisfaction rating
+        execution_time_ms:
+          type: integer
+          description: Optional execution time in milliseconds
+        service_name:
+          type: string
+
+    FeedbackResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        systems_updated:
+          type: array
+          items:
+            type: string
+          description: Which subsystems received the feedback
+
+    RegisterRequest:
+      type: object
+      required: [service_name]
+      properties:
+        service_name:
+          type: string
+
+    # ── Cognitive State ────────────────────────────────────────────
+    EmotionalState:
+      type: object
+      properties:
+        valence:
+          type: number
+          format: float
+          description: Emotional valence (-1.0 negative to 1.0 positive)
+        arousal:
+          type: number
+          format: float
+          description: Emotional arousal (0.0 calm to 1.0 excited)
+        dominant_emotion:
+          type: string
+        history:
+          type: array
+          items:
+            type: object
+
+    SensoryExtractRequest:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          description: Raw text to extract sensory features from
+
+    FeatureCallRequest:
+      type: object
+      required: [feature, task]
+      properties:
+        feature:
+          type: string
+          description: Name of the cognitive feature to call
+        task:
+          type: string
+          description: Task input for the feature
+        context:
+          type: object
+          description: Optional context object
+        service_name:
+          type: string
+
+    # ── Frequency Control ──────────────────────────────────────────
+    SetFrequencyModeRequest:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          description: Frequency band name (e.g. alpha, beta, gamma, theta, delta)
+        activation:
+          type: number
+          format: float
+          description: Activation level (0.0 - 1.0)
+        suppress_others:
+          type: boolean
+          description: Whether to suppress other bands
+          default: false
+
+    AutoFrequencyRequest:
+      type: object
+      required: [task_type]
+      properties:
+        task_type:
+          type: string
+        urgency:
+          type: number
+          format: float
+        complexity:
+          type: number
+          format: float
+        requires_learning:
+          type: boolean
+        requires_action:
+          type: boolean
+
+    # ── Markers ────────────────────────────────────────────────────
+    SetMarkerRequest:
+      type: object
+      required: [decision_point]
+      properties:
+        decision_point:
+          type: string
+          description: Description of the decision point
+        context:
+          type: object
+        alternatives:
+          type: array
+          items:
+            type: string
+        confidence:
+          type: number
+          format: float
+
+    JumpToMarkerRequest:
+      type: object
+      required: [marker_id]
+      properties:
+        marker_id:
+          type: string
+
+    # ── CTM Reasoning ──────────────────────────────────────────────
+    CtmTriggerRequest:
+      type: object
+      required: [task]
+      properties:
+        task:
+          type: string
+        domain_hint:
+          type: string
+          description: Optional domain to bias processor selection
+        max_steps:
+          type: integer
+          description: Maximum reasoning steps
+
+    CtmCollaborateRequest:
+      type: object
+      required: [task]
+      properties:
+        task:
+          type: string
+        max_steps:
+          type: integer
+        execution_order:
+          type: string
+          description: Ordering strategy for cross-CTM collaboration
+
+    CtmTrainingStartRequest:
+      type: object
+      required: [domain]
+      properties:
+        domain:
+          type: string
+        epochs:
+          type: integer
+        batch_size:
+          type: integer
+        learning_rate:
+          type: number
+          format: float
+        dataset_size:
+          type: integer
+
+    # ── Snapshot ────────────────────────────────────────────────────
+    SnapshotSaveRequest:
+      type: object
+      properties:
+        filename:
+          type: string
+          description: Optional custom filename for the snapshot
+
+    SnapshotSaveResponse:
+      type: object
+      properties:
+        filepath:
+          type: string
+        metadata:
+          type: object
+
+    SnapshotRestoreRequest:
+      type: object
+      required: [filepath]
+      properties:
+        filepath:
+          type: string
+
+    SnapshotRestoreResponse:
+      type: object
+      properties:
+        results:
+          type: object
+
+    SnapshotListResponse:
+      type: object
+      properties:
+        snapshots:
+          type: array
+          items:
+            type: object
+            properties:
+              filepath:
+                type: string
+              created:
+                type: string
+                format: date-time
+              size_bytes:
+                type: integer

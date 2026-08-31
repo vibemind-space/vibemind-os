@@ -1,0 +1,19 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir \
+    "autogen-core==0.7.5" \
+    "autogen-ext[grpc]==0.7.5" \
+    "grpcio>=1.62.0" \
+    "openai>=1.0"
+
+COPY messages.py .
+COPY tools.py .
+COPY orchestrator.py .
+COPY scanner.py .
+COPY analyzer.py .
+COPY reporter.py .
+COPY worker.py .
+
+CMD ["python", "-u", "worker.py"]

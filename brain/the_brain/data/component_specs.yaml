@@ -1,0 +1,475 @@
+# component_specs.yaml — Phase 11.W2 Stage B
+#
+# Soll-Anforderungen pro Komponente für die Ideas-Bubble "E-Ticketing_DE".
+# Abgeleitet aus den 15 substantive Notes der Bubble (Acceptance_Criteria_Specs,
+# Architektur_Roadmap_Master, Risk_Assessment_Mitigation,
+# Stakeholder_Governance_Model, Tasks_Deliverables_per_Rolle, DB_REST_API,
+# Wallet-Notes etc.).
+#
+# Format pro Komponente:
+#   name:       canvas_node.title in der Bubble (exakt)
+#   layer:      einer der 7 Architektur-Layer
+#   owner:      Team aus Stakeholder_Governance_Model
+#   requires:   Liste der Soll-Anforderungen
+#     - id:      stabiler Anker (snake_case)
+#       label:   Kurz-Bezeichnung für die Anforderung
+#       content: AUSFORMULIERTE Spec im Stil von Acceptance_Criteria_Specs
+#                (AC / Spec / Edge). Wird beim "mach X" 1:1 als Note-Inhalt
+#                geschrieben — kein LLM dazwischen → deterministisch + verifizierbar.
+#
+# Convention: Die `content`-Strings landen als canvas_nodes.content. Note-
+# Titel der pro-requirement Note = "<component>__<req.id>" (z.B.
+# "Auth_Identity__jwt_flow") — kollisionsfrei, lesbar im Canvas.
+#
+# Wenn du eine Anforderung ergänzen willst: einfach neuen `requires:`-Eintrag
+# hinzufügen. Brain liest die YAML beim component_requirements Capability-
+# Call neu (kein Restart nötig — der Reload-Endpoint reicht).
+
+bubble: "E-Ticketing_DE"
+bubble_id: "ff16dc78"
+
+components:
+
+  # ─── Cross-Cutting: Identity / Auth ──────────────────────────────────
+  - name: "Auth_Identity"
+    layer: "cross_cutting"
+    owner: "Auth-Team"
+    requires:
+      - id: "jwt_flow"
+        label: "JWT Access+Refresh-Token-Flow"
+        content: |
+          AC: User registriert sich mit E-Mail+Passwort, erhält JWT (15min)
+          Access-Token + Refresh-Token (30d).
+          Spec: POST /auth/register, POST /auth/login → {access_token,
+          refresh_token, expires_in}. POST /auth/refresh tauscht Refresh →
+          neues Access. Argon2id Hashing für Passwörter (m=64MB, t=3, p=4).
+          Edge: 401 bei abgelaufenem Access; Client triggert Refresh
+          transparent. Logout invalidiert Refresh-Token server-seitig.
+      - id: "refresh_rotation"
+        label: "Refresh-Token-Rotation + Reuse-Detection"
+        content: |
+          AC: Jeder /auth/refresh-Call gibt einen NEUEN Refresh-Token aus
+          und invalidiert den alten. Wiederverwendung eines alten Refresh-
+          Tokens (Reuse-Detection) invalidiert die gesamte Token-Familie
+          (Diebstahl-Schutz).
+          Spec: refresh_tokens-Tabelle mit family_id + parent_id; bei
+          Reuse wird family_id geblacklistet, alle aktiven Tokens dieser
+          family abgelehnt. User muss sich neu einloggen.
+          Edge: Netzwerk-Race (zwei parallele Refreshes mit gleichem
+          Token) → erster gewinnt, zweiter scheitert mit 401.
+      - id: "eidas_level"
+        label: "eIDAS-Vertrauensstufe für teure Tickets"
+        content: |
+          AC: Tickets >100EUR erfordern eIDAS-Level "substantial"
+          (verifizierte Identität via BankID, eID oder Schufa).
+          Spec: Pre-Booking-Check auf Ticket-Preis; bei >100EUR Redirect
+          zu /auth/upgrade-identity (BankID-Flow oder eID-Reader). User
+          erhält claim "eidas_level":"substantial" im JWT nach
+          erfolgreicher Verifikation.
+          Edge: User ohne eID kann Ticket <100EUR auch ohne Upgrade
+          kaufen. eIDAS-Verifikation cached 12 Monate.
+      - id: "lockout_policy"
+        label: "Brute-Force-Lockout"
+        content: |
+          AC: 3 fehlerhafte Login-Versuche → 15min Lockout für diese
+          E-Mail (nicht IP, sonst Mehrbenutzer-Geräte gesperrt).
+          Spec: failed_logins-Counter in Redis (TTL 15min). Bei 4. Versuch
+          → 429 Too Many Requests + Retry-After-Header. CAPTCHA ab
+          2. Versuch optional.
+          Edge: Erfolgreicher Login resettet Counter sofort.
+
+  # ─── Domain: Ticket Lifecycle ────────────────────────────────────────
+  - name: "Ticket_Lifecycle"
+    layer: "domain_services"
+    owner: "Backend-Team"
+    requires:
+      - id: "state_machine"
+        label: "State-Machine reserved → paid → issued → validated → (refunded|expired)"
+        content: |
+          AC: Ticket-Zustände reserved → paid → issued → validated →
+          (refunded|expired). Jeder Übergang wird auditiert (audit_log-
+          Tabelle mit ticket_id, from_state, to_state, actor, ts).
+          Spec: State-Machine durchsetzen (illegale Übergänge → 409
+          Conflict). Kafka-Event je Transition (topic: ticket.lifecycle)
+          für Analytics + Downstream-Listener.
+          Edge: Refund nur aus paid|issued. Expired-Tickets nicht mehr
+          validierbar (returnt 410 Gone).
+      - id: "qr_aztec_payload"
+        label: "QR/Aztec-Payload signiert + 60s rotierend (online) bzw. statisch+Nonce (offline)"
+        content: |
+          AC: GET /tickets/{id} liefert aktuellen state + QR/Aztec-Payload.
+          Online-Modus: Payload rotiert alle 60s (ECDSA-signiert,
+          Server-Timestamp inkludiert) — verhindert Screenshot-Sharing.
+          Offline-Modus: statisches Aztec mit eingebettetem Nonce.
+          Spec: Payload = base64(ticket_id || timestamp || nonce ||
+          ECDSA-Sig). Validator prüft Signatur + timestamp-Drift <90s.
+          Edge: Offline-Validierung akzeptiert max 24h alten Nonce
+          (anti-replay via local nonce-cache).
+      - id: "audit_log"
+        label: "Audit-Log jeder Lifecycle-Transition (DSGVO-konform)"
+        content: |
+          AC: Jeder State-Übergang persistiert in audit_log mit
+          {ticket_id, from, to, actor (user_id|system), reason, ts,
+          ip_pseudonymized}. Aufbewahrung 10 Jahre (steuerlich), DSGVO-
+          Auskunftsanfrage möglich.
+          Spec: append-only Tabelle, kein UPDATE/DELETE durch
+          Application-User (DB-Permission). Pseudonymisierung der IP
+          nach 30 Tagen (SHA256 mit Salt-Rotation).
+
+  # ─── Payment Layer ───────────────────────────────────────────────────
+  - name: "Payment_Layer"
+    layer: "payment"
+    owner: "Payment-Team"
+    requires:
+      - id: "stripe_idempotency"
+        label: "Stripe-Zahlung mit Idempotency-Key"
+        content: |
+          AC: Zahlung via Stripe. Jeder POST /payments akzeptiert + erzwingt
+          Idempotency-Key-Header. Wiederholtes Request mit gleichem Key
+          retourniert das ursprüngliche Ergebnis (keine Doppelbuchung).
+          Spec: POST /payments {amount, method, idempotency_key,
+          ticket_id} → 3DS-Redirect-URL oder direct-confirm.
+          Idempotency-Keys 24h im Redis-Cache.
+          Edge: Bei Stripe-Timeout NICHT retry'en ohne Idempotency-Key.
+      - id: "psd2_sca"
+        label: "PSD2 Strong Customer Authentication für Zahlungen >30EUR"
+        content: |
+          AC: Zahlungen ≥30EUR triggern 3D-Secure-Flow (PSD2 SCA-Pflicht).
+          Stripe Payment Intent mit confirmation_method=automatic +
+          setup_future_usage=off_session.
+          Spec: Bei amount>=3000 (cents) → response enthält
+          {next_action: redirect_to_3ds}. Frontend redirected, Stripe
+          callbacked /payments/webhook nach SCA-Completion.
+          Edge: SCA-Exemption für gleichen Merchant + bekannter
+          Cardholder (low_value, recurring) — Stripe entscheidet.
+      - id: "webhook_dedup"
+        label: "Webhook-Signatur + Event-Deduplication"
+        content: |
+          AC: POST /payments/webhook validiert Stripe-Signatur
+          (X-Stripe-Signature). Wiederholte Lieferung des gleichen
+          stripe_event_id wird stillschweigend mit 200 OK quittiert,
+          aber nicht reprocessed.
+          Spec: processed_webhook_events-Tabelle mit event_id als
+          Primary Key. Insert-or-skip-Pattern.
+          Edge: Signatur ungültig → 400; aber Stripe wird re-deliver'n,
+          also Alarm an SRE.
+      - id: "refund_partial"
+        label: "Teilrückerstattung erlaubt"
+        content: |
+          AC: POST /refunds {payment_id, amount?} unterstützt volle UND
+          teilweise Erstattung. Summe aller Refunds darf
+          payment.amount nicht überschreiten.
+          Spec: refund_amount default = payment.amount; explizit
+          übergeben für Teilrefund. Stripe Refund-Object mit reason.
+          Edge: Refund nur aus ticket.state ∈ {paid, issued}.
+
+  # ─── Domain: Routing/Search ──────────────────────────────────────────
+  - name: "Routing_Search"
+    layer: "domain_services"
+    owner: "Carrier-Team"
+    requires:
+      - id: "hafas_endpoint"
+        label: "GET /routes Endpoint mit HAFAS-Backend"
+        content: |
+          AC: GET /routes?from=&to=&dep=&pax= liefert geranke
+          Routen-Liste (nach Preis, Dauer, Umstiegen sortierbar via &sort=).
+          Spec: Response: [{legs[{carrier, from, to, dep, arr, vehicle}],
+          price_cents, duration_s, transfers, fare_class}]. HAFAS-XML →
+          internes JSON-Mapping in carrier_adapter/hafas.py.
+          Edge: from/to via Station-ID (HAFAS-eva-Nummer) oder
+          Free-Text-Geocoding-Lookup.
+      - id: "redis_cache"
+        label: "60s Redis-Cache für HAFAS-Antworten"
+        content: |
+          AC: HAFAS-Response gecacht 60s in Redis. Cache-Key =
+          sha1(from|to|dep_rounded_to_5min).
+          Spec: Cache-Read VOR HAFAS-Call; Cache-Write nach erfolgreicher
+          Antwort. X-Cache: HIT|MISS-Header zurückgeben.
+          Edge: Bei Redis-Outage → cache-bypass, direkt HAFAS, kein
+          Plan-Fehler.
+      - id: "carrier_failover"
+        label: "Fallback auf nächsten Carrier bei HAFAS-Timeout"
+        content: |
+          AC: HAFAS-Timeout (>2s) oder 5xx → Failover auf BVG-API (oder
+          DB_REST_API) für die gleiche Strecke.
+          Spec: Carrier-Failover-Reihenfolge in config.yaml definiert:
+          [hafas, db_rest, bvg, vbb]. Pro Carrier max 2s Timeout.
+          Edge: Alle Carrier down → 503 Service Unavailable mit
+          Retry-After-Header + cached degraded-mode-Routen anzeigen.
+
+  # ─── Integration: DB REST API ────────────────────────────────────────
+  - name: "DB_REST_API"
+    layer: "integration"
+    owner: "Carrier-Team"
+    requires:
+      - id: "oauth2_client_creds"
+        label: "OAuth2 client_credentials Flow mit DB Identity Server"
+        content: |
+          AC: Authentifizierung gegen DB Identity Server via OAuth2
+          client_credentials. access_token cached bis 60s vor expires_in.
+          Spec: POST https://identity.bahn.de/oauth/token {grant_type:
+          client_credentials, client_id, client_secret} → access_token.
+          Im Brain-Container als Env-Var DB_CLIENT_ID/DB_CLIENT_SECRET.
+          Edge: Token-Refresh automatisch, kein User-facing 401.
+      - id: "rate_limit_handling"
+        label: "60 req/min Rate-Limit + Exponential Backoff bei 429"
+        content: |
+          AC: Respektiere DB-Rate-Limit 60 req/min per client_id (burst
+          100). Bei 429 Response: exponentielles Backoff (1s, 2s, 4s,
+          max 8s) + Retry-After-Header honorieren.
+          Spec: Token-Bucket-Limiter in adapter/db_rest.py. Bei
+          dauerhaftem 429 → Carrier_Failover auf HAFAS.
+          Edge: Burst von 100 in <60s zulässig, danach drosselt der
+          Limiter.
+      - id: "endpoint_routes"
+        label: "Endpoints: /fahrplan/v1/location, /journeys, /vendo-rest/v1/bookings"
+        content: |
+          AC: Drei DB-API-Endpoints integriert:
+          GET /fahrplan/v1/location?query=  → Station-Search
+          GET /fahrplan/v1/journeys?from=&to=&dep=  → Fahrplan + DELFI-Delays
+          POST /vendo-rest/v1/bookings  → Booking-Lifecycle
+          Spec: Response-Mapping ins interne Schema (carrier-agnostisch).
+          Latenz p95 ~280ms (Frankfurt-Region). Caching: 60s TTL für
+          Station-Daten, KEIN Cache für Journey-Queries.
+
+  # ─── API Gateway: OpenAPI ────────────────────────────────────────────
+  - name: "API_Endpoints_OpenAPI"
+    layer: "api_gateway"
+    owner: "Backend-Team"
+    requires:
+      - id: "openapi_31_spec"
+        label: "OpenAPI 3.1 als Single Source of Truth"
+        content: |
+          AC: Alle Endpoints in openapi.yaml dokumentiert (OpenAPI 3.1).
+          Generierter Client-SDK aus dieser Spec.
+          Spec: openapi.yaml im Repo-Root, CI-Step generiert TypeScript-
+          Client + Python-Client. Schema-Validation in CI gegen Real-Calls.
+          Edge: Spec-Drift = CI-Fail.
+      - id: "versioning_v1"
+        label: "Endpoint-Versionierung über /v1/, Breaking → /v2/"
+        content: |
+          AC: Alle Endpoints unter /v1/. Breaking Changes erfordern /v2/
+          mit min. 6-Monaten-Deprecation des /v1/.
+          Spec: Major-Version im Pfad. SemVer im X-API-Version-Response-
+          Header (z.B. 1.4.2). /v1/ und /v2/ co-existieren während
+          Deprecation.
+      - id: "contract_test_ci"
+        label: "Contract-Test in CI"
+        content: |
+          AC: Jeder PR durchläuft Contract-Tests (Real-API-Call vs.
+          OpenAPI-Spec). Drift = Fail.
+          Spec: Schemathesis oder Dredd in der CI-Pipeline (GitHub
+          Actions). Live-Smoke gegen Staging-API.
+      - id: "rate_limit_headers"
+        label: "RFC-konforme Rate-Limit-Header"
+        content: |
+          AC: Alle Responses tragen X-RateLimit-Limit, X-RateLimit-
+          Remaining, X-RateLimit-Reset.
+          Spec: Header-Werte aus Token-Bucket per User+Endpoint-Group.
+          Bei Überschreitung 429 + Retry-After.
+
+  # ─── Client Layer: Mobile + Wallet ───────────────────────────────────
+  - name: "React_Native_SDK"
+    layer: "client"
+    owner: "Mobile-Team"
+    requires:
+      - id: "cross_platform_wrapper"
+        label: "Cross-platform Mobile SDK (RN, opt. Flutter)"
+        content: |
+          AC: Eine React-Native-Library kapselt Booking + Ticket APIs.
+          Wiederverwendbar für Partner-Apps (DB, MVV, BVG white-label).
+          Spec: npm-Package @vibemind/eticketing-sdk. Public-API:
+          login(), bookTicket(), getTickets(), validateTicket(). Native
+          Module für NFC-HCE + Wallet-Integration.
+          Edge: SDK-Major-Version folgt API-Major-Version.
+      - id: "offline_cache"
+        label: "Offline-Cache für gekaufte Tickets"
+        content: |
+          AC: Gekaufte Tickets persistent im verschlüsselten Local-Store
+          (Keychain iOS / Keystore Android). Offline anzeigbar +
+          validierbar.
+          Spec: AES-256-GCM Verschlüsselung mit Device-Key. Sync bei
+          App-Start, falls online.
+
+  - name: "iOS_Wallet_Pass"
+    layer: "client"
+    owner: "Mobile-Team"
+    requires:
+      - id: "pkpass_generation"
+        label: "PKPass-Generation mit QR/Aztec"
+        content: |
+          AC: Nach Ticket-Issue: .pkpass generieren (Apple PassKit
+          Format) mit QR/Aztec-Payload.
+          Spec: Backend-Service signiert pass.json + manifest.json mit
+          Pass-Type-ID-Zertifikat. /tickets/{id}/wallet/apple → .pkpass.
+          Edge: Pass-Update via Push-Notification + Web Service URL.
+
+  - name: "Google_Wallet"
+    layer: "client"
+    owner: "Mobile-Team"
+    requires:
+      - id: "transit_pass_class"
+        label: "Transit-Pass-Class via Google Wallet Passes API"
+        content: |
+          AC: Google Wallet Issuer API: transitObject mit transitClass.
+          Spec: JWT-signed Save-to-Wallet-Button. transitClass enthält
+          carrier_info; transitObject pro Ticket. Dynamic Updates via
+          Issuer API patch().
+          Edge: Save-Button nur auf Android-Browser angezeigt.
+
+  - name: "NFC_HCE_Beacon"
+    layer: "client"
+    owner: "Mobile-Team"
+    requires:
+      - id: "hce_gate_tap"
+        label: "NFC Host Card Emulation für Gate-Tap-Validierung (Android)"
+        content: |
+          AC: Android-NFC-HCE Service emuliert MIFARE-DESFire-Karte am
+          Gate. Gate liest signed ticket_payload via APDU.
+          Spec: HostApduService mit AID; signed payload < 250 Bytes
+          (NFC-Frame-Limit). Fallback auf QR wenn HCE nicht verfügbar.
+      - id: "ibeacon_be_in_be_out"
+        label: "iBeacon Proximity für Bus-Be-In/Be-Out Fare-Calc"
+        content: |
+          AC: Bus-iBeacon triggert Be-In-Event bei Einsteigen, Be-Out
+          beim Aussteigen. Fare-Calc nach gefahrener Strecke.
+          Spec: CoreLocation (iOS) / BeaconManager (Android). Be-In
+          startet Tracking-Session, Be-Out beendet + sendet POST
+          /fares/calculate.
+          Edge: Verlorenes Be-Out (App killed) → 90min Timeout, dann
+          max-fare verrechnet.
+
+  - name: "Push_Notifications"
+    layer: "client"
+    owner: "Mobile-Team"
+    requires:
+      - id: "fcm_apns_setup"
+        label: "FCM (Android) + APNS (iOS) Multi-Channel"
+        content: |
+          AC: Server sendet Push via FCM + APNS abhängig von Plattform.
+          Verbraucht device_token aus user_devices-Tabelle.
+          Spec: notification_service in /notifications. Channels:
+          delay_alerts, ticket_ready, refund_status, gate_reminder.
+          User kann Channels granular abonnieren.
+          Edge: device_token invalid → aus user_devices entfernen.
+
+  # ─── Data Layer ──────────────────────────────────────────────────────
+  - name: "Datenmodell_Core"
+    layer: "data"
+    owner: "Backend-Team"
+    requires:
+      - id: "schema_users_tickets_payments"
+        label: "Kern-Tabellen: users, tickets, payments, refunds, audit_log"
+        content: |
+          AC: PostgreSQL-Schema (versioniert via Flyway/Alembic).
+          Kern-Tabellen: users, tickets, payments, refunds, audit_log,
+          user_devices, processed_webhook_events.
+          Spec: UUID-PKs, created_at/updated_at trigger-managed,
+          soft-delete via deleted_at (außer audit_log: append-only).
+          Edge: Schema-Migration in CI dry-run-validated.
+      - id: "postgresql_cluster"
+        label: "PostgreSQL primary + read-replica"
+        content: |
+          AC: Primary für writes, async-Replica für reads (analytics,
+          /tickets-list).
+          Spec: Streaming Replication, max-Lag-Alarm bei >5s.
+          Connection-Pool (pgbouncer) trennt primary/replica.
+          Edge: Bei Replica-Lag >10s → reads fallback auf primary.
+
+  # ─── Cross-Cutting: Compliance ───────────────────────────────────────
+  - name: "DSGVO_Datenschutz"
+    layer: "cross_cutting"
+    owner: "Compliance-Officer"
+    requires:
+      - id: "dsfa"
+        label: "DSGVO-Datenschutz-Folgenabschätzung (DSFA)"
+        content: |
+          AC: DSFA dokumentiert für alle PII-verarbeitenden Prozesse
+          (Booking, Payment, Ticket-Validation). Externer Datenschutz-
+          Auditor early-engaged.
+          Spec: DSFA-Dokument im Repo unter compliance/dsfa.md. Update
+          bei jedem neuen PII-Datenfluss. Sign-off vom DPO Pflicht
+          vor Phase 1 Go-Live.
+      - id: "auskunftsrecht"
+        label: "Auskunfts- + Löschungsrecht (Art. 15, 17)"
+        content: |
+          AC: User kann via /me/data-export alle eigenen Daten als
+          JSON-Bundle abrufen. /me/account-delete startet 30-Tage-
+          Löschungsworkflow (Soft → Hard).
+          Spec: Datenexport asynchron (Job-Queue), Mail mit
+          Download-Link. Löschung erhält audit_log (anonymisiert).
+          Edge: Steuerliche Aufbewahrungspflicht (10 Jahre) override't
+          Löschung für Payment-Daten.
+      - id: "audit_log_pseudonym"
+        label: "IP-Pseudonymisierung nach 30 Tagen"
+        content: |
+          AC: IP-Adressen in audit_log werden nach 30 Tagen durch
+          SHA256(ip || rotating_salt) ersetzt — Korrelations-Möglichkeit
+          erhalten, Re-Identifikation nicht.
+          Spec: Nightly job_anonymize_audit_log läuft 02:00 UTC.
+
+  - name: "eID_eIDAS"
+    layer: "cross_cutting"
+    owner: "Compliance-Officer"
+    requires:
+      - id: "eidas_substantial"
+        label: "eIDAS-Vertrauensstufe substantial für teure Tickets"
+        content: |
+          AC: User-Identity-Verification über eID-Service (z.B. AusweisApp)
+          oder BankID. Claim eidas_level∈{low,substantial,high} im JWT.
+          Spec: /auth/upgrade-identity startet eID-Flow. Bei erfolgreicher
+          Verifikation: User.eidas_level gesetzt + 12 Monate gültig.
+          Edge: Re-Verifikation auf User-Wunsch oder bei Identity-Change.
+
+  - name: "BSI_TR03161_Telemetry"
+    layer: "cross_cutting"
+    owner: "Compliance-Officer"
+    requires:
+      - id: "telemetry_spec"
+        label: "BSI TR-03161 konforme Sicherheits-Telemetrie"
+        content: |
+          AC: Sicherheits-relevante Events (Auth-Failures, Refund-
+          Anomalies, Cert-Rotations) werden BSI-TR-03161-konform geloggt
+          + signiert.
+          Spec: Tamper-evident Log-Chain (Hash-Chained Entries).
+          Append-only zu separatem Log-Stream (nicht audit_log!).
+          Edge: Log-Verlust = Compliance-Incident → DPO informieren.
+
+  # ─── Cross-Cutting: Operations ───────────────────────────────────────
+  - name: "Sentry_Monitoring"
+    layer: "cross_cutting"
+    owner: "DevOps-SRE"
+    requires:
+      - id: "sentry_backend_frontend"
+        label: "Sentry für Backend (Python) + Frontend (RN + Web)"
+        content: |
+          AC: Sentry-SDK in allen Services. Performance-Tracing für
+          Endpoints. PII-Scrubbing (E-Mail, IP) aktiviert.
+          Spec: traces_sample_rate=0.1 prod, 1.0 staging. Slack-Alert
+          bei >5 Errors/min in 5min-Window.
+      - id: "slo_p95_300ms"
+        label: "SLA: p95 < 300ms, 99.5% Verfügbarkeit"
+        content: |
+          AC: p95-Latenz <300ms für /routes, /tickets, /payments.
+          99.5% monatliche Verfügbarkeit.
+          Spec: Grafana-Dashboard mit p95/p99-Histogrammen; SLO-Budget-
+          Burn-Alerts an SRE-Slack.
+
+  - name: "K8s_Deployment"
+    layer: "cross_cutting"
+    owner: "DevOps-SRE"
+    requires:
+      - id: "helm_chart"
+        label: "Helm Chart für Service-Deployment"
+        content: |
+          AC: Jeder Service hat einen Helm-Chart in infra/charts/.
+          Versionierte Releases via helm repo.
+          Spec: Values-Files pro Environment (dev/staging/prod).
+          Secrets via External Secrets Operator (nicht im Chart).
+      - id: "rolling_updates_pdb"
+        label: "Rolling Updates + PodDisruptionBudget"
+        content: |
+          AC: Zero-Downtime-Deployments via RollingUpdate strategy.
+          PodDisruptionBudget verhindert >1 Pod-Down während Update.
+          Spec: maxSurge=1, maxUnavailable=0. PDB.minAvailable=N-1
+          für N-replicate Services.

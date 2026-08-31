@@ -1,0 +1,532 @@
+space: mirofish
+exists: true
+tool_count: 34
+tools:
+- name: start_docker
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/docker_tools.py
+  line: 55
+  doc: Start the MiroFish Docker stack (Flask + Neo4j + Ollama).
+  voice_triggers: []
+  args: []
+- name: stop_docker
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/docker_tools.py
+  line: 92
+  doc: Stop the MiroFish Docker stack.
+  voice_triggers: []
+  args: []
+- name: restart_docker
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/docker_tools.py
+  line: 117
+  doc: Restart the MiroFish Docker stack.
+  voice_triggers: []
+  args: []
+- name: docker_status
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/docker_tools.py
+  line: 147
+  doc: Check the status of the MiroFish Docker containers.
+  voice_triggers: []
+  args: []
+- name: get_status
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 50
+  doc: Check MiroFish connection status.
+  voice_triggers: []
+  args: []
+- name: generate_ontology
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 86
+  doc: Upload seed data and generate ontology.
+  voice_triggers: []
+  args:
+  - name: requirement
+    kind: positional
+    annotation: str
+    required: true
+  - name: file_paths
+    kind: positional
+    annotation: List[str]
+    default: None
+  - name: text_content
+    kind: positional
+    annotation: str
+    default: None
+  - name: project_name
+    kind: positional
+    annotation: str
+    default: None
+- name: build_graph
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 170
+  doc: Build knowledge graph from a project.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+- name: poll_build
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 204
+  doc: Poll graph build progress (0-100%).
+  voice_triggers: []
+  args:
+  - name: task_id
+    kind: positional
+    annotation: str
+    required: true
+- name: get_graph_data
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 222
+  doc: Get full graph dump (nodes + edges).
+  voice_triggers: []
+  args:
+  - name: graph_id
+    kind: positional
+    annotation: str
+    required: true
+- name: list_projects
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 234
+  doc: List all MiroFish projects.
+  voice_triggers: []
+  args: []
+- name: search_graph
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 246
+  doc: Search the knowledge graph directly.
+  voice_triggers: []
+  args:
+  - name: graph_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: query
+    kind: positional
+    annotation: str
+    required: true
+- name: configure_simulation
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 264
+  doc: Configure a simulation.
+  voice_triggers: []
+  args:
+  - name: graph_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_count
+    kind: positional
+    annotation: int
+    default: '100'
+  - name: rounds
+    kind: positional
+    annotation: int
+    default: '10'
+  - name: platform
+    kind: positional
+    annotation: str
+    default: '''twitter'''
+- name: start_simulation
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 302
+  doc: Start a configured simulation.
+  voice_triggers: []
+  args:
+  - name: simulation_id
+    kind: positional
+    annotation: str
+    required: true
+- name: poll_simulation
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 320
+  doc: Poll simulation status.
+  voice_triggers: []
+  args:
+  - name: simulation_id
+    kind: positional
+    annotation: str
+    required: true
+- name: interview_agent
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 333
+  doc: Interview a simulated agent.
+  voice_triggers: []
+  args:
+  - name: simulation_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_name
+    kind: positional
+    annotation: str
+    required: true
+  - name: question
+    kind: positional
+    annotation: str
+    required: true
+- name: generate_report
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 357
+  doc: Generate prediction report from simulation.
+  voice_triggers: []
+  args:
+  - name: simulation_id
+    kind: positional
+    annotation: str
+    required: true
+- name: get_report
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 376
+  doc: Get a completed report.
+  voice_triggers: []
+  args:
+  - name: report_id
+    kind: positional
+    annotation: str
+    required: true
+- name: chat_report
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 388
+  doc: Chat with the report agent about findings.
+  voice_triggers: []
+  args:
+  - name: report_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: question
+    kind: positional
+    annotation: str
+    required: true
+- name: build_graph_from_text
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 406
+  doc: Build a knowledge graph from raw text (no simulation, no report).
+  voice_triggers: []
+  args:
+  - name: requirement
+    kind: positional
+    annotation: str
+    required: true
+  - name: text_content
+    kind: positional
+    annotation: str
+    required: true
+  - name: project_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: poll_interval
+    kind: positional
+    annotation: int
+    default: '5'
+- name: get_graph_summary
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 488
+  doc: Get a compact text summary of a graph (entities, relations, counts).
+  voice_triggers: []
+  args:
+  - name: graph_id
+    kind: positional
+    annotation: str
+    required: true
+- name: run_prediction
+  owner_class: MiroFishClient
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 545
+  doc: 'Run full prediction pipeline: ontology → graph → simulation → report.'
+  voice_triggers: []
+  args:
+  - name: requirement
+    kind: positional
+    annotation: str
+    required: true
+  - name: text_content
+    kind: positional
+    annotation: str
+    default: None
+  - name: file_paths
+    kind: positional
+    annotation: List[str]
+    default: None
+  - name: agent_count
+    kind: positional
+    annotation: int
+    default: '100'
+  - name: rounds
+    kind: positional
+    annotation: int
+    default: '10'
+  - name: poll_interval
+    kind: positional
+    annotation: int
+    default: '5'
+- name: get_mirofish_client
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_client.py
+  line: 675
+  doc: Get or create MiroFishClient singleton.
+  voice_triggers: []
+  args: []
+- name: get_status
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 26
+  doc: Check MiroFish connection status.
+  voice_triggers: []
+  args: []
+- name: simulate
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 49
+  doc: Run a full MiroFish prediction simulation.
+  voice_triggers: []
+  args:
+  - name: requirement
+    kind: positional
+    annotation: str
+    required: true
+  - name: text
+    kind: positional
+    annotation: str
+    default: None
+  - name: file_path
+    kind: positional
+    annotation: str
+    default: None
+  - name: agent_count
+    kind: positional
+    annotation: int
+    default: '100'
+  - name: rounds
+    kind: positional
+    annotation: int
+    default: '10'
+- name: build_graph
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 124
+  doc: Build a MiroFish knowledge graph from seed data (without simulation).
+  voice_triggers: []
+  args:
+  - name: requirement
+    kind: positional
+    annotation: str
+    required: true
+  - name: text
+    kind: positional
+    annotation: str
+    default: None
+  - name: file_path
+    kind: positional
+    annotation: str
+    default: None
+- name: search_graph
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 186
+  doc: Search a MiroFish knowledge graph.
+  voice_triggers: []
+  args:
+  - name: graph_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: query
+    kind: positional
+    annotation: str
+    required: true
+- name: list_projects
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 222
+  doc: List all MiroFish projects.
+  voice_triggers: []
+  args: []
+- name: chat_report
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 256
+  doc: Chat with MiroFish about a prediction report.
+  voice_triggers: []
+  args:
+  - name: report_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: question
+    kind: positional
+    annotation: str
+    required: true
+- name: interview_agent
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 288
+  doc: Interview a simulated agent from a MiroFish simulation.
+  voice_triggers: []
+  args:
+  - name: simulation_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: agent_name
+    kind: positional
+    annotation: str
+    required: true
+  - name: question
+    kind: positional
+    annotation: str
+    required: true
+- name: predict_from_knowledge
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 329
+  doc: Pull knowledge from Rowboat and run MiroFish prediction on it.
+  voice_triggers: []
+  args:
+  - name: requirement
+    kind: positional
+    annotation: str
+    required: true
+  - name: query
+    kind: positional
+    annotation: str
+    default: None
+  - name: agent_count
+    kind: positional
+    annotation: int
+    default: '100'
+  - name: rounds
+    kind: positional
+    annotation: int
+    default: '10'
+- name: evaluate_bubble_readiness
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/tools/mirofish_tools.py
+  line: 577
+  doc: 'Evaluate a bubble''s readiness for code generation using
+
+    MiroFish knowledge graph + Minibook expert panel.'
+  voice_triggers: []
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    required: true
+- name: name
+  owner_class: MiroFishBackendAgent
+  is_async: false
+  file: spaces/mirofish/agents/mirofish_agent.py
+  line: 135
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: MiroFishBackendAgent
+  is_async: false
+  file: spaces/mirofish/agents/mirofish_agent.py
+  line: 139
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_mirofish_agent
+  owner_class: null
+  is_async: false
+  file: spaces/mirofish/agents/mirofish_agent.py
+  line: 209
+  doc: Get or create MiroFishBackendAgent singleton.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/mirofish/tools
+- spaces/mirofish/agents
+registry_agent: brain-forecaster
+registry_mcp_servers:
+- vibemind-db
+registry_events:
+- event: mirofish.simulate
+  tool_hint: db_query
+  required_params:
+  - model
+- event: mirofish.predict
+  tool_hint: db_query
+  required_params:
+  - query
+- event: mirofish.graph.build
+  tool_hint: db_insert
+  required_params:
+  - graph_name
+- event: mirofish.graph.search
+  tool_hint: db_query
+  required_params:
+  - query
+- event: mirofish.status
+  tool_hint: db_query
+  required_params: []
+- event: mirofish.evaluate
+  tool_hint: db_query
+  required_params: []
+- event: mirofish.interview
+  tool_hint: db_query
+  required_params:
+  - topic
+all_routed_events:
+- mirofish.evaluate
+- mirofish.graph.build
+- mirofish.graph.search
+- mirofish.interview
+- mirofish.predict
+- mirofish.simulate
+- mirofish.status

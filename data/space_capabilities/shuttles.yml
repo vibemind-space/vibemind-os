@@ -1,0 +1,10 @@
+space: shuttles
+exists: true
+tool_count: 0
+tools: []
+parse_errors: []
+scanned_dirs: []
+registry_agent: null
+registry_events: []
+registry_mcp_servers: []
+all_routed_events: []

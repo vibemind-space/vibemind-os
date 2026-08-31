@@ -1,0 +1,42 @@
+[submodule "voice"]
+	path = voice
+	url = https://github.com/Flissel/VibeMind-VoiceDialog.git
+[submodule "shared"]
+	path = shared
+	url = https://github.com/Flissel/vibemind-shared.git
+[submodule "openclaw"]
+	path = openclaw
+	url = https://github.com/Flissel/openclaw.git
+[submodule "openfang"]
+	path = openfang
+	url = https://github.com/Flissel/openfang.git
+[submodule "la-fungus-search"]
+	path = la-fungus-search
+	url = https://github.com/Flissel/la_fungus_search.git
+[submodule "coding-engine"]
+	path = coding-engine
+	url = https://github.com/Flissel/coding-engine.git
+[submodule "spaces/video/vibevideo"]
+	path = spaces/video/vibevideo
+	url = https://github.com/Flissel/vibevideo.git
+[submodule "spaces/video/vibevideo_deepfake"]
+	path = spaces/video/vibevideo_deepfake
+	url = https://github.com/Flissel/vibevideo-deepfake.git
+[submodule "spaces/shuttles/swe_desgine"]
+	path = spaces/shuttles/swe_desgine
+	url = https://github.com/Flissel/swe_desgine.git
+[submodule "brain/the_brain/tribe"]
+	path = brain/the_brain/tribe
+	url = https://github.com/Flissel/tribev2.git
+[submodule "spaces/desktop/Automation_ui"]
+	path = spaces/desktop/Automation_ui
+	url = https://github.com/Flissel/Automation_ui.git
+[submodule "spaces/captain_cook"]
+	path = spaces/captain_cook
+	url = https://github.com/Flissel/Captain_cook.git
+[submodule "spaces/sales"]
+	path = spaces/sales
+	url = https://github.com/Flissel/aisalesorgcore.git
+[submodule "spaces/video/laura"]
+	path = spaces/video/laura
+	url = https://github.com/Vibemind-LAB/Lauras_star.git

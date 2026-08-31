@@ -1,0 +1,486 @@
+space: coding
+exists: true
+tool_count: 32
+tools:
+- name: generate_code
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/adapted_coding_tools.py
+  line: 16
+  doc: Start code generation for a new project using Hybrid Run.
+  voice_triggers: []
+  args:
+  - name: title
+    kind: positional
+    annotation: str
+    default: None
+  - name: description
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: tech_stack
+    kind: positional
+    annotation: str
+    default: '''react'''
+  - name: requirements
+    kind: positional
+    annotation: Optional[List[str]]
+    default: None
+  - name: autonomous
+    kind: positional
+    annotation: bool
+    default: 'True'
+- name: get_generation_status
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/adapted_coding_tools.py
+  line: 51
+  doc: Get the current status of a code generation job.
+  voice_triggers: []
+  args:
+  - name: job_id
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: project_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: start_preview
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/adapted_coding_tools.py
+  line: 72
+  doc: Start a VNC preview for a completed project.
+  voice_triggers: []
+  args:
+  - name: job_id
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: project_name
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: resolution
+    kind: positional
+    annotation: str
+    default: '''1280x720'''
+- name: stop_preview
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/adapted_coding_tools.py
+  line: 95
+  doc: Stop a running VNC preview.
+  voice_triggers: []
+  args:
+  - name: job_id
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: project_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: list_generated_projects
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/adapted_coding_tools.py
+  line: 116
+  doc: List all generated projects.
+  voice_triggers: []
+  args:
+  - name: status_filter
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: limit
+    kind: positional
+    annotation: int
+    default: '10'
+- name: cancel_generation
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/adapted_coding_tools.py
+  line: 137
+  doc: Cancel a running code generation job.
+  voice_triggers: []
+  args:
+  - name: job_id
+    kind: positional
+    annotation: str
+    default: None
+- name: set_electron_sender
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 40
+  doc: Set the Electron IPC message sender callback.
+  voice_triggers: []
+  args:
+  - name: sender
+    kind: positional
+    annotation: Callable[[dict], None]
+    required: true
+- name: set_coding_engine_runner
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 46
+  doc: Set the CodingEngineRunner instance.
+  voice_triggers: []
+  args:
+  - name: runner
+    kind: positional
+    required: true
+- name: generate_code
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 72
+  doc: Start code generation for a new project using Hybrid Run.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: get_generation_status
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 190
+  doc: Get the current status of a code generation job.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: start_preview
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 277
+  doc: Start a VNC preview for a completed project.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: stop_preview
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 349
+  doc: Stop a running VNC preview.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: list_generated_projects
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 407
+  doc: List all generated projects.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: cancel_generation
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 466
+  doc: Cancel a running code generation job.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: exit_project
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 519
+  doc: Exit the Projects/Coding Space and return to Ideas Space.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: register_coding_tools
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/coding_tools.py
+  line: 570
+  doc: Register all coding tools with the ClientToolsManager.
+  voice_triggers: []
+  args:
+  - name: tools_manager
+    kind: positional
+    required: true
+- name: idea_to_project
+  owner_class: null
+  is_async: true
+  file: spaces/coding/tools/voice_coding_tools.py
+  line: 24
+  doc: Convert an idea/note from a bubble into a coding project.
+  voice_triggers: []
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: tech_stack
+    kind: positional
+    annotation: str
+    default: '''react'''
+- name: modify_code
+  owner_class: null
+  is_async: true
+  file: spaces/coding/tools/voice_coding_tools.py
+  line: 90
+  doc: Send a voice instruction to modify generated code.
+  voice_triggers: []
+  args:
+  - name: instruction
+    kind: positional
+    annotation: str
+    default: None
+  - name: job_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: show_code
+  owner_class: null
+  is_async: true
+  file: spaces/coding/tools/voice_coding_tools.py
+  line: 141
+  doc: Show generated code for review (via voice summary).
+  voice_triggers: []
+  args:
+  - name: file_path
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: job_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: run_preview
+  owner_class: null
+  is_async: true
+  file: spaces/coding/tools/voice_coding_tools.py
+  line: 173
+  doc: Start the live preview for a generated project.
+  voice_triggers: []
+  args:
+  - name: job_id
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: project_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: idea_to_project_sync
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/voice_coding_tools.py
+  line: 197
+  doc: Synchronous wrapper for idea_to_project.
+  voice_triggers: []
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: tech_stack
+    kind: positional
+    annotation: str
+    default: '''react'''
+- name: modify_code_sync
+  owner_class: null
+  is_async: false
+  file: spaces/coding/tools/voice_coding_tools.py
+  line: 216
+  doc: Synchronous wrapper for modify_code.
+  voice_triggers: []
+  args:
+  - name: instruction
+    kind: positional
+    annotation: str
+    default: None
+  - name: job_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: stream
+  owner_class: CodingAgent
+  is_async: false
+  file: spaces/coding/agents/coding_agent.py
+  line: 56
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: name
+  owner_class: CodingAgent
+  is_async: false
+  file: spaces/coding/agents/coding_agent.py
+  line: 60
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_coding_agent
+  owner_class: null
+  is_async: false
+  file: spaces/coding/agents/coding_agent.py
+  line: 109
+  doc: Get or create CodingAgent singleton.
+  voice_triggers: []
+  args: []
+- name: generate_code
+  owner_class: null
+  is_async: false
+  file: spaces/coding/agents/coding_swarm_agent.py
+  line: 39
+  doc: Generate code for a project.
+  voice_triggers: []
+  args:
+  - name: description
+    kind: positional
+    annotation: str
+    required: true
+  - name: tech_stack
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: get_generation_status
+  owner_class: null
+  is_async: false
+  file: spaces/coding/agents/coding_swarm_agent.py
+  line: 57
+  doc: Check code generation progress.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: list_generated_projects
+  owner_class: null
+  is_async: false
+  file: spaces/coding/agents/coding_swarm_agent.py
+  line: 74
+  doc: List all generated projects.
+  voice_triggers: []
+  args: []
+- name: start_preview
+  owner_class: null
+  is_async: false
+  file: spaces/coding/agents/coding_swarm_agent.py
+  line: 88
+  doc: Start project preview.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+- name: stop_preview
+  owner_class: null
+  is_async: false
+  file: spaces/coding/agents/coding_swarm_agent.py
+  line: 105
+  doc: Stop project preview.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+- name: create_coding_agent
+  owner_class: null
+  is_async: false
+  file: spaces/coding/agents/coding_swarm_agent.py
+  line: 132
+  doc: Create the Coding Agent for code generation, plus sub-agents.
+  voice_triggers: []
+  args:
+  - name: model_client
+    kind: positional
+    required: true
+  - name: handoff_targets
+    kind: positional
+    annotation: List[str]
+    default: None
+- name: get_coding_tools
+  owner_class: null
+  is_async: false
+  file: spaces/coding/agents/coding_swarm_agent.py
+  line: 188
+  doc: Get all tools for Coding Agent.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/coding/tools
+- spaces/coding/agents
+registry_agent: brain-coder
+registry_mcp_servers:
+- vibemind-db
+- filesystem
+- git
+- github
+- context7
+- qdrant
+- fetch
+- brain
+- issue-detector
+registry_events:
+- event: code.generate
+  tool_hint: shell_exec
+  required_params:
+  - description
+- event: code.modify
+  tool_hint: apply_patch
+  required_params:
+  - file_path
+- event: code.status
+  tool_hint: shell_exec
+  required_params: []
+- event: code.show
+  tool_hint: file_read
+  required_params:
+  - file_path
+- event: code.preview.start
+  tool_hint: shell_exec
+  required_params: []
+- event: code.preview.stop
+  tool_hint: shell_exec
+  required_params: []
+- event: code.list
+  tool_hint: db_projects_list
+  required_params: []
+- event: code.cancel
+  tool_hint: shell_exec
+  required_params: []
+all_routed_events:
+- code.cancel
+- code.generate
+- code.list
+- code.modify
+- code.preview.start
+- code.preview.stop
+- code.show
+- code.status
+- idea.to_project

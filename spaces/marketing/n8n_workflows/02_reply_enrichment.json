@@ -1,0 +1,308 @@
+{
+  "name": "marketing-reply-enrichment-v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-reply-enrichment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (inbound_classified)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "marketing-reply-enrichment"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.event_kind }}",
+              "operation": "equals",
+              "value2": "inbound_classified"
+            },
+            {
+              "value1": "={{ $json.data && $json.data.classification }}",
+              "operation": "equals",
+              "value2": "reply"
+            }
+          ]
+        }
+      },
+      "name": "Filter: classification=reply",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/recipients/{{ encodeURIComponent($json.data.from_email) }}/consent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "GET",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Check consent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "marketing-n8n-key",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.data && $json.data.can_send === true }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Skip if no consent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [900, 240]
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/inbound_messages/{{ $('Webhook (inbound_classified)').first().json.data.inbound_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "GET",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Get inbound details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "marketing-n8n-key",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/templates",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "GET",
+        "options": {}
+      },
+      "name": "List templates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "marketing-n8n-key",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build a Rowboat-call request_id (so we can correlate the async callback).\n// Also pick the most-relevant template (currently: first email-template, future: LLM-pick).\nconst webhook = $('Webhook (inbound_classified)').first().json.data;\nconst inbound = $('Get inbound details').first().json.data;\nconst templates = $('List templates').first().json.data || [];\nconst emailTemplates = templates.filter(t => t.channel === 'email');\nconst chosenTemplate = emailTemplates[0] || null;\n\nconst rb_request_id = 'rb-' + Math.random().toString(36).slice(2, 18);\n\nreturn [{\n  json: {\n    inbound_id: webhook.inbound_id,\n    from_email: webhook.from_email,\n    subject: inbound.subject || '(no subject)',\n    body_preview: (inbound.body_text || '').slice(0, 500),\n    rb_request_id,\n    chosen_template_id: chosenTemplate ? chosenTemplate.id : null,\n    chosen_template_name: chosenTemplate ? chosenTemplate.name : null,\n  }\n}];"
+      },
+      "name": "Build draft + request_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 240]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:3100/api/v1/c157ade4-7e8d-4f4f-a8f7-bafbbbcc/chat",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"messages\": [{\"role\": \"user\", \"content\": \"What do we know about {{ $json.from_email }}? They wrote: '{{ $json.subject }}'. Reply context briefly.\"}] }",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer vibemind-local-key"
+            },
+            {
+              "name": "X-Vibemind-Request-Id",
+              "value": "={{ $json.rb_request_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 25000,
+          "ignoreHttpStatusErrors": true
+        }
+      },
+      "name": "Rowboat chat (async-style)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1780, 180]
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/proposals/reply",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"reply_to_inbound_id\": \"{{ $('Build draft + request_id').first().json.inbound_id }}\", \"draft_to_email\": \"{{ $('Build draft + request_id').first().json.from_email }}\", \"draft_subject\": \"Re: {{ $('Build draft + request_id').first().json.subject }}\", \"draft_body_text\": \"Hi,\\n\\nThanks for reaching out. We'll get back to you shortly.\\n\\n(this is an auto-generated draft — a curator will review and send.)\", \"draft_template_id\": {{ $('Build draft + request_id').first().json.chosen_template_id ? '\"' + $('Build draft + request_id').first().json.chosen_template_id + '\"' : 'null' }}, \"rowboat_request_id\": \"{{ $('Build draft + request_id').first().json.rb_request_id }}\" }",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-Workflow",
+              "value": "reply-enrichment-v1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Create reply proposal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2000, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "marketing-n8n-key",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Rowboat response (best-effort) and post callback to marketing\nconst rb = $('Rowboat chat (async-style)').first().json || {};\nconst req_id = $('Build draft + request_id').first().json.rb_request_id;\n\nreturn [{\n  json: {\n    rb_request_id: req_id,\n    callback_payload: {\n      summary: (rb.response || rb.message || rb.text || '').slice(0, 2000),\n      sources: rb.sources || rb.citations || [],\n      tags: rb.tags || [],\n      raw_response_text: (rb.response || '').slice(0, 5000),\n    }\n  }\n}];"
+      },
+      "name": "Extract Rowboat context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 180]
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/rowboat_callback/{{ $json.rb_request_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.callback_payload) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-Workflow",
+              "value": "reply-enrichment-v1"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 5000,
+          "ignoreHttpStatusErrors": true
+        }
+      },
+      "name": "Send Rowboat callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2440, 180],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "marketing-n8n-key",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"enriched\", \"proposal_id\": \"{{ $('Create reply proposal').first().json.data ? $('Create reply proposal').first().json.data.id : 'unknown' }}\" }"
+      },
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2660, 240]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"skipped\", \"reason\": \"consent or filter blocked\" }"
+      },
+      "name": "Respond skipped",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 420]
+    }
+  ],
+  "connections": {
+    "Webhook (inbound_classified)": {
+      "main": [[{"node": "Filter: classification=reply", "type": "main", "index": 0}]]
+    },
+    "Filter: classification=reply": {
+      "main": [
+        [{"node": "Check consent", "type": "main", "index": 0}],
+        [{"node": "Respond skipped", "type": "main", "index": 0}]
+      ]
+    },
+    "Check consent": {
+      "main": [[{"node": "Skip if no consent", "type": "main", "index": 0}]]
+    },
+    "Skip if no consent": {
+      "main": [
+        [{"node": "Get inbound details", "type": "main", "index": 0}],
+        [{"node": "Respond skipped", "type": "main", "index": 0}]
+      ]
+    },
+    "Get inbound details": {
+      "main": [[{"node": "List templates", "type": "main", "index": 0}]]
+    },
+    "List templates": {
+      "main": [[{"node": "Build draft + request_id", "type": "main", "index": 0}]]
+    },
+    "Build draft + request_id": {
+      "main": [[{"node": "Rowboat chat (async-style)", "type": "main", "index": 0}, {"node": "Create reply proposal", "type": "main", "index": 0}]]
+    },
+    "Rowboat chat (async-style)": {
+      "main": [[{"node": "Extract Rowboat context", "type": "main", "index": 0}]]
+    },
+    "Create reply proposal": {
+      "main": [[{"node": "Respond OK", "type": "main", "index": 0}]]
+    },
+    "Extract Rowboat context": {
+      "main": [[{"node": "Send Rowboat callback", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Marketing reply enrichment. Triggers on inbound_classified events where classification='reply'. Checks consent, fetches inbound, picks template, calls Rowboat for context, creates reply-proposal in draft status, posts Rowboat-result back as async callback. Curator sees proposal in Curator-Space and edits + requests approval.",
+    "dsvgo_notes": [
+      "Rowboat is local (container :3100) — no payload leaves the box.",
+      "Consent check BEFORE building any draft (can_send=false → stop).",
+      "Body preview limited to 500 bytes (full body stays in DB).",
+      "Rowboat-context stored in proposals.rowboat_context, subject to 6.6 retention."
+    ],
+    "imports_required": {
+      "credential_type": "Header Auth",
+      "credential_name": "Marketing n8n API key"
+    },
+    "subscription_setup": "POST /api/webhook_subscriptions {api_key:..., name:'n8n-reply-enrichment', url:'http://host.docker.internal:5678/webhook/marketing-reply-enrichment', events:['inbound_classified'], secret:'<32+ chars>'}"
+  }
+}

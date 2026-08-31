@@ -1,0 +1,160 @@
+# =============================================================================
+# Model Pricing — input/output cost per 1M tokens (USD)
+# =============================================================================
+# Used by vibemind_shared.estimate_cost() and the cost dashboard.
+# Local models (ollama) are free.
+#
+# Update from official pricing pages:
+#   OpenAI:     https://openai.com/api/pricing/
+#   Anthropic:  https://www.anthropic.com/pricing#anthropic-api
+#   OpenRouter: https://openrouter.ai/models  (per-model)
+#   Google:     https://ai.google.dev/pricing
+# =============================================================================
+
+# Format: model_id: { input: $/1M, output: $/1M, context: tokens }
+
+# ── OpenAI ──────────────────────────────────────────────────────────────────
+gpt-4o:
+  provider: openai
+  input: 2.50
+  output: 10.00
+  context: 128000
+
+gpt-4o-mini:
+  provider: openai
+  input: 0.15
+  output: 0.60
+  context: 128000
+
+gpt-4o-realtime-preview:
+  provider: openai
+  input: 5.00       # text input
+  output: 20.00     # text output
+  audio_input: 100.00   # per 1M audio tokens
+  audio_output: 200.00
+  context: 128000
+
+text-embedding-3-large:
+  provider: openai
+  input: 0.13
+  output: 0
+  embedding: true
+
+text-embedding-3-small:
+  provider: openai
+  input: 0.02
+  output: 0
+  embedding: true
+
+# ── Anthropic ───────────────────────────────────────────────────────────────
+claude-sonnet-4-5:
+  provider: anthropic
+  input: 3.00
+  output: 15.00
+  context: 200000
+
+claude-opus-4:
+  provider: anthropic
+  input: 15.00
+  output: 75.00
+  context: 200000
+
+claude-haiku-4-5-20251001:
+  provider: anthropic
+  input: 0.80
+  output: 4.00
+  context: 200000
+
+# ── OpenRouter (gateway — varies per model, common ones below) ──────────────
+"openrouter/auto":
+  provider: openrouter
+  input: 0           # depends on model picked
+  output: 0
+  context: 128000
+  note: "Auto-routing, cost depends on actual model used"
+
+"meta-llama/llama-3.3-70b-instruct":
+  provider: openrouter
+  input: 0.13
+  output: 0.40
+  context: 131072
+
+"deepseek/deepseek-chat":
+  provider: openrouter
+  input: 0.14
+  output: 0.28
+  context: 64000
+
+"deepseek/deepseek-coder":
+  provider: openrouter
+  input: 0.14
+  output: 0.28
+  context: 64000
+
+"anthropic/claude-sonnet-4.5":
+  provider: openrouter
+  input: 3.00
+  output: 15.00
+  context: 200000
+
+"openai/gpt-4o":
+  provider: openrouter
+  input: 2.50
+  output: 10.00
+  context: 128000
+
+# ── Google Gemini ───────────────────────────────────────────────────────────
+gemini-2.0-flash:
+  provider: google
+  input: 0.10
+  output: 0.40
+  context: 1000000
+
+gemini-1.5-pro:
+  provider: google
+  input: 1.25
+  output: 5.00
+  context: 2000000
+
+gemini-1.5-flash:
+  provider: google
+  input: 0.075
+  output: 0.30
+  context: 1000000
+
+# ── Ollama (LOCAL — always free) ────────────────────────────────────────────
+"qwen2.5-coder:7b":
+  provider: ollama
+  input: 0
+  output: 0
+  context: 32768
+
+"qwen2.5:7b":
+  provider: ollama
+  input: 0
+  output: 0
+  context: 32768
+
+"qwen2.5:3b":
+  provider: ollama
+  input: 0
+  output: 0
+  context: 32768
+
+"llama3.2":
+  provider: ollama
+  input: 0
+  output: 0
+  context: 131072
+
+"deepseek-coder-v2:33b":
+  provider: ollama
+  input: 0
+  output: 0
+  context: 128000
+
+"nomic-embed-text":
+  provider: ollama
+  input: 0
+  output: 0
+  embedding: true

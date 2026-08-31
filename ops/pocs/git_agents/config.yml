@@ -1,0 +1,21 @@
+safety:
+  require_confirmation:
+    - merge
+    - close
+    - delete
+    - release_create
+    - secret_set
+    - approve
+    - workflow_run
+  delete_whitelist: []
+  auto_approve: false
+
+scan:
+  skip_repos:
+    - ".github"
+  max_per_repo: 50
+
+output:
+  terminal: true
+  save_report: true
+  report_dir: reports/

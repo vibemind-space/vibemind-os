@@ -1,0 +1,133 @@
+space: research
+exists: true
+tool_count: 8
+tools:
+- name: web_research
+  owner_class: null
+  is_async: false
+  file: spaces/research/tools/research_tools.py
+  line: 31
+  doc: Research a topic on the web via ZeroClaw.
+  voice_triggers: []
+  args:
+  - name: query
+    kind: positional
+    annotation: str
+    required: true
+- name: scrape_url
+  owner_class: null
+  is_async: false
+  file: spaces/research/tools/research_tools.py
+  line: 79
+  doc: Scrape a URL and extract content via ZeroClaw.
+  voice_triggers: []
+  args:
+  - name: url
+    kind: positional
+    annotation: str
+    required: true
+- name: summarize_url
+  owner_class: null
+  is_async: false
+  file: spaces/research/tools/research_tools.py
+  line: 123
+  doc: Summarize the content of a URL via ZeroClaw.
+  voice_triggers: []
+  args:
+  - name: url
+    kind: positional
+    annotation: str
+    required: true
+- name: research_to_idea
+  owner_class: null
+  is_async: false
+  file: spaces/research/tools/research_tools.py
+  line: 160
+  doc: Research a topic and save results as a new Idea in the current space.
+  voice_triggers: []
+  args:
+  - name: query
+    kind: positional
+    annotation: str
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: None
+- name: research_to_rowboat
+  owner_class: null
+  is_async: false
+  file: spaces/research/tools/research_tools.py
+  line: 225
+  doc: Research a topic and push results into Rowboat Knowledge Graph.
+  voice_triggers: []
+  args:
+  - name: query
+    kind: positional
+    annotation: str
+    required: true
+- name: name
+  owner_class: ZeroClawResearchAgent
+  is_async: false
+  file: spaces/research/agents/zeroclaw_research_agent.py
+  line: 74
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: ZeroClawResearchAgent
+  is_async: false
+  file: spaces/research/agents/zeroclaw_research_agent.py
+  line: 78
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_zeroclaw_research_agent
+  owner_class: null
+  is_async: false
+  file: spaces/research/agents/zeroclaw_research_agent.py
+  line: 117
+  doc: Get or create ZeroClawResearchAgent singleton.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/research/tools
+- spaces/research/agents
+registry_agent: brain-researcher
+registry_mcp_servers:
+- vibemind-db
+- fetch
+- qdrant
+registry_events:
+- event: research.web
+  tool_hint: fetch
+  required_params:
+  - query
+- event: research.scrape
+  tool_hint: fetch
+  required_params:
+  - url
+- event: research.summarize
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: research.to_idea
+  tool_hint: db_ideas_create
+  required_params:
+  - title
+- event: openclaw.research
+  tool_hint: fetch
+  required_params:
+  - query
+- event: openclaw.compare
+  tool_hint: fetch
+  required_params:
+  - queries
+all_routed_events:
+- openclaw.compare
+- openclaw.research
+- research.scrape
+- research.summarize
+- research.to_idea
+- research.web

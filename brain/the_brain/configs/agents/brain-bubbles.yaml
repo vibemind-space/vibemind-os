@@ -1,0 +1,20 @@
+agent: brain-bubbles
+description: Auto-seeded for bubble.* events
+default_namespace: bubble
+events:
+- bubble.back
+- bubble.create
+- bubble.current
+- bubble.delete
+- bubble.delete_all_except
+- bubble.enter
+- bubble.evaluate
+- bubble.exit
+- bubble.find
+- bubble.list
+- bubble.promote
+- bubble.score
+- bubble.stats
+- bubble.update
+fallback_agent: ''
+notes: Auto-seeded from namespace='bubble'.

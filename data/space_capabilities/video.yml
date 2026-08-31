@@ -1,0 +1,301 @@
+space: video
+exists: true
+tool_count: 22
+tools:
+- name: team_pipeline_status
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 54
+  doc: Get status of the team video pipeline (available steps, outputs).
+  voice_triggers: []
+  args: []
+- name: team_run_step
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 67
+  doc: Run a team video pipeline step.
+  voice_triggers: []
+  args:
+  - name: step
+    kind: positional
+    annotation: str
+    default: '''all'''
+- name: vision_generate
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 77
+  doc: Generate a Her-style vision video with Sora AI scenes.
+  voice_triggers: []
+  args: []
+- name: demo_analyze
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 91
+  doc: Analyze a screenrecording for demo video production.
+  voice_triggers: []
+  args:
+  - name: input_file
+    kind: positional
+    annotation: str
+    required: true
+  - name: target_duration
+    kind: positional
+    annotation: int
+    default: '60'
+- name: demo_build
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 97
+  doc: Build a demo video from a scene config.
+  voice_triggers: []
+  args:
+  - name: config_path
+    kind: positional
+    annotation: str
+    required: true
+- name: lipsync_run
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 105
+  doc: Run MuseTalk lip sync on team videos.
+  voice_triggers: []
+  args:
+  - name: person
+    kind: positional
+    annotation: str
+    default: None
+- name: lipsync_analyze
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 113
+  doc: Run quality analysis on lip sync results.
+  voice_triggers: []
+  args: []
+- name: voice_clone
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 120
+  doc: Extract reference audio for Chatterbox voice cloning (local).
+  voice_triggers: []
+  args: []
+- name: voice_tts
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 125
+  doc: Generate TTS voiceover per person.
+  voice_triggers: []
+  args:
+  - name: person
+    kind: positional
+    annotation: str
+    default: None
+- name: video_status
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 135
+  doc: Get overall video space status (installed tools, submodules).
+  voice_triggers: []
+  args: []
+- name: scan_video_outputs
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 195
+  doc: Return videos from database. Falls back to filesystem scan if DB is empty.
+  voice_triggers: []
+  args: []
+- name: import_videos
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 268
+  doc: Import videos from an external directory into the database.
+  voice_triggers: []
+  args:
+  - name: source_dir
+    kind: positional
+    annotation: str
+    default: None
+- name: create_video_project
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 282
+  doc: Create a new video production project.
+  voice_triggers: []
+  args:
+  - name: name
+    kind: positional
+    annotation: str
+    required: true
+  - name: description
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: add_project_person
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 292
+  doc: Add a person to a video project.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: name
+    kind: positional
+    annotation: str
+    required: true
+  - name: role
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: raw_video_path
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: list_video_projects
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 305
+  doc: List all video projects.
+  voice_triggers: []
+  args: []
+- name: get_project_pipeline
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 316
+  doc: Get pipeline matrix for a project.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+- name: get_reference_pipeline
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 327
+  doc: Get Surya's reference pipeline for the UI.
+  voice_triggers: []
+  args: []
+- name: run_pipeline_step
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 338
+  doc: Run a specific pipeline step for a person in a project.
+  voice_triggers: []
+  args:
+  - name: project_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: person_name
+    kind: positional
+    annotation: str
+    required: true
+  - name: step_name
+    kind: positional
+    annotation: str
+    required: true
+- name: publish_videos_to_rowboat
+  owner_class: null
+  is_async: false
+  file: spaces/video/tools/video_tools.py
+  line: 487
+  doc: Publish all videos from DB to Rowboat as a knowledge source.
+  voice_triggers: []
+  args: []
+- name: name
+  owner_class: VideoBackendAgent
+  is_async: false
+  file: spaces/video/agents/video_agent.py
+  line: 75
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: VideoBackendAgent
+  is_async: false
+  file: spaces/video/agents/video_agent.py
+  line: 79
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_video_agent
+  owner_class: null
+  is_async: false
+  file: spaces/video/agents/video_agent.py
+  line: 129
+  doc: Get or create the VideoBackendAgent singleton.
+  voice_triggers: []
+  args: []
+parse_errors: []
+scanned_dirs:
+- spaces/video/tools
+- spaces/video/agents
+registry_agent: brain-video
+registry_mcp_servers:
+- vibemind-db
+registry_events:
+- event: video.status
+  tool_hint: db_query
+  required_params: []
+- event: video.team_status
+  tool_hint: db_query
+  required_params: []
+- event: video.team_run
+  tool_hint: db_update
+  required_params:
+  - task
+- event: video.vision
+  tool_hint: db_query
+  required_params:
+  - url
+- event: video.demo_analyze
+  tool_hint: db_query
+  required_params:
+  - url
+- event: video.demo_build
+  tool_hint: db_video_project_create
+  required_params:
+  - description
+- event: video.lipsync
+  tool_hint: db_video_project_create
+  required_params:
+  - video
+  - audio
+- event: video.voice_clone
+  tool_hint: db_video_project_create
+  required_params:
+  - audio
+- event: video.voice_tts
+  tool_hint: db_video_project_create
+  required_params:
+  - text
+all_routed_events:
+- video.demo_analyze
+- video.demo_build
+- video.lipsync
+- video.status
+- video.team_run
+- video.team_status
+- video.vision
+- video.voice_clone
+- video.voice_tts

@@ -1,0 +1,28 @@
+# VibeMind Security PoCs - Dependencies
+# All packages already installed in the environment.
+# Run: pip install -r requirements.txt
+
+# Multi-agent framework
+autogen-core>=0.7.5
+
+# LLM Providers
+openai>=1.0
+anthropic>=0.20.0
+
+# MCP (Model Context Protocol)
+mcp>=1.0
+fastmcp>=2.0
+
+# Config & Environment
+python-dotenv>=1.0
+pyyaml>=6.0
+
+# HTTP
+requests>=2.30
+aiohttp>=3.8
+
+# Process hooking (botnet detector)
+frida-tools>=14.0
+
+# Standard library deps (no install needed):
+# asyncio, json, subprocess, ctypes, winreg, sqlite3, smtplib, hashlib

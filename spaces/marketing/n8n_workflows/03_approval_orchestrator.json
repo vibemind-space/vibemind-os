@@ -1,0 +1,144 @@
+{
+  "name": "marketing-approval-orchestrator-v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "marketing-approval-orchestrator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (reply_proposal_status_changed)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "marketing-approval-orchestrator"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.event_kind }}",
+              "operation": "equals",
+              "value2": "reply_proposal_status_changed"
+            },
+            {
+              "value1": "={{ $json.data && $json.data.new_status }}",
+              "operation": "equals",
+              "value2": "pending_approval"
+            }
+          ]
+        }
+      },
+      "name": "Filter: pending_approval",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5510/api/n8n/reply_proposals/{{ $json.data.proposal_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "GET",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Get proposal status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 240],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "marketing-n8n-key",
+          "name": "Marketing n8n API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the approval-card instruction for OpenFang approval-handler agent.\n// The card has the proposal preview + approval-token; the user replies\n// APPROVE or REJECT, OpenFang's brain-gateway routes the response back\n// to marketing's /api/reply_proposals/{id}/approve endpoint.\n\nconst webhook = $('Webhook (reply_proposal_status_changed)').first().json.data;\nconst proposal = $('Get proposal status').first().json.data || {};\n\n// Operator chat_id placeholder - set on workflow import.\n// For multi-operator setups this would come from a `approval_recipients` config.\nconst recipient = 'REPLACE_WITH_OPERATOR_CHAT_ID';\nconst channel = webhook.approval_channel || 'telegram';\n\nreturn [{\n  json: {\n    instruction: 'MARKETING-APPROVAL-V1. Send approval-card.\\n\\n' + JSON.stringify({\n      action: 'approval_request',\n      args: {\n        proposal_id: webhook.proposal_id,\n        channel: channel,\n        recipient: recipient,\n        preview: {\n          to_email: proposal.draft_to_email,\n          subject: proposal.draft_subject,\n          body_preview: '(see curator-UI for full body)'\n        },\n        // Note: the actual approval_token is NOT carried through n8n.\n        // It was returned by curator.request_approval and stored\n        // securely (operator copies it to a vault). The user that\n        // approves provides the token when calling /approve.\n        approval_token_hint: 'use the token from curator-UI',\n        callback_url: 'http://127.0.0.1:5510/api/reply_proposals/' + webhook.proposal_id + '/approve'\n      }\n    })\n  }\n}];"
+      },
+      "name": "Build approval-card instruction",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 240]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:4200/api/agents/approval-handler/message",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"message\": \"{{ $json.instruction.replace(/\"/g, '\\\\\"').replace(/\\n/g, '\\\\n') }}\" }",
+        "options": {
+          "timeout": 20000,
+          "ignoreHttpStatusErrors": true
+        }
+      },
+      "name": "OpenFang: send approval-card",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 240]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"approval_card_dispatched\", \"proposal_id\": \"{{ $('Webhook (reply_proposal_status_changed)').first().json.data.proposal_id }}\" }"
+      },
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 240]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"ignored\", \"reason\": \"not pending_approval transition\" }"
+      },
+      "name": "Respond ignored",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 420]
+    }
+  ],
+  "connections": {
+    "Webhook (reply_proposal_status_changed)": {
+      "main": [[{"node": "Filter: pending_approval", "type": "main", "index": 0}]]
+    },
+    "Filter: pending_approval": {
+      "main": [
+        [{"node": "Get proposal status", "type": "main", "index": 0}],
+        [{"node": "Respond ignored", "type": "main", "index": 0}]
+      ]
+    },
+    "Get proposal status": {
+      "main": [[{"node": "Build approval-card instruction", "type": "main", "index": 0}]]
+    },
+    "Build approval-card instruction": {
+      "main": [[{"node": "OpenFang: send approval-card", "type": "main", "index": 0}]]
+    },
+    "OpenFang: send approval-card": {
+      "main": [[{"node": "Respond OK", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Marketing approval orchestrator. Triggers on reply_proposal_status_changed -> pending_approval. Pulls proposal preview, builds approval-card instruction for OpenFang approval-handler agent, which sends via Telegram (default) or Discord. User responds APPROVE/REJECT via the chat, OpenFang's brain-gateway routes to marketing /api/reply_proposals/{id}/approve with the token.",
+    "dsvgo_notes": [
+      "Approval-token is NEVER in this workflow. Curator stores it securely from /request_approval response.",
+      "Card-preview shows only subject + draft_to_email — full body is curator-UI only.",
+      "OpenFang handles channel-credentials (DPAPI). n8n only triggers via /api/agents/{id}/message."
+    ],
+    "imports_required": {
+      "credential_type": "Header Auth",
+      "credential_name": "Marketing n8n API key"
+    },
+    "subscription_setup": "POST /api/webhook_subscriptions {api_key:..., name:'n8n-approval-orchestrator', url:'http://host.docker.internal:5678/webhook/marketing-approval-orchestrator', events:['reply_proposal_status_changed'], secret:'<32+ chars>'}"
+  }
+}

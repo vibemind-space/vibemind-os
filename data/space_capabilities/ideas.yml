@@ -1,0 +1,2460 @@
+space: ideas
+exists: true
+tool_count: 163
+tools:
+- name: start_host
+  owner_class: AutoGenResearchSystem
+  is_async: true
+  file: spaces/ideas/tools/autogen_research.py
+  line: 144
+  doc: Starte den Host Service.
+  voice_triggers: []
+  args:
+  - name: address
+    kind: positional
+    annotation: str
+    default: '''localhost:50051'''
+- name: stop_host
+  owner_class: AutoGenResearchSystem
+  is_async: true
+  file: spaces/ideas/tools/autogen_research.py
+  line: 155
+  doc: Stoppe den Host Service.
+  voice_triggers: []
+  args: []
+- name: conduct_research
+  owner_class: AutoGenResearchSystem
+  is_async: true
+  file: spaces/ideas/tools/autogen_research.py
+  line: 162
+  doc: Führe komplette Forschung mit AutoGen durch.
+  voice_triggers: []
+  args:
+  - name: topic
+    kind: positional
+    annotation: str
+    required: true
+  - name: requirements
+    kind: positional
+    annotation: List[str]
+    required: true
+  - name: max_concurrent_workers
+    kind: positional
+    annotation: int
+    default: '5'
+- name: get_research_system
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/autogen_research.py
+  line: 319
+  doc: Hole oder erstelle die globale Research-System Instanz.
+  voice_triggers: []
+  args:
+  - name: language
+    kind: positional
+    annotation: str
+    default: '''de'''
+- name: conduct_autogen_research
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/autogen_research.py
+  line: 327
+  doc: Führe Multi-Agenten-Forschung mit AutoGen durch.
+  voice_triggers: []
+  args:
+  - name: topic
+    kind: positional
+    annotation: str
+    required: true
+  - name: requirements
+    kind: positional
+    annotation: List[str]
+    required: true
+  - name: language
+    kind: positional
+    annotation: str
+    default: '''de'''
+  - name: max_concurrent_workers
+    kind: positional
+    annotation: int
+    default: '5'
+- name: start_autogen_host
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/autogen_research.py
+  line: 349
+  doc: Starte den AutoGen Host Service.
+  voice_triggers: []
+  args:
+  - name: address
+    kind: positional
+    annotation: str
+    default: '''localhost:50051'''
+- name: stop_autogen_host
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/autogen_research.py
+  line: 367
+  doc: Stoppe den AutoGen Host Service.
+  voice_triggers: []
+  args: []
+- name: get_current_bubble_db_id
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 35
+  doc: Get the current bubble's database UUID.
+  voice_triggers: []
+  args: []
+- name: get_current_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 48
+  doc: Get the current bubble's data as a dictionary.
+  voice_triggers: []
+  args: []
+- name: get_pending_agent_switch
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 180
+  doc: Check if an agent switch is pending.
+  voice_triggers: []
+  args: []
+- name: list_bubbles
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 200
+  doc: List all BUBBLES in the Ideas Space (top-level containers).
+  voice_triggers:
+  - What bubbles do I have?
+  - Show my bubbles
+  - List all bubbles
+  - Welche Bubbles habe ich?
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: find_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 259
+  doc: Search for a bubble by name (fuzzy) and automatically enter it.
+  voice_triggers:
+  - Such nach Bubble Marketing
+  - Finde Bubble Swarm Team
+  - Wo ist die Bubble Finanzen?
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: create_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 393
+  doc: Create a new bubble/idea space.
+  voice_triggers:
+  - Create a new space for cooking
+  - Make a bubble for project ideas
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: update_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 444
+  doc: Update a bubble's title or description.
+  voice_triggers:
+  - Rename this space to X
+  - Update bubble name
+  - Change the title to X
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: get_bubble_stats
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 520
+  doc: Get statistics about a bubble based on its content.
+  voice_triggers:
+  - How developed is this idea?
+  - What
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: score_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 573
+  doc: Calculate and update bubble score based on content richness.
+  voice_triggers:
+  - Evaluate this idea
+  - Score this space
+  - How good is this idea?
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: promote_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 664
+  doc: Promote a bubble/idea to a project.
+  voice_triggers:
+  - Turn this into a project
+  - Promote this idea
+  - Make this a project
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: delete_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 762
+  doc: 'Delete a bubble/idea space with CASCADE deletion of all content.
+
+    Supports deleting multiple bubbles when a list of names is provided.'
+  voice_triggers:
+  - Delete this space
+  - Remove the cooking bubble
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: delete_all_bubbles_except
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 910
+  doc: Delete all bubbles/spaces EXCEPT the specified ones.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    default: None
+- name: enter_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1029
+  doc: Enter a bubble and switch to its dedicated agent.
+  voice_triggers:
+  - Enter cooking space
+  - Go into my project ideas
+  - Open the recipes bubble
+  - Geh in 2
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: exit_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1195
+  doc: Exit current bubble and return to the multiverse agent.
+  voice_triggers:
+  - Go back
+  - Exit this space
+  - Return to multiverse
+  - Leave
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: generate_bubble_embeddings
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1226
+  doc: Generate embeddings for all bubbles in the database.
+  voice_triggers:
+  - Generiere Embeddings
+  - Erstelle Vektoren
+  - Bubbles indizieren
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: evaluate_bubble_evolution
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1319
+  doc: Evaluate how evolved/complete a bubble's ideas are using AI analysis.
+  voice_triggers:
+  - Evaluate this bubble
+  - How complete is this idea?
+  - Score the evolution of this space
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: register_bubble_tools
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/bubble_tools.py
+  line: 1517
+  doc: Register all bubble tools with the tools manager (with observer logging).
+  voice_triggers: []
+  args:
+  - name: tools_manager
+    kind: positional
+    required: true
+- name: start_exploration
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 145
+  doc: Start exploring connections for a bubble.
+  voice_triggers: []
+  args:
+  - name: bubble_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: depth
+    kind: positional
+    annotation: int
+    default: '4'
+  - name: context
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: mode
+    kind: positional
+    annotation: str
+    default: '''auto'''
+- name: stop_exploration
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 441
+  doc: Stop the current exploration.
+  voice_triggers: []
+  args: []
+- name: get_exploration_status
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 467
+  doc: Get the status of the current exploration.
+  voice_triggers: []
+  args: []
+- name: accept_connection
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 502
+  doc: Accept a discovered connection (saves it permanently).
+  voice_triggers: []
+  args:
+  - name: connection_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+- name: reject_connection
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 570
+  doc: Reject a discovered connection.
+  voice_triggers: []
+  args:
+  - name: connection_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+- name: explore_deeper
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 623
+  doc: Go one stage deeper in exploration.
+  voice_triggers: []
+  args: []
+- name: visualize_exploration
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 661
+  doc: Get visualization data for exploration results.
+  voice_triggers: []
+  args: []
+- name: respond_to_exploration_question
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 698
+  doc: Respond to an exploration question (from UI or voice).
+  voice_triggers: []
+  args:
+  - name: question_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: response_type
+    kind: positional
+    annotation: str
+    required: true
+  - name: selected_option
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: custom_text
+    kind: positional
+    annotation: Optional[str]
+    default: None
+- name: generate_complete_research_paper
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 741
+  doc: Generate complete research paper using AI-Scientist methodology.
+  voice_triggers: []
+  args:
+  - name: sections
+    kind: positional
+    annotation: List[Dict[str, Any]]
+    required: true
+  - name: paper_title
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: target_journal
+    kind: positional
+    annotation: str
+    default: '''general'''
+  - name: citation_style
+    kind: positional
+    annotation: str
+    default: '''APA'''
+- name: optimize_paper_coherence
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 793
+  doc: Optimize coherence and logical flow between paper sections.
+  voice_triggers: []
+  args:
+  - name: sections
+    kind: positional
+    annotation: List[Dict[str, Any]]
+    required: true
+  - name: target_audience
+    kind: positional
+    annotation: str
+    default: '''academic'''
+- name: generate_requirements_from_sections
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 1094
+  doc: Generate architectural requirements document from parsed sections.
+  voice_triggers: []
+  args:
+  - name: sections
+    kind: positional
+    annotation: List[Dict[str, Any]]
+    required: true
+  - name: project_context
+    kind: positional
+    annotation: Optional[str]
+    default: None
+- name: parse_bubble_content_for_paper
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 1149
+  doc: Parse bubble content to extract research paper components.
+  voice_triggers: []
+  args:
+  - name: bubble_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: content_text
+    kind: positional
+    annotation: Optional[str]
+    default: None
+- name: set_exploration_direction
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 1205
+  doc: Set the exploration direction (for guided mode).
+  voice_triggers: []
+  args:
+  - name: bubble_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: direction
+    kind: positional
+    annotation: Optional[str]
+    default: None
+- name: conduct_autogen_research
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 1274
+  doc: Führe Multi-Agenten-Forschung mit AutoGen durch.
+  voice_triggers: []
+  args:
+  - name: topic
+    kind: positional
+    annotation: str
+    required: true
+  - name: requirements
+    kind: positional
+    annotation: List[str]
+    required: true
+  - name: language
+    kind: positional
+    annotation: str
+    default: '''de'''
+  - name: max_concurrent_workers
+    kind: positional
+    annotation: int
+    default: '5'
+- name: explore_bubble_complete
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 1324
+  doc: 'One-Shot Bubble Exploration: Kombiniert Inter-Bubble und Intra-Bubble Exploration.'
+  voice_triggers: []
+  args:
+  - name: bubble_id
+    kind: positional
+    annotation: Optional[str]
+    default: None
+  - name: output_type
+    kind: positional
+    annotation: str
+    default: '''paper'''
+  - name: exploration_mode
+    kind: positional
+    annotation: str
+    default: '''auto'''
+  - name: depth
+    kind: positional
+    annotation: int
+    default: '4'
+  - name: target_journal
+    kind: positional
+    annotation: str
+    default: '''general'''
+  - name: citation_style
+    kind: positional
+    annotation: str
+    default: '''APA'''
+- name: get_exploration_tools
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/exploration_tools.py
+  line: 1862
+  doc: Get list of exploration tools for registration.
+  voice_triggers: []
+  args: []
+- name: format_as_note
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 163
+  doc: Convert any format to a well-written plain note using LLM.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_table
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 211
+  doc: Convert any format to table.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: columns
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_action_list
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 252
+  doc: Convert any format to action list.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_pros_cons
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 292
+  doc: Convert any format to pros/cons table.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_hierarchy
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 339
+  doc: Convert any format to hierarchy/outline.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_specs
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 396
+  doc: Convert any format to technical specifications.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_kanban
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 438
+  doc: Convert any format to a Kanban board with columns and cards.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_mindmap
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 495
+  doc: Convert any format to a mind map with central concept and branches.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_swot
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 546
+  doc: Convert any format to a SWOT analysis.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_user_story
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 611
+  doc: Convert any format to user stories.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: format_as_flowchart
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 665
+  doc: Convert any format to a flowchart with steps and decisions.
+  voice_triggers: []
+  args:
+  - name: source_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: convert_format
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 767
+  doc: Convert an idea from one format to another.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: get_idea_format
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 945
+  doc: Get the current format of an idea.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: list_available_formats
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 992
+  doc: List all available format types.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    default: None
+- name: format_idea_table
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1088
+  doc: Format idea as table. Wrapper for convert_format with target_format=table.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_note
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1099
+  doc: Format idea as simple note. Wrapper for convert_format with target_format=note.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_action_list
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1105
+  doc: Format idea as action/task list. Wrapper for convert_format with target_format=action_list.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_pros_cons
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1111
+  doc: Format idea as pros and cons list. Wrapper for convert_format with target_format=pros_cons.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_hierarchy
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1117
+  doc: Format idea as hierarchy/outline. Wrapper for convert_format with target_format=hierarchy.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_specs
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1123
+  doc: Format idea as technical specification. Wrapper for convert_format with target_format=specs.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_kanban
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1129
+  doc: Format idea as Kanban board. Wrapper for convert_format with target_format=kanban.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_mindmap
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1135
+  doc: Format idea as mind map. Wrapper for convert_format with target_format=mindmap.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_swot
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1141
+  doc: Format idea as SWOT analysis. Wrapper for convert_format with target_format=swot.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_user_story
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1147
+  doc: Format idea as user stories. Wrapper for convert_format with target_format=user_story.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_flowchart
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1153
+  doc: Format idea as flowchart/process diagram. Wrapper for convert_format with target_format=flowchart.
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: revert_format
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/format_dispatcher.py
+  line: 1163
+  doc: Revert an idea node to its previous format (undo last format change).
+  voice_triggers: []
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: calculate_spiral_position
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 144
+  doc: Calculate non-overlapping spiral position for a new node.
+  voice_triggers: []
+  args:
+  - name: count
+    kind: positional
+    annotation: int
+    required: true
+  - name: existing_positions
+    kind: positional
+    annotation: List[Tuple[float, float]]
+    required: true
+  - name: center_x
+    kind: positional
+    annotation: float
+    default: '300'
+  - name: center_y
+    kind: positional
+    annotation: float
+    default: '300'
+  - name: min_distance
+    kind: positional
+    annotation: float
+    default: '150'
+- name: list_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 255
+  doc: List all NOTES (canvas items) inside the current space/bubble.
+  voice_triggers:
+  - What notes do I have here?
+  - Show my ideas in this space
+  - List notes
+  - What
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: count_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 325
+  doc: Count the number of ideas/notes in the current space.
+  voice_triggers:
+  - How many ideas do I have?
+  - Wie viele Ideen?
+  - Count the ideas
+  - Anzahl der Ideen
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    default: None
+- name: create_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 373
+  doc: Create a new note in the current bubble/space.
+  voice_triggers:
+  - Add an idea about cooking
+  - Create a note for Python tips
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: create_idea_batch
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 467
+  doc: Create multiple ideas/notes at once via LLM generation.
+  voice_triggers:
+  - Erstelle 15 Ideen ueber Autogen
+  - Generiere 5 Notizen zu KI
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: add_image
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 590
+  doc: Add an image to the current bubble/space.
+  voice_triggers:
+  - Add an image
+  - Save this picture
+  - Add image from URL
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: find_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 657
+  doc: Search for notes matching a query.
+  voice_triggers:
+  - Find my notes about Python
+  - Search for cooking ideas
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: update_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 765
+  doc: Update an existing idea.
+  voice_triggers:
+  - Update the cooking idea
+  - Change my Python note
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: classify_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 849
+  doc: Classify an idea using AI backend analysis.
+  voice_triggers:
+  - Klassifiziere die Idee
+  - Send to backend
+  - Analyze this idea
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: connect_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 938
+  doc: Connect two ideas with an edge.
+  voice_triggers:
+  - Link cooking to recipes
+  - Connect Python to coding
+  - Verbinde Marketing mit Social Media
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: disconnect_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1019
+  doc: Disconnect/unlink two ideas by removing their edge.
+  voice_triggers:
+  - Trenne Tools von Frontend
+  - Entferne Verbindung zwischen X und Y
+  - Disconnect A from B
+  - Unlink these ideas
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: connect_ideas_multi
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1119
+  doc: Connect one idea to multiple others by index or name.
+  voice_triggers:
+  - Verbinde 2 mit 3, 4 und 5
+  - Link 1 to 2, 3, 4
+  - Connect 3 to 4 and 5 and 6
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: link_idea_to_root
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1240
+  doc: Link an idea to the root node of the current bubble.
+  voice_triggers:
+  - Verknüpfe das mit dem Root
+  - Link to root
+  - Connect to main node
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: delete_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1317
+  doc: Delete an idea.
+  voice_triggers:
+  - Remove the old note
+  - Delete cooking idea
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: get_current_space
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1383
+  doc: Get information about current location.
+  voice_triggers:
+  - Where am I?
+  - What space is this?
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: expand_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1405
+  doc: Expand existing ideas using AI to generate related concepts.
+  voice_triggers:
+  - Erweitere die Ideen
+  - Generiere verwandte Ideen
+  - Mach mehr Ideen aus den bestehenden
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: move_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1629
+  doc: Move an idea/note from current space to another space.
+  voice_triggers:
+  - Verschiebe X nach Y
+  - Move idea X to space Y
+  - Bringe X in den Space Y
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: auto_link_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1720
+  doc: 'Automatically analyze all ideas in current bubble and create links
+
+    between semantically related pairs.'
+  voice_triggers:
+  - Verlinke die Ideen sinnvoll
+  - Link related ideas
+  - Verbinde ähnliche Notizen automatisch
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: analyze_and_suggest_links
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 1882
+  doc: 'Analyze all ideas in current bubble and suggest meaningful links
+
+    WITHOUT creating them. User can confirm to create links.'
+  voice_triggers:
+  - Analysiere die Ideen
+  - Schlage Verlinkungen vor
+  - Welche Ideen gehören zusammen
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: explain_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 2007
+  doc: Explain what an idea is about using AI analysis.
+  voice_triggers:
+  - Erkläre die Idee X
+  - Was bedeutet X?
+  - Explain the idea X
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: format_idea_as_table
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 2100
+  doc: Format an idea's content as a table structure.
+  voice_triggers:
+  - Formatiere als Tabelle
+  - Mach eine Tabelle daraus
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: register_idea_tools
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/idea_tools.py
+  line: 2178
+  doc: Register all idea tools with the tools manager (with observer logging).
+  voice_triggers: []
+  args:
+  - name: tools_manager
+    kind: positional
+    required: true
+- name: validate_format_schema
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 29
+  doc: Validate structured content against its format schema.
+  voice_triggers: []
+  args:
+  - name: content_json
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: format_type
+    kind: positional
+    annotation: str
+    required: true
+- name: format_idea_content
+  owner_class: null
+  is_async: true
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 311
+  doc: Use LLM to format idea content into structured format.
+  voice_triggers: []
+  args:
+  - name: idea_content
+    kind: positional
+    annotation: str
+    required: true
+  - name: format_type
+    kind: positional
+    annotation: str
+    required: true
+  - name: idea_title
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: additional_context
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: merge_structured_content
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 577
+  doc: Merge new structured content with existing content.
+  voice_triggers: []
+  args:
+  - name: existing_content
+    kind: positional
+    annotation: Optional[Dict[str, Any]]
+    required: true
+  - name: new_content
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: merge_strategy
+    kind: positional
+    annotation: str
+    default: '''replace'''
+- name: update_canvas_node_structured
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 644
+  doc: Update a canvas node with structured content.
+  voice_triggers: []
+  args:
+  - name: node_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: content_json
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: format_type
+    kind: positional
+    annotation: str
+    required: true
+- name: update_idea_structured_content
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 695
+  doc: 'SQL Tool: Update idea with structured content.'
+  voice_triggers: []
+  args:
+  - name: idea_id
+    kind: positional
+    annotation: str
+    required: true
+  - name: new_content_json
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: format_type
+    kind: positional
+    annotation: str
+    required: true
+  - name: merge
+    kind: positional
+    annotation: bool
+    default: 'False'
+- name: query_structured_content
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 787
+  doc: 'SQL Tool: Query structured content of an idea.'
+  voice_triggers: []
+  args:
+  - name: idea_id
+    kind: positional
+    annotation: str
+    required: true
+- name: format_idea_as_table
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 867
+  doc: Format an existing idea's content into a structured table.
+  voice_triggers: []
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: custom_columns
+    kind: positional
+    annotation: List[str]
+    default: None
+  - name: format_instruction
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: register_structured_formatting_tools
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 1055
+  doc: Register structured formatting tools with the tools manager.
+  voice_triggers: []
+  args:
+  - name: tools_manager
+    kind: positional
+    required: true
+- name: get_supported_formats
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 1074
+  doc: Get list of supported format types.
+  voice_triggers: []
+  args: []
+- name: format_content_preview
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/structured_formatting_tools.py
+  line: 1078
+  doc: Generate a human-readable preview of structured content.
+  voice_triggers: []
+  args:
+  - name: content_json
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+  - name: format_type
+    kind: positional
+    annotation: str
+    required: true
+  - name: max_length
+    kind: positional
+    annotation: int
+    default: '200'
+- name: summarize_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 265
+  doc: Summarize a specific idea/bubble or a single note using AI via OpenRouter.
+  voice_triggers:
+  - Summarize this idea
+  - Create summary for cooking
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: list_summaries
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 415
+  doc: List all ideas that have summaries.
+  voice_triggers:
+  - Show my summaries
+  - What ideas have summaries?
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: get_summary
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 447
+  doc: Get the existing summary for an idea.
+  voice_triggers:
+  - Read me the summary
+  - What
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: generate_white_paper
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 494
+  doc: Generate a structured White Paper document from linked ideas using graph traversal.
+  voice_triggers:
+  - Generate a white paper from [idea]
+  - Create project overview from [idea]
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: generate_project_structure
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 704
+  doc: Convert bubble whitepaper/notes into a structured project with requirements.
+  voice_triggers:
+  - Generate project structure
+  - Extract requirements from this idea
+  - Turn this into a project spec
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: generate_feature_docs
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 911
+  doc: Generate detailed markdown documents for each feature in a bubble.
+  voice_triggers:
+  - Generate feature docs
+  - Create feature documentation
+  - Document all features
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: submit_to_req_orchestrator
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 1536
+  doc: Submit bubble requirements to req-orchestrator for validation.
+  voice_triggers:
+  - Validate my requirements
+  - Submit to arch team
+  - Check requirement quality
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: get_requirement_clarifications
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 1813
+  doc: Get pending clarification questions for requirements.
+  voice_triggers:
+  - What clarifications are needed
+  - Show requirement questions
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: sync_shuttle_from_orchestrator
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 1906
+  doc: Sync shuttle checkpoint state from req-orchestrator API.
+  voice_triggers:
+  - Sync shuttle progress
+  - Update shuttle from orchestrator
+  - Check orchestrator status
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: create_stage_shuttles
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 2211
+  doc: Create 4 stage-specific shuttles for a bubble (one per checkpoint).
+  voice_triggers:
+  - Create requirement shuttles
+  - Launch pipeline
+  - Create stage shuttles
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: generate_project_doc
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 2701
+  doc: Generate a cohesive project documentation from all bubble content via LLM.
+  voice_triggers:
+  - Erstelle Projektdoku
+  - Generiere Dokumentation
+  - Exportiere als Dokument
+  - Erstelle Doku
+  args:
+  - name: params
+    kind: positional
+    annotation: Dict[str, Any]
+    required: true
+- name: register_summary_tools
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/tools/summary_tools.py
+  line: 2844
+  doc: Register all summary tools with the tools manager.
+  voice_triggers: []
+  args:
+  - name: tools_manager
+    kind: positional
+    required: true
+- name: list_bubbles
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 19
+  doc: List all spaces/bubbles in the multiverse.
+  voice_triggers: []
+  args: []
+- name: create_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 30
+  doc: Create a new bubble/space in the multiverse.
+  voice_triggers: []
+  args:
+  - name: title
+    kind: positional
+    annotation: str
+    default: None
+  - name: description
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: enter_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 47
+  doc: Enter a bubble/space to work on ideas inside it.
+  voice_triggers: []
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: None
+- name: exit_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 63
+  doc: Exit current bubble and return to multiverse view.
+  voice_triggers: []
+  args: []
+- name: delete_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 74
+  doc: Delete a bubble/space and all its content.
+  voice_triggers: []
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: _targets
+    kind: positional
+    annotation: list
+    default: None
+  - name: _target_type
+    kind: positional
+    annotation: str
+    default: None
+- name: delete_all_bubbles_except
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 118
+  doc: Delete all bubbles/spaces EXCEPT the specified ones.
+  voice_triggers: []
+  args:
+  - name: exceptions
+    kind: positional
+    annotation: str
+    default: None
+  - name: keep
+    kind: positional
+    annotation: str
+    default: None
+- name: get_bubble_stats
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 157
+  doc: Get statistics about a bubble (note count, connections, score).
+  voice_triggers: []
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: score_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 171
+  doc: Calculate and update bubble score based on content richness.
+  voice_triggers: []
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: evaluate_bubble_evolution
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 185
+  doc: Evaluate how evolved/complete a bubble's ideas are using AI analysis.
+  voice_triggers: []
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: promote_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 199
+  doc: Promote a bubble/idea to a project.
+  voice_triggers: []
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: update_bubble
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/bubble_tools.py
+  line: 213
+  doc: Update a bubble's title or description.
+  voice_triggers:
+  - Benenne den Space um
+  - Aendere den Namen zu X
+  - Update den Bubble-Namen
+  args:
+  - name: bubble_name
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: new_title
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: new_description
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: list_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 19
+  doc: List all notes/ideas in the current bubble/space.
+  voice_triggers: []
+  args: []
+- name: create_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 32
+  doc: Create a new note/idea in the current bubble.
+  voice_triggers: []
+  args:
+  - name: title
+    kind: positional
+    annotation: str
+    default: None
+  - name: content
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: type
+    kind: positional
+    annotation: str
+    default: '''note'''
+- name: add_image
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 50
+  doc: Add an image to the current bubble/space.
+  voice_triggers: []
+  args:
+  - name: url
+    kind: positional
+    annotation: str
+    default: None
+  - name: title
+    kind: positional
+    annotation: str
+    default: '''Image'''
+- name: find_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 67
+  doc: Search for notes matching a query.
+  voice_triggers: []
+  args:
+  - name: query
+    kind: positional
+    annotation: str
+    default: None
+- name: update_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 83
+  doc: Update an existing note/idea.
+  voice_triggers: []
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: new_content
+    kind: positional
+    annotation: str
+    default: ''''''
+  - name: new_title
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: connect_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 105
+  doc: Connect two ideas with an edge/link.
+  voice_triggers: []
+  args:
+  - name: idea1
+    kind: positional
+    annotation: str
+    default: None
+  - name: idea2
+    kind: positional
+    annotation: str
+    default: None
+- name: disconnect_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 122
+  doc: Disconnect/unlink two ideas by removing their edge.
+  voice_triggers:
+  - Trenne Tools von Frontend
+  - Entferne Verbindung
+  args:
+  - name: idea1
+    kind: positional
+    annotation: str
+    default: None
+  - name: idea2
+    kind: positional
+    annotation: str
+    default: None
+- name: delete_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 141
+  doc: Delete a note/idea.
+  voice_triggers: []
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+- name: get_current_space
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 157
+  doc: Get information about current location (which bubble/space).
+  voice_triggers: []
+  args: []
+- name: auto_link_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 168
+  doc: 'Automatically analyze all ideas in current bubble and create links
+
+    between semantically related pairs using embedding similarity.'
+  voice_triggers:
+  - Verlinke die Ideen sinnvoll
+  - Link related ideas
+  - Verbinde ähnliche Notizen automatisch
+  args:
+  - name: threshold
+    kind: positional
+    annotation: float
+    default: '0.5'
+  - name: max_links
+    kind: positional
+    annotation: int
+    default: '10'
+- name: format_idea_as_table
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 187
+  doc: Format an existing idea's content into a structured table.
+  voice_triggers:
+  - Formatiere die Idee X als Tabelle
+  - Erstelle eine Tabelle aus der Idee X
+  - Mach eine Tabelle mit Spalten X, Y, Z
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: custom_columns
+    kind: positional
+    annotation: List[str]
+    default: None
+  - name: format_instruction
+    kind: positional
+    annotation: str
+    default: ''''''
+- name: summarize_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 217
+  doc: Summarize a specific idea or the current bubble using AI.
+  voice_triggers:
+  - Fasse die Idee zusammen
+  - Erstelle eine Zusammenfassung
+  - Summarize this idea
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: style
+    kind: positional
+    annotation: str
+    default: '''concise'''
+- name: generate_white_paper
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 235
+  doc: Generate a structured White Paper document from linked ideas using graph traversal.
+  voice_triggers:
+  - Erstelle ein Whitepaper
+  - Generiere eine Projektübersicht
+  - Mach ein White Paper aus den Ideen
+  args:
+  - name: start_node
+    kind: positional
+    annotation: str
+    default: None
+  - name: task
+    kind: positional
+    annotation: str
+    default: '''project overview'''
+  - name: max_depth
+    kind: positional
+    annotation: int
+    default: '5'
+- name: expand_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 254
+  doc: Expand existing ideas using AI to generate related concepts.
+  voice_triggers:
+  - Erweitere die Ideen
+  - Generiere verwandte Ideen
+  - Mach mehr Ideen aus den bestehenden
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: count
+    kind: positional
+    annotation: int
+    default: '3'
+- name: analyze_and_suggest_links
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 272
+  doc: 'Analyze all ideas in current bubble and suggest meaningful links
+
+    WITHOUT creating them. User can confirm to create links.'
+  voice_triggers:
+  - Analysiere die Ideen
+  - Schlage Verlinkungen vor
+  - Welche Ideen gehören zusammen
+  args: []
+- name: explain_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 287
+  doc: Explain what an idea is about using AI analysis.
+  voice_triggers:
+  - Erkläre die Idee X
+  - Was bedeutet X?
+  - Explain the idea X
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    required: true
+- name: count_ideas
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 303
+  doc: Count the number of ideas/notes in the current bubble/space.
+  voice_triggers:
+  - Wie viele Ideen?
+  - How many ideas?
+  - Anzahl der Ideen
+  args: []
+- name: move_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 319
+  doc: Move an idea/note from the current space to another space.
+  voice_triggers:
+  - Verschiebe X nach Y
+  - Move idea X to space Y
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: target_space
+    kind: positional
+    annotation: str
+    default: None
+- name: connect_ideas_multi
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 340
+  doc: Connect one idea to multiple others by name or index.
+  voice_triggers:
+  - Verbinde 2 mit 3, 4 und 5
+  - Link 1 to 2, 3, 4
+  args:
+  - name: source
+    kind: positional
+    annotation: str
+    default: None
+  - name: targets
+    kind: positional
+    annotation: list
+    default: None
+- name: link_idea_to_root
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 361
+  doc: Link an idea to the root node of the current bubble.
+  voice_triggers:
+  - Verknüpfe das mit dem Root
+  - Link to root
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+  - name: bubble_id
+    kind: positional
+    annotation: str
+    default: None
+- name: classify_idea
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/adapted/idea_tools.py
+  line: 383
+  doc: Classify an idea using AI backend analysis.
+  voice_triggers:
+  - Klassifiziere die Idee
+  - Analyze this idea
+  args:
+  - name: idea_name
+    kind: positional
+    annotation: str
+    default: None
+- name: stream
+  owner_class: BubblesAgent
+  is_async: false
+  file: spaces/ideas/agents/bubbles_agent.py
+  line: 119
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: name
+  owner_class: BubblesAgent
+  is_async: false
+  file: spaces/ideas/agents/bubbles_agent.py
+  line: 123
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_bubbles_agent
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/agents/bubbles_agent.py
+  line: 178
+  doc: Get or create BubblesAgent singleton.
+  voice_triggers: []
+  args: []
+- name: stream
+  owner_class: IdeasAgent
+  is_async: false
+  file: spaces/ideas/agents/ideas_agent.py
+  line: 325
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: name
+  owner_class: IdeasAgent
+  is_async: false
+  file: spaces/ideas/agents/ideas_agent.py
+  line: 329
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_ideas_agent
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/agents/ideas_agent.py
+  line: 540
+  doc: Get or create IdeasAgent singleton.
+  voice_triggers: []
+  args: []
+- name: create_ideas_agent
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/agents/ideas_swarm_agent.py
+  line: 41
+  doc: Create the Ideas Agent with all bubble and idea tools, plus sub-agents.
+  voice_triggers: []
+  args:
+  - name: model_client
+    kind: positional
+    required: true
+  - name: handoff_targets
+    kind: positional
+    annotation: List[str]
+    default: None
+- name: get_ideas_tools
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/agents/ideas_swarm_agent.py
+  line: 104
+  doc: Get all tools for Ideas Agent.
+  voice_triggers: []
+  args: []
+- name: orchestrator
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 169
+  doc: Lazy-load orchestrator.
+  voice_triggers: []
+  args: []
+- name: notification_queue
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 177
+  doc: Lazy-load notification queue.
+  voice_triggers: []
+  args: []
+- name: context_store
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 185
+  doc: Lazy-load SystemContextStore for recent actions (10-min window).
+  voice_triggers: []
+  args: []
+- name: conversation_memory
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 192
+  doc: Lazy-load ConversationMemory for long-term history.
+  voice_triggers: []
+  args: []
+- name: question_queue
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 204
+  doc: Lazy-load QuestionQueue for backend questions.
+  voice_triggers: []
+  args: []
+- name: set_orchestrator
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 210
+  doc: Set the orchestrator instance.
+  voice_triggers: []
+  args:
+  - name: orchestrator
+    kind: positional
+    required: true
+- name: set_notification_queue
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 214
+  doc: Set the notification queue instance.
+  voice_triggers: []
+  args:
+  - name: queue
+    kind: positional
+    required: true
+- name: get_system_prompt
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 218
+  doc: ''
+  voice_triggers: []
+  args: []
+- name: get_tools
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 221
+  doc: Get Rachel's tools - only send_intent().
+  voice_triggers: []
+  args: []
+- name: send_intent
+  owner_class: RachelAgent
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 230
+  doc: Send user intent to the orchestrator for processing.
+  voice_triggers: []
+  args:
+  - name: user_request
+    kind: positional
+    annotation: str
+    required: true
+- name: send_intent_async
+  owner_class: RachelAgent
+  is_async: true
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 262
+  doc: Async version of send_intent.
+  voice_triggers: []
+  args:
+  - name: user_request
+    kind: positional
+    annotation: str
+    required: true
+- name: process_input
+  owner_class: RachelAgent
+  is_async: true
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 288
+  doc: Process user input through LLM with FULL context awareness.
+  voice_triggers: []
+  args:
+  - name: event
+    kind: positional
+    annotation: InputEvent
+    required: true
+- name: create_rachel_agent
+  owner_class: null
+  is_async: false
+  file: spaces/ideas/agents/rachel_agent.py
+  line: 406
+  doc: Factory function to create Rachel agent.
+  voice_triggers: []
+  args:
+  - name: model_client
+    kind: positional
+    annotation: Any
+    default: None
+  - name: orchestrator
+    kind: positional
+    annotation: Any
+    default: None
+  - name: notification_queue
+    kind: positional
+    annotation: Any
+    default: None
+parse_errors: []
+scanned_dirs:
+- spaces/ideas/tools
+- spaces/ideas/adapted
+- spaces/ideas/agents
+registry_agent: brain-ideas
+registry_mcp_servers:
+- vibemind-db
+registry_events:
+- event: idea.list
+  tool_hint: db_ideas_list
+  required_params: []
+- event: idea.create
+  tool_hint: db_ideas_create
+  required_params:
+  - title
+- event: idea.update
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.delete
+  tool_hint: db_ideas_delete
+  required_params:
+  - idea_id
+- event: idea.find
+  tool_hint: db_ideas_list
+  required_params:
+  - query
+- event: idea.connect
+  tool_hint: db_canvas_edge_create
+  required_params:
+  - from_id
+  - to_id
+- event: idea.auto_link
+  tool_hint: db_canvas_edge_create
+  required_params: []
+- event: idea.add_image
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.current_space
+  tool_hint: db_ideas_list
+  required_params: []
+- event: idea.format_table
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.format_note
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.format_action_list
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.format_pros_cons
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.format_hierarchy
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.format_specs
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.convert_format
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.summarize
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.whitepaper
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.expand
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.explain
+  tool_hint: db_ideas_list
+  required_params:
+  - idea_id
+- event: idea.analyze_links
+  tool_hint: db_canvas_nodes
+  required_params: []
+- event: idea.explore.start
+  tool_hint: db_ideas_update
+  required_params: []
+- event: idea.explore.stop
+  tool_hint: db_ideas_update
+  required_params: []
+- event: idea.generate_doc
+  tool_hint: db_ideas_update
+  required_params:
+  - idea_id
+- event: idea.to_project
+  tool_hint: db_projects_create
+  required_params:
+  - name
+all_routed_events:
+- idea.add_image
+- idea.analyze_links
+- idea.auto_link
+- idea.connect
+- idea.convert_format
+- idea.create
+- idea.current_space
+- idea.delete
+- idea.expand
+- idea.explain
+- idea.explore.start
+- idea.explore.stop
+- idea.find
+- idea.format_action_list
+- idea.format_hierarchy
+- idea.format_note
+- idea.format_pros_cons
+- idea.format_specs
+- idea.format_table
+- idea.generate_doc
+- idea.list
+- idea.summarize
+- idea.update
+- idea.whitepaper
+- openclaw.enrich
+- openclaw.pitch

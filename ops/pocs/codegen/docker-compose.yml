@@ -1,0 +1,60 @@
+# AutoGen gRPC Code Generation - Security PoC
+#
+# Architecture:
+#   host:       gRPC coordinator (no auth, no TLS)
+#   legit:      Code generation team (CodeGen + Reviewer + Executor with GPT-4o)
+#   malicious:  Attacker (eavesdrop + code injection bypassing reviewer)
+#
+# Usage:
+#   docker compose build
+#   docker compose up
+
+services:
+  host:
+    build:
+      context: .
+      dockerfile: Dockerfile.host
+    container_name: codegen-host
+    ports:
+      - "50052:50051"
+    networks:
+      - codegen-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.socket(); s.connect((\"localhost\",50051)); s.close()'"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  legit:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: codegen-legit
+    depends_on:
+      host:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    volumes:
+      - ./legitimate_worker.py:/app/worker.py:ro
+    command: ["python", "-u", "/app/worker.py"]
+    networks:
+      - codegen-net
+
+  malicious:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: codegen-malicious
+    depends_on:
+      host:
+        condition: service_healthy
+    volumes:
+      - ./malicious_worker.py:/app/worker.py:ro
+    command: ["python", "-u", "/app/worker.py"]
+    networks:
+      - codegen-net
+
+networks:
+  codegen-net:
+    driver: bridge

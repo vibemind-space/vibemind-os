@@ -1,0 +1,2083 @@
+# Brain capability registry — Phase 1 (regex routing only).
+#
+# Each entry is matched in order; first regex hit wins. No regex match →
+# router returns None → DiscourseEngine falls back to broadcast (existing
+# behavior, unchanged).
+#
+# All agent names verified live in OpenFang on 2026-05-01:
+#     curl http://127.0.0.1:4200/api/agents
+#
+# Field reference:
+#   capability     — short snake_case id, used in trace + stats
+#   description    — human readable, also used as semantic-fallback text in Phase 2
+#   match_patterns — list of regex strings (case-insensitive)
+#   agents.primary — preferred candidates for the dispatch role
+#   agents.supporting — additional voices for the discourse round
+#   execution_target — Phase 1.5 only; not used by Phase 1 router
+#
+# Adding a capability: append a new entry, restart Brain. Router validates
+# agent names against OpenFang at startup and warns on registry-rot.
+
+- capability: schedule_openclaw_cron
+  description: "create a persistent OpenClaw cron job with a validated five-field cron expression"
+  match_patterns:
+    - "openclaw\\s+cron"
+    - "cron\\s+(job|task).*(openclaw)"
+  execution_target: "direct:spaces.schedule.execution:openclaw_cron"
+
+- capability: schedule_create
+  description: "create a persistent scheduled task, reminder, timer, alarm or appointment"
+  match_patterns:
+    - "(schedule|create|set|plane|erstelle|stell).*(task|reminder|timer|alarm|termin|erinnerung)"
+    - "erinnere mich"
+  execution_target: "direct:spaces.schedule.execution:create"
+
+- capability: schedule_cancel
+  description: "cancel a scheduled task or reminder"
+  match_patterns:
+    - "(cancel|delete|lösche|storniere).*(schedule|task|reminder|termin|erinnerung)"
+  execution_target: "direct:spaces.schedule.execution:cancel"
+
+- capability: schedule_modify
+  description: "modify or reschedule a scheduled task"
+  match_patterns:
+    - "(modify|change|reschedule|ändere|verschiebe).*(schedule|task|reminder|termin|erinnerung)"
+  execution_target: "direct:spaces.schedule.execution:modify"
+
+- capability: schedule_snooze
+  description: "snooze a scheduled task or reminder"
+  match_patterns:
+    - "(snooze|schlummer|später).*(schedule|task|reminder|termin|erinnerung)?"
+  execution_target: "direct:spaces.schedule.execution:snooze"
+
+- capability: schedule_status
+  description: "show scheduler status and persistent task counts"
+  match_patterns:
+    - "(schedule|scheduler).*(status|health|zustand)"
+  execution_target: "direct:spaces.schedule.execution:status"
+
+- capability: schedule_list
+  description: "list persistent scheduled tasks and reminders"
+  match_patterns:
+    - "(list|show|zeige).*(scheduled|schedule|reminders|termine|erinnerungen)"
+  execution_target: "direct:spaces.schedule.execution:list_tasks"
+- capability: mirofish.simulate
+  description: "start an existing MiroFish simulation as a durable job"
+  match_patterns: ["\\bmirofish\\b.*\\b(simulate|simulation starten|simulieren)\\b"]
+  agents: { primary: [brain-forecaster], supporting: [] }
+  execution_target: "mirofish:simulate"
+  result_arg_extractor: 'regex:\b(sim_[A-Za-z0-9_-]+)\b'
+  arg_kwarg: simulation_id
+  validator: { kind: "rule:mirofish_evidence", on_fail: "block" }
+
+- capability: mirofish.predict
+  description: "generate a prediction report for an existing MiroFish simulation"
+  match_patterns: ["\\bmirofish\\b.*\\b(predict|prediction|forecast|vorhersage)\\b"]
+  agents: { primary: [brain-forecaster], supporting: [] }
+  execution_target: "mirofish:predict"
+  result_arg_extractor: 'regex:\b(sim_[A-Za-z0-9_-]+)\b'
+  arg_kwarg: simulation_id
+  validator: { kind: "rule:mirofish_evidence", on_fail: "block" }
+
+- capability: mirofish.graph.build
+  description: "start a MiroFish graph build job for an existing project"
+  match_patterns: ["\\bmirofish\\b.*\\b(graph build|build graph|graph bauen)\\b"]
+  agents: { primary: [brain-forecaster], supporting: [] }
+  execution_target: "mirofish:graph.build"
+  result_arg_extractor: 'regex:\b(proj_[A-Za-z0-9_-]+)\b'
+  arg_kwarg: project_id
+  validator: { kind: "rule:mirofish_evidence", on_fail: "block" }
+
+- capability: mirofish.graph.search
+  description: "search an identified MiroFish knowledge graph"
+  match_patterns: ["\\bmirofish\\b.*\\b(graph search|search graph|graph durchsuchen)\\b"]
+  agents: { primary: [brain-forecaster], supporting: [] }
+  execution_target: "mirofish:graph.search"
+  result_arg_extractor: 'regex:\b([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\b'
+  arg_kwarg: graph_id
+  validator: { kind: "rule:mirofish_evidence", on_fail: "block" }
+
+- capability: mirofish.status
+  description: "query a MiroFish task, simulation, or report job status"
+  match_patterns: ["\\bmirofish\\b.*\\b(status|progress|fortschritt)\\b"]
+  agents: { primary: [brain-forecaster], supporting: [] }
+  execution_target: "mirofish:status"
+  result_arg_extractor: 'regex:\b((?:task|sim|report)_[A-Za-z0-9_-]+)\b'
+  arg_kwarg: job_id
+  validator: { kind: "rule:mirofish_evidence", on_fail: "block" }
+
+- capability: mirofish.evaluate
+  description: "generate an evidence-backed evaluation report for a MiroFish simulation"
+  match_patterns: ["\\bmirofish\\b.*\\b(evaluate|evaluation|bewerten)\\b"]
+  agents: { primary: [brain-forecaster], supporting: [] }
+  execution_target: "mirofish:evaluate"
+  result_arg_extractor: 'regex:\b(sim_[A-Za-z0-9_-]+)\b'
+  arg_kwarg: simulation_id
+  validator: { kind: "rule:mirofish_evidence", on_fail: "block" }
+
+- capability: mirofish.interview
+  description: "interview an identified agent in a running MiroFish simulation"
+  match_patterns: ["\\bmirofish\\b.*\\b(interview|befrage)\\b"]
+  agents: { primary: [brain-forecaster], supporting: [] }
+  execution_target: "mirofish:interview"
+  result_arg_extractor: 'regex:\b(sim_[A-Za-z0-9_-]+)\b'
+  arg_kwarg: simulation_id
+  validator: { kind: "rule:mirofish_evidence", on_fail: "block" }
+# ─── AgentFarm contract (canonical; legacy space alias: autogen) ────────────
+# The historical spaces/autogen implementation was removed in ec98a0c.  It
+# kept teams/runs only in process memory and referenced an unversioned external
+# source path, so none of these operations has an honest execution target yet.
+# Keeping the disabled entries makes the Voice/API -> Brain contract explicit
+# without allowing regex or semantic routing to manufacture a live success.
+- capability: agentfarm_create_team
+  space: agentfarm
+  enabled: false
+  runtime_blocker: missing_versioned_agentfarm_source
+  description: "AgentFarm create_team is not implemented: versioned runtime source is missing"
+  match_patterns: ["(agentfarm|autogen).*create.*team"]
+
+- capability: agentfarm_run
+  space: agentfarm
+  enabled: false
+  runtime_blocker: missing_versioned_agentfarm_source
+  description: "AgentFarm run is not implemented: versioned runtime source is missing"
+  match_patterns: ["(agentfarm|autogen).*(run|start).*(team|task)"]
+
+- capability: agentfarm_status
+  space: agentfarm
+  enabled: false
+  runtime_blocker: missing_versioned_agentfarm_source
+  description: "AgentFarm status is not implemented: versioned runtime source is missing"
+  match_patterns: ["(agentfarm|autogen).*status"]
+
+- capability: agentfarm_list_teams
+  space: agentfarm
+  enabled: false
+  runtime_blocker: missing_versioned_agentfarm_source
+  description: "AgentFarm list_teams is not implemented: versioned runtime source is missing"
+  match_patterns: ["(agentfarm|autogen).*list.*teams"]
+
+- capability: agentfarm_stop
+  space: agentfarm
+  enabled: false
+  runtime_blocker: missing_versioned_agentfarm_source
+  description: "AgentFarm stop is not implemented: versioned runtime source is missing"
+  match_patterns: ["(agentfarm|autogen).*(stop|cancel).*(run|team)"]
+
+- capability: agentfarm_results
+  space: agentfarm
+  enabled: false
+  runtime_blocker: missing_versioned_agentfarm_source
+  description: "AgentFarm results is not implemented: versioned runtime source is missing"
+  match_patterns: ["(agentfarm|autogen).*(results|result|ergebnis)"]
+
+- capability: agentfarm_list_templates
+  space: agentfarm
+  enabled: false
+  runtime_blocker: missing_versioned_agentfarm_source
+  description: "AgentFarm list_templates is not implemented: versioned runtime source is missing"
+  match_patterns: ["(agentfarm|autogen).*list.*templates"]
+
+- capability: agentfarm_collaborate
+  space: agentfarm
+  enabled: false
+  runtime_blocker: missing_versioned_agentfarm_source
+  description: "AgentFarm collaborate is not implemented: versioned runtime source is missing"
+  match_patterns: ["(agentfarm|autogen).*collaborat"]
+
+- capability: bubble_evaluate
+  description: "evaluate a bubble idea readiness for project promotion through 5 expert perspectives, is this idea mature enough is this ready to build, project gate go/no-go assessment, score and missing_items report"
+  match_patterns:
+    # Use 'evaluate', 'eval', 'assess', 'bewerte' as the lead verbs.
+    # Avoid catching 'promote bubble X' / 'create bubble X' which have
+    # their own capabilities defined later in this file.
+    - "(evaluate|eval|assess|bewerte)\\b.*\\bbubble\\b"
+    - "(evaluate|eval|assess|bewerte|prüf|check)\\s+(the|this|my)?\\s*\\b(idea|idee)\\b"
+    - "(ready|reif)\\s+(for|für)\\s+(project|umsetzung|production)"
+    - "(review|critique)\\s+(my|the|this)?\\s*\\w+(\\.py|\\.ts|\\.js|\\.rs|\\.go)"
+    - "design (review|check|critique)"
+    - "go.?no.?go"
+    - "readiness (check|score|eval)"
+  # Phase 11.U.H — was direct:spaces.mirofish.tools.mirofish_tools:
+  # evaluate_bubble_readiness, but spaces/* import drags the unimportable
+  # `swarm` chain into the Brain process AND that path hallucinated junk
+  # bubbles via KG-recall. Supabase-direct executor scores 4 dims via
+  # Brain's own groq_subagent and writes metadata.ai_eval over REST —
+  # zero spaces import, zero KG-recall hallucination.
+  execution_target: "supabase:bubble.evaluate"
+  # Pulls the bubble name out of the intent. Tries quoted form first
+  # ("Brain Capability Router"), falls back to "evaluate <name> bubble"
+  # word capture between 'evaluate' and 'bubble'.
+  result_arg_extractor: 'regex:evaluate\s+(?:the\s+|this\s+|my\s+)?(.+?)\s+bubble'
+  # Phase 3 — Validator. Cheap deterministic check that the eval result
+  # contains a numeric score in [0,100]. on_fail: report keeps the
+  # existing flow (verdict attached, response still returned).
+  # truth: Phase-1 coverage lift — ground truth via world_observer re-query
+  # evaluate_op (supabase_ideas_ops.py) merges ai_eval into ideas.metadata
+  # AND flips ideas.status to 'scored' (update_idea_eval). The op's return
+  # string quotes only the bubble title ("'X' scored N/100 ..."), so
+  # {result_title} resolves; combined with status=scored this confirms the
+  # SPECIFIC write landed, not just that the (pre-existing) bubble row
+  # exists — same JSON/column-filter pattern already proven by
+  # idea_format_table's truth:supabase_row above.
+  validator:
+    kind: truth:supabase_row
+    on_fail: report
+    postcondition:
+      check: supabase_row
+      table: ideas
+      match: "title=eq.{result_title}&status=eq.scored"
+      expect: present
+  # Feedback loop: after the deterministic eval returns, send result
+  # to a small focused agent set for reflective synthesis. Agents
+  # answer in I_AGREE/I_DISAGREE/KEY_GAP/NEXT_STEP format which the
+  # aggregator turns into a coherent recommendation.
+  feedback_loop:
+    enabled: true
+    agents: [brain-coder, fungus-search, poc-security-scanner, rowboat-knowledge]
+    prompt_template: |
+      A bubble was just evaluated for project-readiness. Here is the raw output:
+
+      Bubble: {bubble_name}
+      Score: {total_score}/100
+      Prediction: {prediction}
+
+      Per-perspective scores:
+      {per_agent_summary}
+
+      Top missing items ({missing_count} total):
+      {missing_items_top10}
+
+      The user's original question was:
+      "{original_intent}"
+
+      Reply in this exact format:
+      I_AGREE / I_DISAGREE: <one-line stance>
+      KEY_GAP: <the single most important missing item from your perspective>
+      NEXT_STEP: <one concrete actionable next step the user should take>
+
+- capability: code_search
+  description: "find code locate function class method implementation source file, where is X, find me the X, locate where Y is, get code snippets relevant to a topic, search the codebase for patterns or definitions"
+  # Phase 2.5 — extra anchor phrases for semantic match (max-cosine across all)
+  anchor_phrases:
+    - "find me the implementation of a function"
+    - "locate where a piece of code is defined"
+    - "show me the source for the X module"
+    - "where is the auth code"
+    - "search the codebase for a function"
+  match_patterns:
+    - "(where|wo) (is|ist)\\s+(the|der|die|das)?\\s*\\w+"
+    - "find (the|all)?\\s*(code|function|class|method)"
+    - "show me (the|how)\\s+\\w+"
+    - "wie (funktioniert|geht)\\s+\\w+"
+    - "code (for|about|that does)\\s+\\w+"
+  agents:
+    primary: [fungus-search]
+    supporting: [brain-coder, rowboat-knowledge]
+
+- capability: security_scan
+  description: "scan for vulnerabilities, audit secrets, check security posture"
+  anchor_phrases:
+    - "check for hardcoded api keys in the repo"
+    - "audit the codebase for leaked credentials"
+    - "scan for security vulnerabilities"
+    - "find exposed secrets"
+  match_patterns:
+    - "(scan|check|audit) .* (security|vulnerab|secret|cve)"
+    - "(audit|review) (the\\s+)?(secret|cred|api.key)"  # covers "audit secrets in this codebase"
+    - "(security|vuln|vulnerability) (scan|check|audit|assessment)"
+    - "find (vuln|cve|exposed secret)"
+    - "ist .* (sicher|sicherheit)"
+  agents:
+    primary: [poc-security-scanner, poc-vuln-scanner]
+    supporting: [poc-secret-vault, poc-forensics, poc-red-blue]
+
+- capability: incident_response
+  description: "diagnose contain mitigate a security or ops incident, server unreachable api endpoint throwing 500 errors pages loading slowly users impacted, outage triage on-call investigate alert"
+  anchor_phrases:
+    - "the api endpoint is throwing 500 errors"
+    - "server is unreachable for users"
+    - "production is down"
+    - "users are impacted by an outage"
+    - "investigate this alert"
+  match_patterns:
+    - "(security|prod|outage)\\s+(incident|alarm|issue|alert)"
+    - "etwas ist\\s+(kaputt|down|defekt)"
+    - "system\\s+(is\\s+down|crashed|hung)"
+    - "investigate\\s+(the|this)?\\s*(alert|incident)"
+    - "(suspicious|verdächtig)\\s+\\w+"
+  agents:
+    primary: [poc-alerter, poc-forensics]
+    supporting: [poc-log-analyzer, sensor-monitor, poc-vuln-scanner]
+
+- capability: log_analysis
+  description: "examine log files diagnose failures find error patterns stack traces crashes what happened what went wrong root-cause an incident from log output debug application crashes from traces"
+  match_patterns:
+    - "(analy[sz]e|parse|search)\\s+(the|my|some)?\\s*\\w*\\.log"
+    - "(analy[sz]e|parse|search)\\s+(the|my|some)?\\s*log"
+    - "log\\s+(analy|search|grep)"
+    - "what happened in (the)?\\s*log"
+    - "errors? (in|aus)\\s+\\S*\\.?log"
+  agents:
+    primary: [poc-log-analyzer]
+    supporting: [poc-forensics, sensor-monitor]
+
+- capability: knowledge_query
+  description: "answer factual question from project knowledge, count of agents items registered, list things, breakdown of agents personas bubbles tools, who-what-where-how-many lookup, query the knowledge graph for facts and statistics"
+  anchor_phrases:
+    - "count of agents currently registered"
+    - "how many bubbles do we have"
+    - "list all the personas"
+    - "who is the lead developer"
+    - "give me the statistics"
+  match_patterns:
+    # Restricted to Vibemind-domain nouns — `what is X` for off-domain
+    # entities (e.g. "what is the capital of france") should fall through
+    # to no-match, not be answered as a knowledge query.
+    #
+    # Phase 11.N: bubble/idea/idee removed from "wie viele/list/show me"
+    # patterns — these now route to bubble_stats / idea_count / bubble_list
+    # / idea_list capabilities respectively (more specific dispatch).
+    - "wie viele (agents|tools|personas|spaces|projekte|topics)"
+    - "how many (agents|tools|personas|spaces|projects|topics)"
+    - "what (is|are)\\s+(?:the\\s+)?(agent|tool|persona|space|project|topic|capability|router|brain|mirofish|openfang|fungus|discourse)\\b"
+    - "(was ist|wer ist|wo ist)\\s+(?:der|die|das)?\\s*(agent|brain|tool|persona|space|projekt|router|capability)"
+    # `wer ist <ProperName>` — capitalised name → assume it's a person we know
+    - "wer ist\\s+[A-ZÄÖÜ]\\w+"
+    - "list (the|all)?\\s*(agent|tool|persona|space|project|topic|capability)"
+    - "show me (all|the)?\\s*(agent|tool|persona|space|project|topic)"
+  agents:
+    primary: [rowboat-knowledge, supermemory]
+    supporting: [fungus-search]
+
+- capability: email_action
+  description: "compose send personalise route an email, draft a message, follow-up note, write to team, reply to incoming mail, email automation"
+  anchor_phrases:
+    - "compose a follow-up message"
+    - "draft an email to the team"
+    - "write a reply to a mail"
+    - "send a notification message"
+  match_patterns:
+    - "(send|write|compose|schick) (an|eine)?\\s*(e?mail|nachricht)"
+    - "(reply to|antwort auf)\\s+\\w+"
+    - "email (to|an)\\s+\\w+"
+  agents:
+    primary: [poc-email-response, poc-email-sender]
+    supporting: [poc-email-personalizer, poc-email-verteiler]
+
+- capability: site_check
+  description: "verify website service endpoint url is up reachable online responding healthy ping URL availability check"
+  match_patterns:
+    # Tighten — `.*` was too greedy and caught "check for hardcoded api keys".
+    # Require the keywords adjacent OR with at most a determiner between them.
+    - "(check|verify|test)\\s+(?:if\\s+)?(?:the\\s+|this\\s+|that\\s+|a\\s+)?(site|url|website|page|endpoint|api|service)\\b"
+    - "(check|verify|test) (if )?\\w+ (is|are)\\s+(up|reachable|online|verfügbar|down|healthy)"
+    # Allow domain-name characters (dots, dashes) in `is X up`
+    - "(is|ist)\\s+[\\w.\\-:/]+\\s+(up|reachable|online|verfügbar|down|healthy)"
+    - "site\\s+(verifier|check)"
+  agents:
+    primary: [poc-site-verifier]
+    supporting: [sensor-monitor]
+
+- capability: chitchat
+  description: "casual greetings hi hallo hey hello good morning good evening guten tag, polite small talk how are you how have you been today how is it going, identity questions like who are you what are you tell me about yourself"
+  anchor_phrases:
+    - "good morning"
+    - "good evening"
+    - "how have you been today"
+    - "how are things"
+    - "tell me about yourself"
+  match_patterns:
+    - "^(hi|hallo|hey|hello|moin)\\b"
+    - "wie geht('s| es dir)"
+    - "what (are|r) (you|u)\\s*"
+    - "wer bist du"
+  agents:
+    primary: [assistant]
+    supporting: []
+
+# ─── Direct-execution capabilities for the bubble lifecycle ────────────
+# These wrap the existing voice-tool API (params dict) — Brain extracts
+# the bubble title from the intent, wraps as {title: <name>}, and the
+# tool returns its usual confirmation string.
+
+- capability: bubble_create
+  description: "create a new bubble space topic project with a title (NOT individual ideas/notes — those go via idea_add)"
+  match_patterns:
+    # Only bubble/space/topic — 'idea/note' is owned by idea_add (defined later
+    # but we exclude it here to keep first-match ordering safe regardless).
+    - "create (a |an |new )?(bubble|space|topic)\\b"
+    - "(make|new) (a |an )?(bubble|space|topic)"
+    - "(neue|erstelle eine?) (bubble|space|thema)"
+  execution_target: "supabase:bubble.create"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  result_arg_extractor: 'regex:(?:create|make|new|erstelle|neue)\s+(?:a\s+|an\s+|new\s+|eine?\s+)?(?:bubble|space|topic|thema)\s+(?:called\s+|named\s+|für\s+|with title\s+|titled\s+)?[''"]?([^''"]+?)[''"]?$'
+  arg_kwarg: title
+  validator:
+    # truth: ground-truth (2026-06-24) — independently RE-QUERY supabase that the
+    # created row really exists, instead of trusting the op's self-reported id.
+    # {result_id} = id from the op result (supabase return=representation). Active
+    # only under GROUND_TRUTH_ENABLED; else UNVERIFIED (=valid, never blocks).
+    kind: truth:supabase_row
+    on_fail: report
+    postcondition:
+      check: supabase_row
+      table: ideas
+      match: "id=eq.{result_id}"
+      expect: present
+
+- capability: bubble_promote
+  description: "promote a bubble to a queryable Supabase project and link the canonical bubble to it"
+  match_patterns:
+    - "promote\\s+(?:the\\s+|this\\s+|my\\s+)?(?:bubble|idea)\\s+\\w+"
+    - "befördere\\s+(?:die\\s+|diese\\s+)?(?:bubble|idee)"
+    - "(?:bubble|idea)\\s+\\w+\\s+to\\s+project"
+  execution_target: "supabase:bubble.promote"
+  result_arg_extractor: 'regex:promote\s+(?:the\s+|this\s+|my\s+)?(?:bubble|idea)\s+([^\n]+)'
+  arg_kwarg: bubble_name
+  validator:
+    kind: truth:supabase_row
+    on_fail: report
+    postcondition:
+      check: supabase_row
+      table: projects
+      match: "id=eq.{result_id}"
+      expect: present
+
+- capability: bubble_score
+  description: "score or rate a bubble across impact feasibility novelty urgency dimensions, how mature/ready/reif is a bubble, give me the score, wie reif"
+  anchor_phrases:
+    - "score the bubble"
+    - "rate the bubble"
+    - "wie reif ist die bubble"
+    - "wie gut ist die bubble"
+    - "wie weit ist die bubble"
+  match_patterns:
+    - "score\\s+(?:the\\s+|this\\s+|my\\s+)?(?:bubble|idea)"
+    - "rate\\s+(?:the\\s+|this\\s+|my\\s+)?(?:bubble|idea)"
+    - "wie\\s+(gut|reif|weit|fortgeschritten)\\s+ist\\s+(?:die|diese|meine)\\s+bubble"
+    - "(maturity|readiness)\\s+(?:of\\s+)?(?:the\\s+)?bubble"
+  execution_target: "supabase:bubble.score"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  # Try multiple extractors in priority order: explicit name, then bare bubble word
+  result_arg_extractor: 'regex:(?:bubble|idea|StressBubble)\s+([\w\d\s\-]+?)(?:\s+(?:we|that|which|bubble))?$'
+  arg_kwarg: bubble_name
+
+- capability: idea_add
+  description: "add a note or idea to the current bubble, capture a thought, write down a thought jot down a memo, append a sub-idea to the active space"
+  anchor_phrases:
+    - "write down a thought about something"
+    - "write down a thought about cache strategy"
+    - "capture an idea about a topic"
+    - "jot down a quick note"
+    - "add a sub-idea to this bubble"
+    - "save this thought"
+    - "remember this idea about caching"
+  match_patterns:
+    - "(add|create|note)\\s+(?:a |an )?(?:note|idea|thought)\\s+"
+    - "(add|create)\\s+\\w+\\s+(?:to|in)\\s+(?:the\\s+)?(?:current\\s+)?(?:bubble|space)"
+    - "(notiere|halte fest|merke)\\s+"
+  # Phase 11.U.H — was direct:spaces.ideas.tools.idea_tools:create_idea, but
+  # spaces/ideas/__init__.py drags an unimportable `swarm` chain into the
+  # Brain process (ModuleNotFoundError: No module named 'swarm'), so every
+  # node-create failed. Supabase-direct executor writes canvas_nodes via
+  # REST with zero spaces/swarm import — robust, no Brain restart coupling.
+  execution_target: "supabase:idea.create"
+  result_arg_extractor: 'regex:(?:add|create|note|notiere)\s+(?:a |an |an idea )?(?:note|idea|thought)?\s*(?:about|that|für)?\s*[''"]?([^''"\n]+?)[''"]?$'
+  arg_kwarg: title
+  # truth: Phase-1 coverage lift — ground truth via world_observer re-query
+  # create_op (supabase_ideas_ops.py) already does its own read-back verify
+  # and returns {ok, node_id, ...} with the REAL canvas_nodes.id — the
+  # strongest possible signal, an exact id match (same shape as
+  # bubble_create's truth:supabase_row, just canvas_nodes instead of ideas).
+  validator:
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "id=eq.{result_id}"
+      expect: present
+
+- capability: idea_to_project
+  description: "promote an existing idea bubble to a real project, convert an idea into a project"
+  anchor_phrases:
+    - "turn this idea into a project"
+    - "promote the idea to a project"
+    - "mache aus dieser Idee ein Projekt"
+  match_patterns:
+    - "(?:turn|convert|promote)\\s+.*(?:idea|bubble)\\s+(?:into|to)\\s+(?:a\\s+)?project"
+    - "(?:idee|bubble)\\s+.*(?:in|zu)\\s+(?:ein(?:em)?\\s+)?projekt"
+  execution_target: "supabase:idea.to_project"
+  arg_kwarg: name
+  validator:
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: projects
+      match: "id=eq.{result_id}"
+      expect: present
+
+# ─── Phase 11.W2 — verified component-note write ───────────────────────
+# Dedicated write capability for the E-Ticketing component-fill workflow
+# (and any "fill a named note in a named bubble" task). Same supabase
+# executor as idea_add, but with the STRICT validator: idea_add's
+# rule:idea_created + on_fail:report let Brain claim success while
+# nothing persisted. component_note_write uses rule:canvas_node_persisted
+# + on_fail:block — the hop (and the whole plan) fails honestly unless
+# create_op's read-back verify confirmed the row in canvas_nodes.
+# create_op already mines bubble/title/content from the param-bag and
+# the _intent text, so the single arg_kwarg is fine.
+# ─── Phase 11.W2 Stage B — component requirements lookup ──────────────
+# Antwortet auf "Auth", "Payment_Layer", "was braucht <X>", "requirements
+# for <X>" mit Soll-Anforderungen aus data/component_specs.yaml + dem
+# Ist-Stand aus der Bubble (welche pro-requirement Notes schon da sind).
+# Reine Lese-Operation, keine DB-Mutation.
+- capability: component_requirements
+  description: "list the required parts of a component, show what a component needs, was braucht eine Komponente, requirements for Auth or Payment_Layer, list gaps in the E-Ticketing bubble for a component"
+  anchor_phrases:
+    - "what does Auth need"
+    - "requirements for Payment_Layer"
+    - "was braucht Auth_Identity"
+    - "welche Anforderungen hat Routing_Search"
+    - "show me the gaps in DB_REST_API"
+    - "list what is missing in DSGVO_Datenschutz"
+  match_patterns:
+    - "\\b(was|what)\\s+(braucht|needs?|requires?)\\b"
+    - "\\brequirements?\\s+(for|of|von|für)\\b"
+    - "\\b(luecken|lücken|gaps?|missing|fehlt)\\s+(in|für|for)\\b"
+    - "\\bspec(s|ifications?)?\\s+(of|for|von|für)\\s+\\w+"
+  execution_target: "supabase:component.requirements"
+  arg_kwarg: component
+  validator:
+    kind: rule:non_empty_result
+    on_fail: report
+
+- capability: component_note_write
+  description: "write a verified note into a named bubble, fill a component note with its spec, persist a component requirement as a canvas note, schreibe eine geprüfte Notiz in eine Bubble, fülle eine Komponenten-Note mit Inhalt"
+  anchor_phrases:
+    - "write the spec for Auth_Identity into the E-Ticketing bubble"
+    - "fill the Payment_Layer note with its requirements"
+    - "persist this component requirement as a note"
+    - "schreibe die Spec für Auth in die Bubble"
+    - "fülle die Komponenten-Note mit Inhalt"
+  match_patterns:
+    - "(write|fill|persist|schreib|fülle|befülle)\\s+.*\\b(note|notiz|spec|component|komponente)\\b"
+    - "(note|notiz|spec)\\s+.*\\b(into|in|in die|in der)\\s+.*\\b(bubble|space)\\b"
+  execution_target: "supabase:idea.create"
+  arg_kwarg: title
+  # Phase 1: stays rule:+block on purpose — a truth: check short-circuits to
+  # UNVERIFIED (valid=True) when the op returns no id, i.e. exactly the failure
+  # case this gate must BLOCK. Upgrading needs create_op to emit a hard
+  # success/failure marker first (follow-up).
+  validator:
+    kind: rule:canvas_node_persisted
+    on_fail: block
+
+# ─── Phase 11.H — Idea content-validation capabilities ─────────────────
+# These give the plan-generator access to the rich idea_tools.py functions
+# beyond plain creation: AI-tree-search expansion, classification,
+# semantic connections, formatting, explanation. Makes plans like
+# "expand each idea with sub-ideas" / "classify each idea" actually work.
+
+- capability: idea_expand
+  description: "expand an idea into sub-ideas using AI-Scientist tree-search, generate child ideas from a parent, deepen an idea with sub-points, brainstorm beneath an idea, derive related ideas tree-style"
+  anchor_phrases:
+    - "expand this idea into sub-ideas"
+    - "generate sub-ideas under this one"
+    - "deepen the idea with related sub-points"
+    - "brainstorm beneath this idea"
+    - "tree-search expansion of this idea"
+  match_patterns:
+    - "expand\\s+(?:the\\s+|this\\s+|each\\s+|every\\s+)?(idea|node|note)"
+    - "generate\\s+sub[-\\s]?ideas?"
+    - "deepen\\s+(?:the\\s+|this\\s+)?idea"
+    - "(?:expandiere|vertiefe|erweitere)\\s+(?:die\\s+|jede\\s+)?idee"
+  execution_target: "supabase:idea.llm"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_id
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_classify
+  description: "classify an idea by category, tag it taxonomically, assign a topic class, label the idea, categorize the note"
+  anchor_phrases:
+    - "classify this idea"
+    - "tag the idea with categories"
+    - "label this note with a topic"
+    - "categorize each idea"
+  match_patterns:
+    - "(classify|categorize|tag|label)\\s+(?:the\\s+|this\\s+|each\\s+|every\\s+)?(idea|note|thought)"
+    - "(klassifiziere|kategorisiere|tagge|labele)\\s+(?:die\\s+|jede\\s+)?(idee|notiz)"
+  execution_target: "supabase:idea.llm"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_id
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_connect
+  description: "connect two ideas via a relation, link related ideas, draw an edge between two notes, create a connection edge in the idea graph"
+  anchor_phrases:
+    - "connect these two ideas"
+    - "link the related ideas"
+    - "draw an edge between A and B"
+    - "create a connection between two ideas"
+  match_patterns:
+    - "(connect|link)\\s+(?:these\\s+|the\\s+)?(?:two\\s+)?ideas?"
+    - "(verbinde|verknüpfe|linke)\\s+(?:die\\s+|zwei\\s+)?ideen"
+  execution_target: "supabase:idea.connect"  # Phase 11.U.C.10
+  arg_kwarg: idea1  # primary; idea2 re-extracted from _intent
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm an edge between the two ideas the op
+    # reports connecting now exists. {result_title}+{result_title2} from "'X' and 'Y'
+    # are now connected." -> resolve titles -> query canvas_edges (LIVE-verified).
+    kind: truth:supabase_edge
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_edge
+      title_a: "{result_title}"
+      title_b: "{result_title2}"
+      expect: present
+
+- capability: idea_explain
+  description: "explain an idea in natural language with context, give a written description of the idea, narrate what an idea means, elaborate on a note"
+  anchor_phrases:
+    - "explain this idea in detail"
+    - "describe what this idea means"
+    - "elaborate on this note"
+    - "give a written explanation of the idea"
+  match_patterns:
+    - "(explain|describe|elaborate)\\s+(?:on\\s+)?(?:the\\s+|this\\s+|each\\s+|me\\s+)?ide[ea]n?"
+    - "(erkl(ä|ae)re|erkl(ä|ae)r|beschreibe|elaboriere)\\s+(?:die\\s+|jede\\s+|mir\\s+)?ide[ea]n?"
+    - "what\\s+(?:does|is)\\s+(?:the\\s+)?ide[ea]\\s+(?:mean|about)"
+  execution_target: "supabase:idea.llm"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_id
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_format_table
+  description: "render an idea as a comparison table, format ideas in a table with columns like pros cons specs, create a table view of the bubble"
+  anchor_phrases:
+    - "format this idea as a table"
+    - "render the bubble as a table"
+    - "create a comparison table"
+    - "format ideas with pros and cons table"
+  match_patterns:
+    - "(format|render|stelle\\s+dar)\\s+(?:as\\s+|als\\s+)?(table|tabelle|comparison)"
+    - "compare\\s+(?:the\\s+)?ideas"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_note
+  description: "format an idea as a simple note, revert structured idea back to plain text"
+  anchor_phrases:
+    - "back to a note"
+    - "revert to note"
+    - "mach es wieder zu Text"
+  match_patterns:
+    - "(als|to)\\s+(notiz|note|text)"
+    - "zurueck\\s+zur\\s+notiz"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_action_list
+  description: "format an idea as an action list / task checklist with todos"
+  anchor_phrases:
+    - "make a task list"
+    - "as an action list"
+    - "mach eine aufgabenliste"
+    - "als todos"
+  match_patterns:
+    - "(als|as)\\s+(action[-\\s]?list|aufgabenliste|task[-\\s]?list|todos|tasks)"
+    - "(mache?|create)\\s+(?:eine?\\s+)?aufgabenliste"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_pros_cons
+  description: "format an idea as a pros and cons list, vor- und nachteile, advantages disadvantages"
+  anchor_phrases:
+    - "pros and cons"
+    - "vorteile und nachteile"
+    - "pro contra liste"
+  match_patterns:
+    - "pros?\\s*[-/]?\\s*cons?"
+    - "vor[-\\s]?(?:und[-\\s]?)?nach(?:teile)?"
+    - "(pro|vor)[-\\s]?(contra|nach)"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_hierarchy
+  description: "format an idea as a hierarchy or outline structure"
+  anchor_phrases:
+    - "as an outline"
+    - "structure as hierarchy"
+    - "als gliederung"
+  match_patterns:
+    - "(als|as)\\s+(outline|gliederung|hierarchy|hierarchie)"
+    - "structure\\s+(?:it|this)\\s+(?:as\\s+)?(?:an\\s+)?outline"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_specs
+  description: "format an idea as a technical specification, requirements doc, format the idea as specs, wandle die idee in eine technische spezifikation um, erstelle eine spezifikation aus der idee"
+  anchor_phrases:
+    - "as a spec"
+    - "als spezifikation"
+    - "als technische spezifikation"
+    - "technical specification"
+    - "erstelle eine spezifikation"
+    - "wandle in eine spezifikation um"
+  match_patterns:
+    - "(als|as)\\s+(?:\\w+\\s+)?(spec|spezifikation|specification|specs)"
+    - "(in\\s+eine?\\s+)?(spec(?:ification)?|spezifikation)\\s+(?:um\\s*)?wandel"
+    - "(erstelle|create)\\s+(?:eine?\\s+)?(spec|spezifikation|specification)"
+    - "technical\\s+spec(?:ification)?"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_kanban
+  description: "format an idea as a kanban board with todo doing done columns"
+  anchor_phrases:
+    - "as a kanban board"
+    - "als kanban"
+    - "trello board"
+  match_patterns:
+    - "(als|as)\\s+(kanban|brett|board)"
+    - "kanban[-\\s]?board"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_mindmap
+  description: "format an idea as a mind map with central topic and branches"
+  anchor_phrases:
+    - "as a mind map"
+    - "als mindmap"
+    - "gedankenkarte"
+  match_patterns:
+    - "(als|as)\\s+(mind[-\\s]?map|mindmap|gedankenkarte)"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_swot
+  description: "format an idea as a SWOT analysis (strengths weaknesses opportunities threats)"
+  anchor_phrases:
+    - "swot analysis"
+    - "swot analyse"
+    - "stärken schwächen analyse"
+  match_patterns:
+    - "swot"
+    - "st(ä|ae)rken[-\\s]?schw(ä|ae)chen"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_user_story
+  description: "format an idea as user stories or requirements"
+  anchor_phrases:
+    - "as user stories"
+    - "als user story"
+    - "anforderungen"
+  match_patterns:
+    - "user[-\\s]?stor(y|ies)"
+    - "(als|as)\\s+(anforderung|requirement)"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_flowchart
+  description: "format an idea as a flowchart or process diagram"
+  anchor_phrases:
+    - "as a flowchart"
+    - "als flowchart"
+    - "prozessdiagramm"
+    - "ablaufdiagramm"
+  match_patterns:
+    - "(als|as)\\s+(flow[-\\s]?chart|prozess|ablauf|diagramm)"
+    - "flow[-\\s]?chart"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_convert_format
+  description: "convert an idea between any supported formats (table, note, action_list, pros_cons, hierarchy, specs, kanban, mindmap, swot, user_story, flowchart)"
+  anchor_phrases:
+    - "convert this idea to"
+    - "wandle die idee um in"
+    - "format the idea differently"
+  match_patterns:
+    - "convert\\s+(?:the\\s+)?ide[ea]n?\\s+(?:to|into|in)"
+    - "wandle\\s+(?:die\\s+)?ide[ea]n?\\s+(?:in|um|in\\s+das)"
+    - "(wandle|convert)\\s+(?:die\\s+|the\\s+)?ide[ea]n?.*?(format|tabelle|table|note|mindmap|hierarchy|specs|kanban|swot)"
+    - "(format|wandle|umwandeln)\\s+(?:die\\s+)?ide[ea]n?\\s+(?:in|als|to|into)\\s+\\w+"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea's stored format matches the
+    # format the op reports applying ("...formatted as X." -> {result_format}).
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}&format_schema->>type=eq.{result_format}"
+      expect: present
+
+- capability: idea_format_revert
+  description: "undo the last format change on an idea, revert to previous format"
+  anchor_phrases:
+    - "undo format"
+    - "revert the format"
+    - "mach das format rückgängig"
+  match_patterns:
+    - "(undo|revert|r(ü|ue)ckg(ä|ae)ngig)\\s+(?:the\\s+|das\\s+)?format"
+    - "format\\s+(?:r(ü|ue)ckg(ä|ae)ngig|undo|revert)"
+    - "(mach(e)?|make)\\s+(?:das\\s+|the\\s+)?format\\s+(r(ü|ue)ckg(ä|ae)ngig|undo|revert)"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_auto_link
+  description: "automatically detect and create connections between ideas in a bubble based on semantic similarity, auto-link related ideas, find connections automatically"
+  anchor_phrases:
+    - "auto-link the ideas in this bubble"
+    - "find connections between ideas automatically"
+    - "automatically connect related ideas"
+  match_patterns:
+    - "(auto[-\\s]?link|automatically\\s+(?:connect|link))\\s+(?:the\\s+)?ideas"
+    - "verbinde\\s+(?:die\\s+|alle\\s+)?ideen\\s+automatisch"
+  execution_target: "supabase:idea.auto_link"  # Phase 11.U.C.10
+  arg_kwarg: bubble
+  # truth: Phase-1 coverage lift — ground truth via world_observer re-query.
+  # auto_link_op creates edges (same DB effect as idea_connect), so the
+  # semantically-correct kind is truth:supabase_edge. auto_link_op now names
+  # one concretely created pair in its result ("... first_pair='A' <-> 'B'"),
+  # so {result_title}/{result_title2} resolve and the edge re-query actually
+  # fires. When the op linked nothing there is no pair to name and the check
+  # stays UNVERIFIED — the honest outcome (nothing was written to verify).
+  validator:
+    kind: truth:supabase_edge
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_edge
+      title_a: "{result_title}"
+      title_b: "{result_title2}"
+      expect: present
+
+# ─── Broadcast capabilities (no execution_target — Phase 1 narrowing) ──
+# These run the standard discourse round but to a small focused agent set
+# instead of broadcasting to all 25.
+
+- capability: code_review
+  description: "review code diff pull request changes for bugs style security tests quality"
+  match_patterns:
+    - "(review|check|critique)\\s+(?:my\\s+|the\\s+|this\\s+)?(?:code|diff|pr|pull request|change)"
+    - "code review\\b"
+    - "ist (?:das|der code|mein code)\\s+(?:okay|gut|sicher|sauber)"
+    - "look (?:at|over)\\s+(?:my\\s+|the\\s+)?code"
+  agents:
+    primary: [brain-coder, fungus-search]
+    supporting: [poc-security-scanner, rowboat-knowledge]
+  # When agents respond, aggregator gets a structured prompt asking each
+  # for AGREE/DISAGREE + KEY_GAP + NEXT_STEP. Different from the broadcast
+  # default ("each propose your own answer") — here the supporting agents
+  # are explicitly asked to evaluate the primary's suggestion.
+  # Note: feedback_loop on broadcast capabilities is a Phase 2.5 plan;
+  # current DiscourseEngine only honors feedback_loop for direct-execution
+  # capabilities. This block is documented forward-compat.
+  feedback_loop:
+    enabled: false  # Phase 2.5 — not wired for broadcast yet
+    pattern: proposer_evaluator
+    proposer: [brain-coder]
+    evaluators: [fungus-search, poc-security-scanner, rowboat-knowledge]
+
+- capability: architecture_question
+  description: "explain architecture how does X work understand a system component design decision, walk me through the pipeline routing flow, describe relationship between brain openfang mirofish components, what is the role of, give me an overview"
+  anchor_phrases:
+    - "walk me through the routing pipeline"
+    - "describe the relationship between brain and openfang"
+    - "explain how the discourse engine works"
+    - "what is the role of fungus search"
+    - "give me an overview of the architecture"
+  match_patterns:
+    # Be strict — require Vibemind/Brain domain words to avoid catching
+    # general "how does X work" off-domain queries (e.g. "how does cooking work").
+    - "(how|wie)\\s+(?:does|do|is|are|funktioniert)\\s+(?:the\\s+|der\\s+|die\\s+|das\\s+)?(brain|mirofish|openfang|fungus|capability|router|discourse|agent|bubble|tribe|pipeline|architecture|system)"
+    - "(explain|erklär|erkläre)\\s+(?:the\\s+|how\\s+|wie\\s+)?(brain|mirofish|openfang|fungus|capability|router|discourse|agent|bubble|architecture|system|pipeline)"
+    - "(architecture|architektur) (of|für|von)"
+  agents:
+    primary: [fungus-search, brain-coder]
+    supporting: [rowboat-knowledge]
+
+# ─── Phase 11.N: Bubble + Idea CRUD/Navigation ──────────────────────
+# Routing-Capabilities für die restlichen Ideas-Space MCP-Tools.
+# Pattern wie bei den Format-Tools: anchor_phrases + match_patterns + direct: target.
+
+- capability: bubble_list
+  description: "list all bubbles in the canvas, show me my bubbles, welche bubbles habe ich, alle blasen anzeigen"
+  anchor_phrases:
+    - "list all bubbles"
+    - "show me my bubbles"
+    - "welche bubbles gibt es"
+    - "zeig mir alle bubbles"
+    - "alle blasen auflisten"
+  match_patterns:
+    - "(list|liste|zeig(e)?)\\s+(?:all\\s+|alle\\s+)?(bubbles?|blasen?)"
+    - "(welche|which)\\s+(bubbles?|blasen?)"
+    - "(meine|my)\\s+(bubbles?|blasen?)"
+  execution_target: "supabase:bubble.list"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: query
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: bubble_find
+  description: "find a specific bubble by name or fuzzy match, locate the bubble called X, wo ist die bubble Y"
+  anchor_phrases:
+    - "find the bubble"
+    - "where is the bubble"
+    - "wo ist die bubble"
+    - "such die bubble"
+  match_patterns:
+    - "(find|finde|such(e)?|locate)\\s+(?:the\\s+|die\\s+)?bubble"
+    - "(where|wo)\\s+(is|ist)\\s+(?:the\\s+|die\\s+)?bubble"
+  execution_target: "supabase:bubble.find"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: name
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: bubble_update
+  description: "rename or update a bubble title or description, benenne die bubble um, ändere die bubble"
+  anchor_phrases:
+    - "rename the bubble"
+    - "update the bubble"
+    - "benenne die bubble um"
+    - "ändere die bubble"
+  match_patterns:
+    - "(rename|update|benenne(?:\\s+um)?|ändere|ändre|umbenenn)\\s+(?:the\\s+|die\\s+)?bubble"
+  execution_target: "supabase:bubble.update"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: bubble_name
+  validator:
+    # truth: ground-truth (2026-06-24) — re-query that a row with the NEW title
+    # exists. {result_title} = the updated title the op reports ("Bubble 'X'
+    # updated."), so VERIFIED only if the rename actually persisted (LIVE-verified:
+    # claimed-but-not-persisted -> REFUTED).
+    kind: truth:supabase_row
+    on_fail: report
+    postcondition:
+      check: supabase_row
+      table: ideas
+      match: "title=eq.{result_title}"
+      expect: present
+
+- capability: bubble_delete_all
+  description: "delete ALL bubbles (with optional exceptions to keep), wipe all bubbles, lösche alle bubbles, alle blasen entfernen, clear the canvas, leere ideas space, broadcasts a bubble_deleted UI event for each removed bubble so the canvas updates live — NOT IMPLEMENTED (supabase-direct path): the op was a no-op that faked success — disabled 2026-07-14 so the planner routes elsewhere and the gap is reported."
+  anchor_phrases:
+    - "delete all bubbles"
+    - "remove all bubbles"
+    - "wipe all bubbles"
+    - "lösche alle bubbles"
+    - "alle bubbles löschen"
+    - "alle blasen löschen"
+    - "lösche alle blasen"
+    - "leere den ideas space"
+    - "clear the canvas"
+  match_patterns:
+    - "(delete|remove|wipe|clear|l(ö|oe)sch(e)?|entferne|leere)\\s+(all|alle|every|jede)\\s+(bubbles?|blasen?|spaces?)"
+    - "(all|alle|every)\\s+(bubbles?|blasen?|spaces?)\\s+(delete|l(ö|oe)sch(e)?|entferne|wipe)"
+    - "(clear|leere|wipe)\\s+(?:the\\s+|den\\s+)?(canvas|ideas[-\\s]?space|bubble[-\\s]?canvas)"
+  # execution_target removed 2026-07-14: was supabase:bubble.noop (faked success). No real op → GapSentinel reports the gap.
+  arg_kwarg: exceptions
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: bubble_delete
+  description: "delete or remove a single bubble by name and its content, lösche die bubble X, entferne die bubble Y"
+  anchor_phrases:
+    - "delete the bubble"
+    - "remove the bubble"
+    - "lösche die bubble"
+    - "entferne die bubble"
+  match_patterns:
+    - "(delete|remove|l(ö|oe)sch(e)?|entferne|entfernt?)\\s+(?:the\\s+|die\\s+)?bubble\\s+\\S+"
+    - "(delete|remove|l(ö|oe)sch(e)?|entferne)\\s+(?:the\\s+|die\\s+)bubble\\b"
+  execution_target: "supabase:bubble.delete"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: bubble_name
+  validator:
+    # truth: ground-truth (2026-06-24) — re-query that the deleted row is GONE.
+    # {result_title} = the title the op reported deleting ("Bubble 'X' deleted.") so
+    # the absent-check is grounded in the op's own target, not a guessed filter.
+    kind: truth:supabase_row
+    on_fail: report
+    postcondition:
+      check: supabase_row
+      table: ideas
+      match: "title=eq.{result_title}"
+      expect: absent
+
+- capability: bubble_enter
+  description: "enter a bubble so subsequent idea operations target it, geh in die bubble, betrete die bubble"
+  anchor_phrases:
+    - "enter the bubble"
+    - "open the bubble"
+    - "geh in die bubble"
+    - "betrete die bubble"
+    - "öffne die bubble"
+  match_patterns:
+    - "(enter|open|geh\\s+in|betrete?|öffne)\\s+(?:the\\s+|die\\s+)?bubble"
+    - "switch\\s+to\\s+(?:the\\s+)?bubble"
+  # Phase 11.U.H — was direct:spaces.ideas.tools.bubble_tools:enter_bubble
+  # (broken: swarm import chain). The planner always prefixes idea ops
+  # with a bubble_enter hop; the supabase: ops are stateless (address
+  # bubble by id/title directly) so this is a validating no-op that just
+  # keeps s1 green so the plan doesn't cascade-fail.
+  execution_target: "supabase:bubble.enter"
+  arg_kwarg: bubble_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the entered bubble actually exists
+    # ("entered bubble 'X' (id=...)"). on_fail:report so a non-existent bubble is
+    # surfaced (REFUTED) without cascade-aborting; an "unverified" enter result has
+    # no id -> {result_id} empty -> UNVERIFIED (honest, never a fabricated VERIFIED).
+    kind: truth:supabase_row
+    on_fail: report
+    postcondition:
+      check: supabase_row
+      table: ideas
+      match: "id=eq.{result_id}"
+      expect: present
+
+- capability: bubble_exit
+  description: "exit the current bubble back to top-level canvas, verlasse die bubble, raus aus der bubble"
+  anchor_phrases:
+    - "exit the bubble"
+    - "leave the bubble"
+    - "verlasse die bubble"
+    - "raus aus der bubble"
+    - "back to canvas"
+  match_patterns:
+    - "(exit|leave|verlasse?|raus\\s+aus)\\s+(?:the\\s+|der\\s+|die\\s+)?bubble"
+    - "back\\s+to\\s+(canvas|top|root)"
+    - "z(u|ur(ü|ue)ck)?\\s+zum?\\s+canvas"
+  execution_target: "supabase:bubble.noop"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: bubble_name
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: bubble_stats
+  description: "get statistics for a bubble (idea count, last update, score), wie viele ideen sind in der bubble, statistik der bubble"
+  anchor_phrases:
+    - "stats for the bubble"
+    - "bubble statistics"
+    - "wie viele ideen in der bubble"
+    - "statistik der bubble"
+  match_patterns:
+    - "(stats?|statistik|statistics)\\s+(?:for\\s+|der\\s+|von\\s+)?bubble"
+    - "(how\\s+many|wie\\s+viele)\\s+ideas?\\s+in\\s+(?:the\\s+|der\\s+)?bubble"
+    - "bubble\\s+(stats|statistik|info|details)"
+  execution_target: "supabase:bubble.stats"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: bubble_name
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_list
+  description: "list ideas in the current bubble or globally, zeig mir die ideen, alle ideen auflisten"
+  anchor_phrases:
+    - "list all ideas"
+    - "show me the ideas"
+    - "zeig mir die ideen"
+    - "alle ideen auflisten"
+    - "welche ideen gibt es"
+  match_patterns:
+    - "(list|liste|zeig(e)?)\\s+(?:all\\s+|alle\\s+|mir\\s+(?:alle\\s+|die\\s+)?)?(?:die\\s+)?ideas?n?"
+    - "(welche|which)\\s+ideas?n?\\s+(gibt|exist|are)"
+  execution_target: "supabase:idea.list"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: query
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_count
+  description: "count ideas in a bubble or globally, wie viele ideen, zähle die ideen"
+  anchor_phrases:
+    - "count the ideas"
+    - "how many ideas"
+    - "wie viele ideen"
+    - "zähle die ideen"
+  match_patterns:
+    - "(count|z(ä|ae)hl(e)?)\\s+(?:the\\s+|alle\\s+|die\\s+)?ideas?n?"
+    - "(how\\s+many|wie\\s+viele)\\s+ideas?n?"
+  execution_target: "supabase:idea.count"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: bubble_id
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_find
+  description: "find a specific idea by name, suche die idee X, wo ist die idee Y"
+  anchor_phrases:
+    - "find the idea"
+    - "search for the idea"
+    - "wo ist die idee"
+    - "such die idee"
+  match_patterns:
+    - "(find|finde|such(e)?|search\\s+for)\\s+(?:the\\s+|die\\s+)?ide[ea]n?"
+    - "(where|wo)\\s+(is|ist)\\s+(?:the\\s+|die\\s+)?ide[ea]n?"
+  execution_target: "supabase:idea.find"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: name
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_update
+  description: "update an idea title or content, ändere die idee, update the idea content"
+  anchor_phrases:
+    - "update the idea"
+    - "edit the idea"
+    - "ändere die idee"
+    - "bearbeite die idee"
+  match_patterns:
+    - "(update|edit|ändere|ändre|aendere|aendre|bearbeite)\\s+(?:the\\s+|die\\s+)?ide[ea]n?"
+  # Phase 11.U.H — Supabase-direct (see idea_add note). Resolves the node
+  # by title, PATCHes canvas_nodes.content/title via REST.
+  execution_target: "supabase:idea.update"
+  arg_kwarg: title
+  validator:
+    # truth: ground-truth (2026-06-24) — re-query that a node with the title the op
+    # reports ("Node 'X' updated.") exists; VERIFIED only if it persisted.
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}"
+      expect: present
+
+- capability: idea_delete
+  description: "delete an idea, lösche die idee, entferne die idee"
+  anchor_phrases:
+    - "delete the idea"
+    - "remove the idea"
+    - "lösche die idee"
+    - "entferne die idee"
+  match_patterns:
+    - "(delete|remove|l(ö|oe)sch(e)?|entferne)\\s+(?:the\\s+|die\\s+)?ide[ea]n?"
+  execution_target: "supabase:idea.delete"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_id
+  validator:
+    # truth: ground-truth (2026-06-24) — re-query that the deleted idea is GONE.
+    # {result_title} = the title the op reported deleting ("Idea 'X' deleted.").
+    kind: truth:supabase_row
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "title=eq.{result_title}"
+      expect: absent
+
+- capability: idea_disconnect
+  description: "disconnect or unlink two ideas, trenne die idee A von B, remove the connection between"
+  anchor_phrases:
+    - "disconnect the ideas"
+    - "unlink the ideas"
+    - "trenne die ideen"
+    - "lösche die verbindung"
+  match_patterns:
+    - "(disconnect|unlink|trenne|entferne\\s+(die\\s+)?verbindung|l(ö|oe)sche?\\s+(die\\s+)?verbindung)\\s+(?:the\\s+|die\\s+)?ide[ea]n?"
+    - "remove\\s+(?:the\\s+)?(connection|edge|link)\\s+between"
+    - "trenne\\s+\\S+\\s+und\\s+\\S+"
+  execution_target: "supabase:idea.disconnect"  # Phase 11.U.C.10
+  arg_kwarg: idea1  # primary; idea2 re-extracted from _intent
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the edge between the two ideas is GONE.
+    # {result_title}+{result_title2} from "Connection between 'X' and 'Y' removed."
+    kind: truth:supabase_edge
+    on_fail: block
+    require_verified: true
+    postcondition:
+      check: supabase_edge
+      title_a: "{result_title}"
+      title_b: "{result_title2}"
+      expect: absent
+
+- capability: idea_link_to_root
+  description: "link an idea to the canvas root or back to top-level, verbinde die idee mit dem root"
+  anchor_phrases:
+    - "link to root"
+    - "connect to root"
+    - "verbinde mit root"
+    - "lift to top"
+  match_patterns:
+    - "(link|connect|verbinde?|attach)\\s+(?:the\\s+|die\\s+)?ide[ea]n?\\s+(?:to\\s+|mit\\s+(dem\\s+)?)?(?:the\\s+)?(root|top|canvas)"
+    - "lift\\s+(?:the\\s+)?ide[ea]n?\\s+to\\s+(top|root)"
+  execution_target: "supabase:idea.llm"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_id
+  # truth: Phase-1 coverage lift — ground truth via world_observer re-query.
+  # idea_llm_op's link_to_root branch creates a real edge (root -> idea)
+  # via create_edge — an edge-op, so truth:supabase_edge is the correct
+  # kind (verified by reading supabase_ideas_ops.py; NOT
+  # truth:supabase_node_in_bubble — the idea's bubble membership doesn't
+  # change here, only idea_move actually moves a node between bubbles, so
+  # node_in_bubble would trivially always pass and verify nothing new).
+  # The op now quotes BOTH endpoints ("Linked 'X' to root 'Y'."), so
+  # {result_title}/{result_title2} resolve and the edge re-query fires.
+  validator:
+    kind: truth:supabase_edge
+    on_fail: report
+    postcondition:
+      check: supabase_edge
+      title_a: "{result_title}"
+      title_b: "{result_title2}"
+      expect: present
+
+- capability: idea_move
+  description: "move an idea from one bubble to another, verschiebe die idee, bring die idee in bubble Y"
+  anchor_phrases:
+    - "move the idea"
+    - "move idea to bubble"
+    - "verschiebe die idee"
+    - "bring die idee in"
+  match_patterns:
+    - "(move|verschiebe?|bring(e)?)\\s+(?:the\\s+|die\\s+)?ide[ea]n?\\s+(?:to|in|nach)"
+    - "(move|verschiebe?)\\s+\\S+\\s+(to|nach|in)\\s+(?:bubble|space)"
+  execution_target: "supabase:idea.move"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    # truth: ground-truth (2026-06-24) — confirm the idea is now under the target bubble.
+    # {result_title}=idea, {result_title2}=bubble from "Idea 'X' moved to bubble 'Y'."
+    kind: truth:supabase_node_in_bubble
+    on_fail: report
+    postcondition:
+      check: supabase_node_in_bubble
+      node_title: "{result_title}"
+      bubble_title: "{result_title2}"
+      expect: present
+
+# ─── Phase 11.P: Restliche Ideas-Space utility caps ─────────────────
+
+- capability: bubble_generate_embeddings
+  description: "rebuild or regenerate the semantic embeddings for all ideas inside a bubble, refresh embeddings, re-index the bubble — NOT IMPLEMENTED (supabase-direct path): the op was a no-op that faked success — disabled 2026-07-14 so the planner routes elsewhere and the gap is reported."
+  anchor_phrases:
+    - "regenerate embeddings for the bubble"
+    - "rebuild embeddings"
+    - "re-index the bubble"
+    - "embeddings neu berechnen"
+    - "embeddings rebuilden"
+    - "bubble neu indizieren"
+  match_patterns:
+    - "(regenerate|rebuild|refresh|reindex|re[-\\s]?index|neu\\s+(berechnen|indizieren))\\s+(?:the\\s+|der\\s+|alle\\s+)?(embeddings?|index)"
+    - "embeddings?\\s+(rebuild|regenerate|neu)"
+    - "bubble\\s+(reindex|neu\\s+indizieren)"
+  # execution_target removed 2026-07-14: was supabase:bubble.noop (faked success). No real op → GapSentinel reports the gap.
+  arg_kwarg: bubble_name
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_analyze_links
+  description: "analyze existing connections in a bubble and suggest improvements, find missing links, recommend new edges, link analysis report (read-only — does NOT auto-create like idea_auto_link)"
+  anchor_phrases:
+    - "analyze the connections between ideas"
+    - "analyze the existing links"
+    - "suggest new links between ideas"
+    - "untersuche die verbindungen"
+    - "analysiere die verbindungen zwischen den ideen"
+    - "link analyse report"
+    - "schlage neue verbindungen vor"
+  match_patterns:
+    # Stricter than idea_auto_link: requires the analyze/untersuche verb
+    # AND a connections/verbindungen object. Plus optional "zwischen" /
+    # "between" that disambiguates from auto-link (which uses "verbinde").
+    - "(analy(s|z)e|analyz(e|ier)|untersuche|inspect|review)\\s+(?:the\\s+|die\\s+|alle\\s+)?(connections?|links?|verbindungen|edges?)"
+    - "(suggest|empfehle?|vorschla[gn]e?|schlage?\\s+vor)\\s+(?:new\\s+|weitere\\s+|zusaetzliche\\s+|neue\\s+)(connections?|links?|verbindungen|edges?)"
+    - "(link|verbindungs?)[\\s-]+(analy(s|z)e|analyse|report|review)"
+    - "(connections?|verbindungen|links?)\\s+(analy(s|z)e|analyse|untersuchen|review)"
+  execution_target: "supabase:idea.llm"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: bubble_id
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_format_list
+  description: "list all available format types for ideas (table, note, action_list, pros_cons, hierarchy, specs, kanban, mindmap, swot, user_story, flowchart), show available formats, welche formate gibt es"
+  anchor_phrases:
+    - "list available formats"
+    - "show me the formats"
+    - "welche formate gibt es"
+    - "verfuegbare formate"
+    - "alle formate auflisten"
+  match_patterns:
+    - "(list|liste|zeig(e)?|show\\s+me)\\s+(?:all\\s+|alle\\s+|verfuegbar(e|en)\\s+|available\\s+)?formate?n?"
+    - "(welche|which)\\s+formate?n?"
+    - "(verfuegbar(e|en)|available)\\s+formate?n?"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: ""
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_format_get
+  description: "query the current format of an idea (note, table, action_list, hierarchy, specs, ...), what format is the idea in, welches format hat die idee"
+  anchor_phrases:
+    - "what format is the idea"
+    - "current format of the idea"
+    - "welches format hat die idee"
+    - "in welchem format ist die idee"
+  match_patterns:
+    - "(what|welches?)\\s+format\\s+(is|ist|hat|hat\\s+die)\\s+(?:the\\s+|die\\s+)?ide[ea]n?"
+    - "(current|aktuelles?)\\s+format\\s+(of|der|von)\\s+(?:the\\s+|die\\s+)?ide[ea]n?"
+    - "in\\s+welchem\\s+format\\s+ist\\s+(?:die\\s+)?ide[ea]n?"
+  execution_target: "supabase:idea.format"  # Phase 11.U.H migrated from direct:spaces.* (not in Brain image)
+  arg_kwarg: idea_name
+  validator:
+    kind: rule:string_nonempty
+    on_fail: report
+
+- capability: idea_create_batch
+  description: "create multiple ideas at once with a list of titles or contents, batch idea creation, leg N ideen mit titeln X, Y, Z an"
+  anchor_phrases:
+    - "create multiple ideas"
+    - "batch create ideas"
+    - "lege mehrere ideen an"
+    - "erstelle mehrere ideen"
+    - "alle diese ideen anlegen"
+  match_patterns:
+    - "(create|leg(e)?|erstelle)\\s+(multiple|several|mehrere|viele|alle)\\s+ide[ea]n?"
+    - "batch\\s+create\\s+ide[ea]n?"
+    - "(create|leg(e)?|erstelle)\\s+ide[ea]n?:\\s*\\["
+  # Phase 11.U.H — was direct:spaces.ideas.tools.idea_tools:
+  # create_idea_batch (broken: swarm import chain). Routed to the
+  # supabase: create op. The planner expands a repeat-block into N
+  # child-hops; each calls create_op with one item — so a batch becomes
+  # N individual canvas_nodes (cleaner than one mega-node anyway). The
+  # bubble is still resolved from the shared _intent text per child.
+  execution_target: "supabase:idea.create"
+  arg_kwarg: title
+  # truth: Phase-1 coverage lift — ground truth via world_observer re-query
+  # Same create_op as idea_add — each child-hop create call gets its own
+  # read-back-verified node_id; exact id re-query per hop.
+  validator:
+    kind: truth:supabase_row
+    on_fail: report
+    postcondition:
+      check: supabase_row
+      table: canvas_nodes
+      match: "id=eq.{result_id}"
+      expect: present
+
+# ──────────────────────────────────────────────────────────────────────────
+# Phase 11+ — OpenFang-agent dispatch via `openfang:<agent>` execution_target
+# Added 2026-05-13. Bridge: Voice/User → Brain.think → CapRouter → OpenFangExecutor
+# → POST /api/agents/<id>/message. The executor (capability_targets.py) resolves
+# agent_name → agent_id via /api/agents.
+# ──────────────────────────────────────────────────────────────────────────
+
+- capability: code_generate
+  description: "Generate code through the health-checked coding-engine control server."
+  match_patterns: ["^code\\.generate$", "^(generate|create|erstelle?|generiere?)\\s+(code|projekt|project)"]
+  execution_target: "coding-engine:POST:/api/start"
+  arg_kwarg: description
+  validator: {kind: "rule:non_empty_result", on_fail: report}
+
+- capability: code_modify
+  description: "Modify code through the health-checked coding-engine control server."
+  match_patterns: ["^code\\.modify$", "^(modify|edit|ändere?|bearbeite?)\\s+(code|datei|file)"]
+  execution_target: "coding-engine:POST:/api/start"
+  arg_kwarg: description
+  validator: {kind: "rule:non_empty_result", on_fail: report}
+
+- capability: code_status
+  description: "Read the current coding-engine execution status."
+  match_patterns: ["^code\\.status$", "^(code|coding)[ -]?(status|fortschritt)$"]
+  execution_target: "coding-engine:GET:/api/status"
+  validator: {kind: "rule:non_empty_result", on_fail: report}
+
+- capability: code_show
+  description: "Show coding-engine execution logs and visible results."
+  match_patterns: ["^code\\.show$", "^(show|zeige?)\\s+(code|coding)[ -]?(result|ergebnis|logs?)"]
+  execution_target: "coding-engine:GET:/api/logs"
+  validator: {kind: "rule:non_empty_result", on_fail: report}
+
+- capability: code_preview_start
+  description: "Start a preview for a coding-engine project."
+  match_patterns: ["^code\\.preview\\.start$", "^(start|starte?)\\s+(code|coding)[ -]?preview"]
+  execution_target: "coding-engine:POST:/api/preview/create"
+  validator: {kind: "rule:non_empty_result", on_fail: report}
+
+- capability: code_preview_stop
+  description: "Stop a preview for a coding-engine project."
+  match_patterns: ["^code\\.preview\\.stop$", "^(stop|stoppe?)\\s+(code|coding)[ -]?preview"]
+  execution_target: "coding-engine:POST:/api/preview/{project_id}/stop"
+  arg_kwarg: project_id
+  validator: {kind: "rule:non_empty_result", on_fail: report}
+
+- capability: code_list
+  description: "List coding-engine previews and queryable results."
+  match_patterns: ["^code\\.list$", "^(list|liste|zeige?)\\s+(code|coding)[ -]?(projects?|projekte?|previews?)"]
+  execution_target: "coding-engine:GET:/api/preview/"
+  validator: {kind: "rule:non_empty_result", on_fail: report}
+
+- capability: code_cancel
+  description: "Cancel the active coding-engine execution."
+  match_patterns: ["^code\\.cancel$", "^(cancel|abort|brich|breche)\\s+(code|coding)"]
+  execution_target: "coding-engine:POST:/api/stop"
+  validator: {kind: "rule:non_empty_result", on_fail: report}
+
+- capability: coding_task_anthropic
+  description: "EXECUTE CODE TASK with the Claude Pro/Max subscription through official Claude Code. Use only when the user explicitly selects Claude or Anthropic; writes real files to disk, runs them, and returns output."
+  coding_provider: anthropic
+  anchor_phrases:
+    - "use Claude to fix the failing test in tests/test_foo.py"
+    - "use Anthropic to fix tests/test_foo.py"
+    - "mit Anthropic die Funktion in src/main.py schreiben"
+    - "mit Claude die Funktion in src/main.py schreiben"
+    - "Claude Code verwenden und den Fehler in app.py beheben"
+    - "Anthropic verwenden und app.py reparieren"
+  match_patterns:
+    # A provider selector alone is not a coding request. Require a bounded
+    # coding operation plus a code artifact, repository object, or deployment
+    # target so ordinary Claude chat stays out of this execution route.
+    - "(?=.*\\b(?:claude|anthropic)\\b)(?=.*\\b(?:fix|debug|repair\\w*|reparier\\w*|beheb\\w*|write|create|implement|refactor|modify|edit|rename|move|delete|remove|merge|checkout|check\\s+out|rebase|clone|pull|deploy|schreib\\w*|erstell\\w*|ändere\\w*|lösch\\w*|f[üu]hr\\w*)\\b)(?=.*(?:\\.(?:py|js|ts|tsx|jsx|rs|go|java|cpp|c|h|hpp|rb|php|sh|cmd)\\b|\\b(?:endpoint|api|source\\s+code|codebase|datei|files?|git\\s+branch|branch|repository|repo|build)\\b|\\b(?:(?:refactor|debug)\\s+(?:this|the|a|an)?\\s*(?:function|funktion|class|klasse|module|modul)|(?:python|javascript|typescript|rust|code|source)\\s+(?:function|funktion|script|skript|class|klasse|module|modul)|(?:bug|error|issue|fehler)\\s+(?:in|inside|within)\\s+(?:auth|code|source|codebase|function|funktion|class|klasse|module|modul|api|endpoint|repository|repo|build|tests?|files?)|(?:software|code|source)\\s+(?:project|application|service|test)|(?:project|application|service|test)\\s+(?:code|source|repository|repo|module|endpoint|build|deployment|suite)|(?:unit|integration|failing)\\s+tests?)\\b)).*"
+    # Read/run/review/search requests may omit an extension but must still name
+    # a bounded source-code or repository object. This preserves generic
+    # review/search collisions handled by earlier capabilities.
+    - "(?=.*\\b(?:claude|anthropic)\\b)(?=.*\\b(?:run|execute|review|inspect|check|search|find|locate|ausf[üu]hr\\w*|prüf\\w*|such\\w*)\\b)(?=.*(?:\\.(?:py|js|ts|tsx|jsx|rs|go|java|cpp|c|h|hpp|rb|php|sh|cmd)\\b|\\b(?:tests?|source\\s+code|codebase|repository|repo|files?)\\b)).*"
+    # Concrete repository lifecycle and known deployment targets are also
+    # provider-selected coding work without requiring a source extension.
+    - "(?=.*\\b(?:claude|anthropic)\\b)(?=.*(?:\\b(?:create|setup|init|erstell|leg)\\b.*\\bgithub\\s+repo\\b|\\bdeploy\\b.*\\b(?:vercel|cloudflare|digitalocean|fly\\.io|aws|azure|gcp|render|railway|netlify|heroku|kubernetes|k8s|docker|production|staging|server)\\b|\\b(?:commit|push)\\b.*\\b(?:changes?|änderung)\\b)).*"
+  execution_target: "openfang:brain-coder-anthropic"
+  validator:
+    # truth: ground-truth (2026-06-25) — the coding agent claims it wrote a file;
+    # confirm the file actually exists on disk (same host). {result_path} = first
+    # absolute path in the result ("written to `C:/.../x.py`"). No path in the
+    # result -> UNVERIFIED (honest), reusing world_observer.file_exists.
+    kind: truth:file_exists
+    on_fail: report
+    postcondition:
+      check: file_exists
+      path: "{result_path}"
+
+- capability: coding_task
+  description: "EXECUTE CODE TASK — actually write/edit/run real source code on disk through the ChatGPT subscription via OpenCode. NOT for adding ideas/notes to the knowledge graph (that's idea_add). NOT for searching code (that's code_search). NOT for reviewing code (that's code_review). USE THIS when the user wants the system to actually CREATE OR MODIFY a code file: write a python/js/ts/rust function or script, fix a bug in a specific source file, refactor existing code, implement an API endpoint, run git commit/push, create a github repo, deploy to vercel. This is the deterministic default coding route; it writes real files to disk, runs them, and returns output."
+  coding_provider: openai
+  anchor_phrases:
+    - "write a python script that prints hello and save it as hello.py"
+    - "create a function add_two in src/main.py and run the file"
+    - "fix the failing test in tests/test_foo.py"
+    - "refactor the parse_url function in utils.py to handle edge cases"
+    - "implement a /health endpoint in src/main.py"
+    - "create a github repository for my project and push the code"
+    - "deploy this project to vercel as a preview"
+    - "schreib mir ein lauffähiges python script das hello.py heißt und Hello druckt"
+    - "erstelle die funktion add_two in src/main.py und führe sie aus"
+    - "leg mir ein github repo an und pushe den code dorthin"
+  match_patterns:
+    # File-extension is a strong signal that the user wants ACTUAL code on disk
+    # CapabilityRouter's provider-intent gate allows this default only for
+    # OpenAI/default intent, never for explicit Anthropic intent or conflicts.
+    - "\\.(py|js|ts|tsx|jsx|rs|go|java|cpp|c|h|hpp|rb|php|sh|cmd)\\b"
+    # German + English code-creation verbs with stack keyword nearby
+    - "(write|create|schreib|erstell)\\s+(a|an|me|mir|ein|eine)?\\s*(python|js|ts|rust|go|java)\\s+(function|class|script|module|funktion|klasse)"
+    - "(write|schreib)\\s+(me|mir)\\s+(a|an|ein|eine)?\\s*(python|js|ts)\\s+(function|funktion|script|skript)"
+    # Verb + stack-name (looser — catches "schreib mir ein python script das X")
+    - "(write|create|schreib|erstell)\\s+\\w+\\s+(python|js|ts|rust|go|java)\\s+\\w+"
+    # Bug-fix style
+    - "(fix|debug)\\s+(the|a)?\\s*(bug|error|issue|fehler)\\s+in"
+    - "refactor\\s+(this|the)?\\s*(function|class|file|module|funktion|datei)"
+    - "implement\\s+(a|the|new)?\\s*(feature|endpoint|api)"
+    # Concrete git/deploy operations
+    - "(create|setup|init|erstell|leg)\\s+(a|my|ein|mein)?\\s*github\\s+repo"
+    - "deploy\\s+(to|on|auf)\\s+vercel"
+    - "(commit|push)\\s+(this|my|den|meinen)?\\s*(changes?|änderung)"
+    # Last-resort: stack + thing-noun pair
+    - "(eine?|a|ein)\\s+(python|js|ts|rust|go)\\s+(funktion|function|script|skript|class|klasse)"
+  execution_target: "openfang:brain-coder-openai"
+  validator:
+    # truth: ground-truth (2026-06-25) — the coding agent CLAIMS it wrote a file;
+    # confirm the file actually exists on disk (same host). {result_path} = first
+    # absolute path in the result ("written to `C:/.../x.py`"). No path in the
+    # result -> UNVERIFIED (honest), reusing world_observer.file_exists.
+    kind: truth:file_exists
+    on_fail: report
+    postcondition:
+      check: file_exists
+      path: "{result_path}"
+
+- capability: desktop_skill
+  description: "automate excel word powerpoint outlook chrome desktop apps, fill cells type text click buttons, hr workflows like onboarding offboarding timesheet payroll, anything requiring UI automation on the user's Windows desktop with telegram approval"
+  anchor_phrases:
+    - "fill excel cell A1 with hello"
+    - "open word and write a letter"
+    - "create the hr onboarding checklist"
+    - "fülle die zelle A1 mit hallo"
+    - "öffne excel und mach X"
+    - "erstelle einen stundenzettel"
+    - "klick auf den OK button"
+  match_patterns:
+    - "(fill|set|fülle|setze)\\s+.*\\b(zelle|cell)\\s+[A-Z]\\d+"
+    - "(open|öffne|starte)\\s+(excel|word|powerpoint|outlook|chrome|firefox)"
+    - "(create|erstelle)\\s+.*\\b(stundenzettel|onboarding|offboarding|gehaltsabrechnung|payroll|timesheet)"
+    - "(click|klick)\\s+(on|auf)?\\s+(the|den|die|das)?\\s*\\w+\\s+(button|knopf)"
+    - "type\\s+\\\".+\\\"\\s+in\\s+(the|der|die|das)?\\s*\\w+\\s+(field|feld)"
+    # Desktop-Screenshot NUR mit explizitem Desktop/Fenster/App-Bezug. Das nackte
+    # "screenshot" klaute first-match-wins auch Website-Screenshots
+    # ("screenshot von github.com" -> faelschlich skill-coordinator statt
+    # browser_automation/openclaw-visible). Verifiziert Intent-Validierung Kat-6.
+    - "\\b(bildschirm|desktop|screen|fenster|window|monitor|app|anwendung|programm)\\b.{0,15}screenshot|screenshot\\b.{0,20}\\b(bildschirm|desktop|screen|fenster|window|monitor|app|anwendung|programm)"
+    - "(automate|automatisier)\\s+\\w+"
+  execution_target: "openfang:skill-coordinator"
+
+- capability: browser_automation
+  description: "browse the web, navigate to a url, scrape a page, fill out a web form, click links in browser, take a screenshot of a website, do web research, login to a website, extract data from a webpage"
+  anchor_phrases:
+    - "navigate to https://example.com"
+    - "open the website X and screenshot it"
+    - "fill out the contact form on Y"
+    - "scrape product prices from Z"
+    - "gehe auf die webseite X und klick auf Y"
+    - "such mir im web nach X"
+    - "log dich bei X ein"
+    - "extrahier alle links von dieser seite"
+  match_patterns:
+    # URL present + a browse verb (covers DE 'navigiere/öffne/gehe' + EN)
+    - "(navigate|navigier|go|open|öffne|browse|gehe?|surf|besuche?)\\w*\\s+(to|zu|zur|auf|nach)?\\s*https?://"
+    # any explicit http(s) URL with a browse-ish verb anywhere before it
+    - "(navigiere|navigate|öffne|browse|scrape|screenshot|besuche)\\b.{0,40}https?://"
+    - "(scrape|extract|grab|extrahier)\\w*\\s+.*\\b(page|website|webpage|site|seite|webseite)"
+    - "(fill|complete|fülle?|ausfüllen)\\s+.*\\b(form|formular)\\b"
+    # login: deckt "logge dich bei X ein" / "melde dich bei X an" mit Woertern
+    # dazwischen ab (alte Form verlangte "melde dich an" als Block, "logge..ein"
+    # fehlte ganz). Intent-Validierung Kat-6.
+    - "(login|log\\s?in|einlog\\w*|logg?e?\\s+(dich|mich)\\s+.{0,25}\\bein\\b|melde?\\s+(dich|mich)\\s+.{0,25}\\ban\\b|melde?\\s+(dich|mich)\\s+an)"
+    - "(take|grab|mach|erstell)\\w*\\s+(a|ein|einen)?\\s*screenshot\\s+(of|von|der|des)?\\s*(the|a|der|die|das)?\\s*(website|page|webpage|webseite|seite)"
+    # Screenshot einer bloßen Domain ohne http:// und ohne das Wort "website"
+    # ("screenshot von github.com") — sonst faellt es zwischen die Stuehle
+    # (desktop_skill desktop-scoped, browser verlangte website/http). Kat-6-Fix.
+    - "screenshot\\s+(von|of|der|des|the|a|einen?)?\\s*[\\w.-]+\\.(com|org|net|io|de|gov|edu|co|app|dev|ai)"
+    - "(gehe|geh|navigiere|navigate|öffne|besuche)\\s+(zur?|auf|to|nach)?\\s*(die|the)?\\s*(webseite|website|seite|url|web\\s?site)"
+    # "öffne (sichtbar) (die) seite/website X" — fiel sonst durch zu site_check
+    # (broadcast-only, kein execution_target -> Fehler). Verb + opt. Fueller
+    # (sichtbar/mir/zur/...) + seite/website. Faengt NICHT "öffne excel" (Desktop)
+    # oder "ist die seite erreichbar" (site_check). Intent-Validierung Kat-6.
+    - "(öffne|oeffne|zeig\\w*|besuche?|navigiere|geh\\w*|open|show|visit)\\s+(sichtbar\\s+|visible\\s+|mir\\s+|mal\\s+|uns\\s+|zur?\\s+|auf\\s+|to\\s+|nach\\s+)*(die\\s+|the\\s+|von\\s+)?(seite|website|webseite|web\\s?site|url|page)\\b"
+    - "(web\\s?research|deep research|recherchiere?\\s+im\\s+(web|netz|internet))"
+    # 2026-05-19: natural site requests without https:// or the word
+    # "webseite" (e.g. "öffne gmail", "geh auf youtube", "gmail aufmachen")
+    # previously fell through to the unreliable LLM planner -> wrong cap /
+    # example.com fallback. These hit the deterministic shortcut instead.
+    # (a) browse-verb + a domain-looking token (foo.com / mail.google.de)
+    - "(gehe|geh|navigiere|navigate|öffne|open|besuche|surf|zeig\\w*\\s+mir|check|geh\\s+auf|ruf\\w*\\s+auf)\\s+(zur?|auf|to|nach|die|the|mal)?\\s*[\\w-]+\\.(com|de|org|net|io|co|ai|app|dev|me|tv|gov|edu)\\b"
+    # (b) browse-verb + a well-known site name (no TLD/scheme needed)
+    - "(gehe|geh|navigiere|navigate|öffne|open|besuche|surf|zeig\\w*\\s+mir|check|geh\\s+auf|mach\\w*\\s+auf|ruf\\w*\\s+auf)\\s+(zur?|auf|to|nach|die|the|mal|meine?|mein)?\\s*(gmail|google|youtube|amazon|github|gitlab|reddit|twitter|x\\.com|linkedin|facebook|instagram|wikipedia|whatsapp|telegram|netflix|spotify|chatgpt|claude|openai|stackoverflow|ebay|paypal|outlook|yahoo|bing|duckduckgo|maps|gmaps|drive|dropbox|notion|slack|discord|twitch|tiktok|pinterest|booking|airbnb|aliexpress|otto|zalando|dhl|deutsche\\s?bahn|bahn|wetter|tagesschau|spiegel|heise|golem)\\b"
+    # (c) bare well-known site name as the whole/lead intent ("gmail",
+    # "gmail aufmachen", "youtube öffnen")
+    - "^\\s*(gmail|youtube|github|gitlab|amazon|reddit|linkedin|wikipedia|netflix|spotify|chatgpt|stackoverflow|outlook)\\b(\\s+(öffnen|aufmachen|aufrufen|zeigen|checken|open|show)\\b)?\\s*$"
+    # (d) German separable-verb bracket: "mach/ruf <site> auf",
+    # "<site> öffnen/aufmachen" (verb after the site name)
+    - "(mach\\w*|ruf\\w*|öffne|zeig\\w*|geh\\w*)\\s+(zur?|auf|die|mal|meine?|mein)?\\s*(gmail|google|youtube|amazon|github|gitlab|reddit|twitter|linkedin|facebook|instagram|wikipedia|whatsapp|telegram|netflix|spotify|chatgpt|claude|openai|stackoverflow|ebay|paypal|outlook|yahoo|maps|drive|dropbox|notion|slack|discord|twitch|tiktok|booking|airbnb|otto|zalando|dhl|bahn|wetter|tagesschau|spiegel|heise|golem)\\b\\s*(auf|aufmachen|aufrufen|öffnen|anzeigen|zeigen)\\b"
+  # Routes to openclaw-visible: the agent turn goes through the NATIVE
+  # openclaw Gateway (ws://127.0.0.1:18793), driving a VISIBLE Chrome
+  # window on the host PC (the user can watch). Sibling openclaw-coder
+  # still exists for HEADLESS container browser_automation if ever needed.
+  # Built + verified end-to-end 2026-05-19 (plan
+  # k-nnnen-wir-adative-skills-splendid-mochi.md).
+  execution_target: "openfang:openclaw-visible"
+
+# rowboat_chat (2026-06-08) — talk to the Rowboat KNOWLEDGE ASSISTANT via its GUI
+# chat (the Rowboat space in the VibeMind Multiverse app, driven over CDP by the
+# rowboat-chat agent). For CONTENT questions against the Rowboat knowledge base
+# (Bewerbung/Projects/Notes/People/Topics...). Distinct from knowledge_query,
+# whose regex patterns ("how many agents", "list personas", "what is the router")
+# are SYSTEM/meta lookups and fire first (regex before semantics) — so those stay
+# with rowboat-knowledge/supermemory and are NOT captured here.
+- capability: research_web
+  description: "research a topic on the web with cited external sources"
+  anchor_phrases:
+    - "research.web latest battery technology"
+  match_patterns:
+    - "research\\.web\\b"
+    - "\\bresearch space\\b.*\\b(web|internet|topic)\\b"
+  execution_target: "research:web"
+  arg_kwarg: query
+  validator:
+    kind: rule:dict_nonempty
+    on_fail: report
+
+- capability: research_scrape
+  description: "scrape a specific URL and return its content with source evidence"
+  anchor_phrases:
+    - "research.scrape https://example.com"
+  match_patterns:
+    - "research\\.scrape\\b"
+    - "\\bresearch space\\b.*\\b(scrape|extract)\\b"
+  execution_target: "research:scrape"
+  arg_kwarg: url
+  validator:
+    kind: rule:dict_nonempty
+    on_fail: report
+
+- capability: research_summarize
+  description: "summarize externally retrieved research with source evidence"
+  anchor_phrases:
+    - "research.summarize this source"
+  match_patterns:
+    - "research\\.summarize\\b"
+    - "\\bresearch space\\b.*\\b(summarize|zusammenfass)"
+  execution_target: "research:summarize"
+  arg_kwarg: url
+  validator:
+    kind: rule:dict_nonempty
+    on_fail: report
+
+- capability: research_to_idea
+  description: "research a topic and persist a sourced result as an idea"
+  anchor_phrases:
+    - "research.to_idea quantum computing"
+  match_patterns:
+    - "research\\.to_idea\\b"
+    - "\\bresearch space\\b.*\\b(to idea|als idee|idee anlegen)\\b"
+  execution_target: "research:to_idea"
+  arg_kwarg: query
+  validator:
+    kind: rule:dict_nonempty
+    on_fail: report
+
+- capability: rowboat_chat
+  description: "ask the Rowboat knowledge assistant a question via chat, consult the Rowboat knowledge base in dialogue about its stored content (Bewerbung, projects, notes, people, topics, investor programs), frag Rowboat, chatte mit Rowboat, was weiß Rowboat über X, lass dir von Rowboat etwas aus der Wissensbasis erklären"
+  anchor_phrases:
+    - "frag Rowboat nach X"
+    - "chatte mit Rowboat"
+    - "ask the rowboat knowledge assistant about X"
+    - "was weiß Rowboat über mein Bewerbungsprofil"
+    - "lass Rowboat die Investor-Programme zusammenfassen"
+    - "consult rowboat about the project notes"
+    - "frag die Wissensbasis was zu X gespeichert ist"
+  match_patterns:
+    - "(chatte?|rede)\\s+(?:mal\\s+)?(?:mit\\s+)?rowboat"
+    - "(ask|chat\\s+with|consult|query)\\s+(?:the\\s+)?rowboat"
+    - "(was|what)\\s+(weiß|wei[ßs]t|does|knows?)\\s+rowboat"
+    - "rowboat\\s+(?:knowledge|wissen|chat|assistant|assistent)"
+    - "(aus|from)\\s+(?:der|the)?\\s*rowboat[\\s-]?(?:wissensbasis|knowledge|kb)"
+  execution_target: "openfang:rowboat-chat"
+  agents:
+    primary: [rowboat-chat]
+    supporting: []
+
+# Canonical Roarboot operations. "Rowboat" remains accepted only in the
+# ingress match patterns because the deployed OpenFang integration retains
+# its legacy agent name. Execution is always provider-backed and fail-closed.
+- capability: roarboot_search
+  description: "search the Roarboot knowledge graph for relevant stored content"
+  anchor_phrases:
+    - "durchsuche Roarboot nach X"
+    - "search Roarboot for X"
+  match_patterns:
+    - "(?:durchsuch|suche|finde).{0,20}(?:roarboot|rowboat).{0,20}(?:nach|zu|for)"
+    - "(?:roarboot|rowboat)[\\s-]?(?:suche|search)"
+  execution_target: "openfang:rowboat-chat"
+  validator: {kind: "rule:non_empty_result", on_fail: block}
+  agents:
+    primary: [rowboat-chat]
+    supporting: []
+
+- capability: roarboot_query
+  description: "query Roarboot about a person, project, decision, or topic"
+  anchor_phrases:
+    - "frage Roarboot was wir über X wissen"
+    - "query Roarboot about X"
+  match_patterns:
+    - "(?:frag|frage|befrage|query).{0,20}(?:roarboot|rowboat).{0,30}(?:über|about|zu)"
+    - "(?:was|what).{0,15}(?:weiß|weiss|knows?).{0,10}(?:roarboot|rowboat).{0,20}(?:über|about)"
+  execution_target: "openfang:rowboat-chat"
+  validator: {kind: "rule:non_empty_result", on_fail: block}
+  agents:
+    primary: [rowboat-chat]
+    supporting: []
+
+- capability: roarboot_email_draft
+  description: "draft an email with context from the Roarboot knowledge graph"
+  anchor_phrases:
+    - "entwirf mit Roarboot eine Mail an X über Y"
+    - "have Roarboot draft an email to X about Y"
+  match_patterns:
+    - "(?:roarboot|rowboat).{0,25}(?:mail|e-mail|email).{0,15}(?:entwurf|entwirf|draft)"
+    - "(?:entwirf|draft).{0,25}(?:mail|e-mail|email).{0,25}(?:mit|using).{0,10}(?:roarboot|rowboat)"
+    - "(?:entwirf|draft).{0,15}(?:mit|using).{0,10}(?:roarboot|rowboat).{0,20}(?:mail|e-mail|email)"
+  execution_target: "openfang:rowboat-chat"
+  validator: {kind: "rule:non_empty_result", on_fail: block}
+  agents:
+    primary: [rowboat-chat]
+    supporting: []
+
+- capability: roarboot_meeting_brief
+  description: "prepare a meeting brief grounded in the Roarboot knowledge graph"
+  anchor_phrases:
+    - "erstelle mit Roarboot ein Meeting-Briefing zu X"
+    - "ask Roarboot for a meeting brief about X"
+  match_patterns:
+    - "(?:roarboot|rowboat).{0,25}(?:meeting|termin).{0,10}(?:brief|briefing|vorbereitung)"
+    - "(?:meeting|termin).{0,10}(?:brief|briefing|vorbereitung).{0,25}(?:roarboot|rowboat)"
+  execution_target: "openfang:rowboat-chat"
+  validator: {kind: "rule:non_empty_result", on_fail: block}
+  agents:
+    primary: [rowboat-chat]
+    supporting: []
+
+- capability: roarboot_deck
+  description: "create a presentation deck grounded in the Roarboot knowledge graph"
+  anchor_phrases:
+    - "erstelle mit Roarboot ein Deck zu X"
+    - "have Roarboot create a deck about X"
+  match_patterns:
+    - "(?:roarboot|rowboat).{0,25}(?:deck|präsentation|praesentation|slides)"
+    - "(?:deck|präsentation|praesentation|slides).{0,25}(?:mit|using|von).{0,10}(?:roarboot|rowboat)"
+  execution_target: "openfang:rowboat-chat"
+  validator: {kind: "rule:non_empty_result", on_fail: block}
+  agents:
+    primary: [rowboat-chat]
+    supporting: []
+
+- capability: openfang_agent_create
+  description: "create a new OpenFang agent, spawn agent from template, build agent for task X, configure agent tools/MCP servers/system prompt — wraps :4200/api/agents/* via the openfang-agents MCP server"
+  match_patterns:
+    # English: create/spawn/build [an] [openfang] agent
+    - "(create|spawn|build|make)\\s+(an?\\s+)?(new\\s+)?(openfang\\s+)?agent\\b"
+    # German: erstelle/baue/starte/spawn [einen] [neuen] [openfang] agent[en]
+    - "(erstelle|baue|spawn|starte|create)\\s+(einen?\\s+)?(neuen?\\s+)?(openfang[- ]?)?agent(en)?\\b"
+    # Explicit "openfang agent" subject + verb in any order
+    - "openfang[- ]?agent\\s+(create|spawn|build|erstelle|anlegen|bauen|starten)"
+    # List request — also routes here for the "what's running" sub-question
+    - "(list|zeig\\w*|show|liste)\\s+(all\\s+|alle\\s+)?(openfang\\s+)?agents?\\b"
+  # Phase 2 (Sofort-Fix 2026-05-20): route to fungus-search (Running, claude-code
+  # provider, has MCP access via :4200/mcp aggregator). The agent sees the user
+  # intent via /api/agents/{id}/message and uses its MCP tools (incl. the new
+  # openfang-agents server) to spawn/patch/kill via natural language.
+  # → Brain → OpenFang Claude-Agent → MCP-Tools → :4200/api/agents (Variante 2)
+  #
+  # Phase 4 follow-up (deferred — needs /api/mcp/dispatch route in Brain):
+  # execution_target: "mcp:openfang-agents:openfang_agent_spawn_from_template"
+  # would be the deterministic direct-call variant. McpExecutor in
+  # capability_targets.py:621 is currently a Phase-4 stub that POSTs to a
+  # non-existent /api/mcp/dispatch route. Until that route is implemented,
+  # use the openfang: target above.
+  execution_target: "openfang:fungus-search"
+  # Try to extract the template/role name from the intent:
+  # "agent for code-review", "agent namens X", "agent named X"
+  result_arg_extractor: 'regex:agent\s+(?:for|für|named|namens)\s+(.+?)(?:\s+(?:with|mit|using|und|and)|$)'
+
+# ============================================================
+# ============================================================
+# Minibook collaboration projection
+# ============================================================
+
+- capability: minibook.discuss
+  description: "Creates a discussion post in a real Minibook project; does not change project lifecycle state."
+  match_patterns:
+    - "(?:minibook.{0,20})?(?:discuss|discussion|diskussion).+"
+  execution_target: "direct:spaces.minibook.tools.minibook_tools:discuss"
+  result_arg_extractor: 'regex:(?:discuss|discussion|diskussion)(?:\s+(?:about|über|ueber))?\s+(.+)'
+  arg_kwarg: topic
+  validator: { kind: "rule:minibook_verified_result", on_fail: "block" }
+  agents:
+    primary: [brain-knowledge]
+
+- capability: minibook.collaborate
+  description: "Creates a collaboration task post inside Minibook without mutating authoritative project lifecycle data."
+  match_patterns:
+    - "(?:minibook.{0,20})?(?:collaborate|collaboration|zusammenarbeit).+"
+  execution_target: "direct:spaces.minibook.tools.minibook_tools:collaborate"
+  result_arg_extractor: 'regex:(?:collaborate|collaboration|zusammenarbeit)(?:\s+(?:on|about|zu|über|ueber))?\s+(.+)'
+  arg_kwarg: topic
+  validator: { kind: "rule:minibook_verified_result", on_fail: "block" }
+  agents:
+    primary: [brain-knowledge]
+
+- capability: minibook.status
+  description: "Reads the live Minibook service status."
+  match_patterns:
+    - '(?:minibook\s+status|status\s+(?:of|von)\s+minibook)'
+  execution_target: "direct:spaces.minibook.tools.minibook_tools:status"
+  validator: { kind: "rule:minibook_verified_result", on_fail: "block" }
+  agents:
+    primary: [brain-knowledge]
+
+- capability: minibook.list_projects
+  description: "Lists projects visible through the live Minibook API without changing them."
+  match_patterns:
+    - '(?:list|show|zeige|liste).{0,20}(?:minibook\s+)?projects|minibook\s+projekte'
+  execution_target: "direct:spaces.minibook.tools.minibook_tools:list_projects"
+  validator: { kind: "rule:minibook_verified_result", on_fail: "block" }
+  agents:
+    primary: [brain-knowledge]
+
+# ============================================================
+# Society-of-Mind Planner (Phase 3 — Telegram/Voice triggerbar)
+# ============================================================
+# Generischer Multi-Agent-Planner für komplexe/mehrstufige Aufträge. Telegram-
+# Nachrichten (via brain-gateway) + Voice (via multihop) die nach einem Plan
+# verlangen, werden hierher geroutet → som-planner OpenFang-Agent → SoM-Pipeline
+# (Planner→Executor→Validator→Matrix, mit Feedback-Loop). Status-Push zurück an
+# Telegram automatisch. Sensible Daten lokal, Pläne stoppen am Approval-Gate.
+
+- capability: rose.recommend
+  description: "Flowzen Blue Rose recommendation from the latest mood and energy check-in; read-only and privacy-minimal"
+  anchor_phrases: ["Was empfiehlst du", "Womit soll ich anfangen", "Flowzen Empfehlung"]
+  match_patterns:
+    - "(was|womit).{0,20}(empfiehl|anfangen|starten)"
+    - "(flowzen|rose|blaue rose).{0,20}(empfehl|recommend)"
+  execution_target: "supabase:rose.recommend"
+  validator: { kind: "rule:flowzen_result", on_fail: "block" }
+
+- capability: rose.accept
+  description: "Accept an opaque Flowzen recommendation ID and persist a verified minimal activity marker"
+  anchor_phrases: ["Empfehlung annehmen", "Flowzen Empfehlung akzeptieren"]
+  match_patterns:
+    - "(empfehlung|recommendation).{0,20}(annehmen|akzeptieren|accept)"
+  execution_target: "supabase:rose.accept"
+  arg_kwarg: recommendation_log_id
+  result_arg_extractor: 'regex:(fzr_[0-9a-f]{16})'
+  validator: { kind: "rule:flowzen_result", on_fail: "block" }
+
+- capability: rose.status
+  description: "Read the latest minimal Flowzen check-in and verified activity status"
+  anchor_phrases: ["Flowzen Status", "Status der blauen Rose"]
+  match_patterns:
+    - "(flowzen|rose|blaue rose).{0,20}(status|stand)"
+  execution_target: "supabase:rose.status"
+  validator: { kind: "rule:flowzen_result", on_fail: "block" }
+
+- capability: som_plan
+  description: "Society-of-Mind Multi-Agent-Planung für komplexe oder mehrstufige Aufträge: zerlegt einen Auftrag in Schritte, bestimmt Ausführung+Agenten, validiert, baut eine Ausführungs-Matrix. Für 'plane X', 'erstelle einen Plan für Y', 'orchestriere Z', mehrstufige Vorhaben mit mehreren Capabilities."
+  anchor_phrases:
+    - "plane das für mich"
+    - "erstelle einen Plan für"
+    - "orchestriere die Aufgabe"
+    - "wie gehe ich X an"
+    - "mach einen Multi-Agent-Plan"
+    - "society of mind plan"
+  match_patterns:
+    - "(plane|erstelle\\s+(?:einen|den)?\\s*plan|orchestriere)\\s+"
+    - "(multi.?agent|society.?of.?mind|som)\\s+plan"
+    - "wie\\s+(gehe\\s+ich|geht\\s+man|sollte\\s+ich)\\s+.{0,30}(an|vor)"
+  execution_target: "openfang:som-planner"
+  agents:
+    primary: [som-planner]
+    supporting: [rowboat-knowledge]
+
+- capability: som_resume
+  description: "Beantwortet eine offene SoM-Plan-Rückfrage und nimmt den wartenden Plan wieder auf (oder bricht ihn ab). Greift wenn der SoM-Planner zuvor nach fehlenden Infos / Freigaben gefragt hat. Die Antwort wird dem jüngsten wartenden Run zugeordnet (kein ID-Tippen nötig), 'x' bricht ab."
+  anchor_phrases:
+    - "antwort"
+    - "antworte"
+    - "freigabe"
+    - "fortsetzen"
+    - "weiter mit dem plan"
+    - "nimm den plan wieder auf"
+  match_patterns:
+    # explizite Antwort-Formen (nummeriert, run-Präfix, Abbruch) + 'antwort:'-Trigger
+    - "^\\s*antwort\\s*[:=]"
+    - "^\\s*run_\\d+\\s*[:.]"
+    - "^\\s*\\d+\\s*[:.)]\\s*\\S"
+    - "^\\s*x\\s*$"
+    - "(setze|nimm)\\s+.{0,20}(plan|run)\\s+.{0,12}(fort|wieder\\s+auf)"
+    - "freigabe\\s+(erteilt|ja|ok)"
+  execution_target: "openfang:som-resume"
+  agents:
+    primary: [som-resume]
+
+- capability: som_execute
+  description: "Führt einen fertigen (ready) SoM-Plan tatsächlich aus — Schritt für Schritt über die zuständigen Agenten, mit Approval-Gates die vor sensiblen Aktionen (Speichern/Versand) anhalten. Für 'führe den Plan aus', 'los, mach das', 'starte die Ausführung'. Nimmt den jüngsten ready-Plan."
+  anchor_phrases:
+    - "führe den plan aus"
+    - "starte die ausführung"
+    - "mach das jetzt"
+    - "los, ausführen"
+    - "plan ausführen"
+  match_patterns:
+    - "(führe|fuehre|starte|mach)\\s+.{0,20}(plan|aus|ausführung|ausfuehrung)"
+    - "plan\\s+ausf(ü|ue)hren"
+    - "^\\s*(los|ausführen|ausfuehren|mach\\s+es)\\s*$"
+  execution_target: "openfang:som-execute"
+  agents:
+    primary: [som-execute]
+
+# ============================================================
+# Video Space — deterministic Brain -> existing Video tools
+# ============================================================
+
+- capability: video_status
+  description: "show Video Space provider and tool availability or query an asynchronous video job"
+  anchor_phrases: ["video status", "status video job"]
+  match_patterns: ["video.{0,20}(status|job)"]
+  execution_target: "direct:spaces.video.execution_target:execute_video"
+
+- capability: video_team_status
+  description: "show the team video pipeline status"
+  anchor_phrases: ["video team status"]
+  match_patterns: ["video.{0,10}team.{0,10}status"]
+  execution_target: "direct:spaces.video.execution_target:execute_video"
+
+- capability: video_team_run
+  description: "run a real team video pipeline step asynchronously"
+  anchor_phrases: ["run video team pipeline"]
+  match_patterns: ["(run|starte|führe).{0,20}video.{0,20}(team|pipeline)"]
+  execution_target: "direct:spaces.video.execution_target:execute_video"
+
+- capability: video_vision
+  description: "generate a vision video through the Video Space provider"
+  anchor_phrases: ["generate vision video"]
+  match_patterns: ["(generate|erstelle).{0,20}(vision|sora).{0,10}video"]
+  execution_target: "direct:spaces.video.execution_target:execute_video"
+
+- capability: video_demo_build
+  description: "build a demo video through the existing Video Space CLI"
+  anchor_phrases: ["build demo video"]
+  match_patterns: ["(build|baue|erstelle).{0,20}demo.{0,10}video"]
+  execution_target: "direct:spaces.video.execution_target:execute_video"
+
+- capability: video_lipsync
+  description: "run lipsync for video and audio media"
+  anchor_phrases: ["lipsync video"]
+  match_patterns: ["(lip.?sync|lippensynchron)"]
+  execution_target: "direct:spaces.video.execution_target:execute_video"
+
+- capability: video_voice_clone
+  description: "clone a voice from reference audio through the Video Space provider"
+  anchor_phrases: ["clone voice from audio"]
+  match_patterns: ["(clone|klone).{0,15}(voice|stimme)"]
+  execution_target: "direct:spaces.video.execution_target:execute_video"
+
+- capability: video_voice_tts
+  description: "generate TTS audio through the Video Space provider"
+  anchor_phrases: ["video voice tts"]
+  match_patterns: ["(tts|text.to.speech).{0,15}(video|voice|stimme)?"]
+  execution_target: "direct:spaces.video.execution_target:execute_video"

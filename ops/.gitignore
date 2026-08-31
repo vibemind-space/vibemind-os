@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Environment
+.env
+
+# Node
+node_modules/
+openclaw/node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build artifacts
+*.pptx
+*.html
+deck_images/
+deck_charts/
+*.emails.txt
+
+# Claude
+.claude/
+
+# Playwright
+.playwright-mcp/
+
+# Temp
+redblue_artifacts/

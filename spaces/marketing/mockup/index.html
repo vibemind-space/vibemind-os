@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en" data-tab="dashboard">
+<head>
+<meta charset="UTF-8" />
+<title>VibeMind Marketing-Ops — Mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    color-scheme: dark;
+  }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(at 0% 0%, #14253c 0%, transparent 40%),
+                radial-gradient(at 100% 0%, #1a1230 0%, transparent 40%),
+                radial-gradient(at 50% 100%, #0e1a2e 0%, transparent 40%),
+                #0a0f1c;
+  }
+  .glass {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .tab-link.active {
+    color: #38bdf8;
+    background: rgba(56,189,248,0.10);
+    border-color: rgba(56,189,248,0.35);
+  }
+  .pill {
+    @apply inline-flex items-center text-xs px-2 py-0.5 rounded-full border;
+  }
+  .lockout-banner {
+    background: linear-gradient(90deg, rgba(244,63,94,0.16), rgba(244,63,94,0.04));
+    border: 1px solid rgba(244,63,94,0.4);
+  }
+  details summary { cursor: pointer; }
+  table.kv td { padding: 4px 12px; font-size: 12px; }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="text-slate-200 min-h-screen">
+
+<!-- ───── Top bar ───────────────────────────────────────────────────── -->
+<header class="border-b border-white/5 sticky top-0 z-30 backdrop-blur bg-slate-950/60">
+  <div class="max-w-[1480px] mx-auto px-6 py-3 flex items-center gap-6">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-md bg-gradient-to-br from-sky-400 to-fuchsia-500 grid place-items-center font-black">M</div>
+      <div>
+        <div class="font-semibold text-base">Marketing-Ops</div>
+        <div class="text-[11px] text-slate-400">VibeMind · Brevo-like · Self-hosted</div>
+      </div>
+    </div>
+    <nav class="flex items-center gap-1 ml-4 flex-wrap">
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="dashboard"  href="#dashboard">Dashboard</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="campaigns"  href="#campaigns">Campaigns</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="audiences"  href="#audiences">Audiences</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="proposals"  href="#proposals">Proposals</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="audit"      href="#audit">Audit</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="templates"  href="#templates">Templates</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="channels"   href="#channels">Channels</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="inbox"      href="#inbox">Inbox</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="analytics"  href="#analytics">Analytics</a>
+      <a class="tab-link px-3 py-1.5 rounded-md text-sm border border-transparent text-slate-300 hover:text-white" data-tab="settings"   href="#settings">Settings</a>
+    </nav>
+    <div class="ml-auto flex items-center gap-3 text-xs">
+      <span class="pill border-emerald-400/40 text-emerald-300 bg-emerald-400/10">DB · marketing.* live</span>
+      <span class="pill border-amber-400/40 text-amber-200 bg-amber-400/10">Sender · loopback only</span>
+    </div>
+  </div>
+
+  <!-- Phase-1 lockout banner — always visible, mockup makes the contract explicit -->
+  <div class="lockout-banner">
+    <div class="max-w-[1480px] mx-auto px-6 py-2 text-sm flex items-center gap-3 text-rose-100">
+      <span class="text-rose-300">⛔</span>
+      <span class="font-medium">Phase 1 no-mail-out gate active.</span>
+      <span class="text-rose-200/80">All sends are dry-run only. Postfix loopback-block is enforced server-side. Production cutover happens at Homelab-Deploy.</span>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1480px] mx-auto px-6 py-6">
+
+<!-- ─── V1 Dashboard ────────────────────────────────────────────────── -->
+<section data-view="dashboard" class="space-y-6">
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="glass rounded-xl p-4"><div class="text-[10px] uppercase tracking-wider text-slate-400">Accounts</div><div class="text-2xl font-semibold num mt-1">14,742</div><div class="text-[11px] text-slate-500 mt-1">pathfinder migrated</div></div>
+    <div class="glass rounded-xl p-4"><div class="text-[10px] uppercase tracking-wider text-slate-400">Verified emails</div><div class="text-2xl font-semibold num mt-1">350</div><div class="text-[11px] text-emerald-300/80 mt-1">+0 last 7d</div></div>
+    <div class="glass rounded-xl p-4"><div class="text-[10px] uppercase tracking-wider text-slate-400">Audiences</div><div class="text-2xl font-semibold num mt-1">3</div><div class="text-[11px] text-slate-500 mt-1">2 dynamic · 1 static</div></div>
+    <div class="glass rounded-xl p-4"><div class="text-[10px] uppercase tracking-wider text-slate-400">Campaigns</div><div class="text-2xl font-semibold num mt-1">2 <span class="text-sm text-slate-400">draft</span></div><div class="text-[11px] text-slate-500 mt-1">0 sending · 0 sent</div></div>
+    <div class="glass rounded-xl p-4"><div class="text-[10px] uppercase tracking-wider text-slate-400">Channels ready</div><div class="text-2xl font-semibold num mt-1">28<span class="text-base text-slate-500">/42</span></div><div class="text-[11px] text-slate-500 mt-1">14 outbound-only</div></div>
+    <div class="glass rounded-xl p-4"><div class="text-[10px] uppercase tracking-wider text-slate-400">Inbound (7d)</div><div class="text-2xl font-semibold num mt-1">0</div><div class="text-[11px] text-slate-500 mt-1">IMAP polling on</div></div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="glass rounded-xl p-5 lg:col-span-2">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold tracking-wide text-slate-200">Recent activity</h3>
+        <span class="text-[11px] text-slate-400">audit_log · last 10</span>
+      </div>
+      <ul class="divide-y divide-white/5 text-sm">
+        <li class="py-2.5 flex items-center gap-3"><span class="pill border-sky-400/40 text-sky-200">sync</span><span class="text-slate-300">Worker A drained outbox · 14,742 accounts rendered</span><span class="ml-auto text-xs text-slate-500">just now</span></li>
+        <li class="py-2.5 flex items-center gap-3"><span class="pill border-emerald-400/40 text-emerald-200">db</span><span class="text-slate-300">Migration 006_sync_columns applied</span><span class="ml-auto text-xs text-slate-500">today</span></li>
+        <li class="py-2.5 flex items-center gap-3"><span class="pill border-fuchsia-400/40 text-fuchsia-200">data</span><span class="text-slate-300">350 verified emails imported from pathfinder</span><span class="ml-auto text-xs text-slate-500">2 days ago</span></li>
+        <li class="py-2.5 flex items-center gap-3"><span class="pill border-amber-400/40 text-amber-200">infra</span><span class="text-slate-300">Postfix loopback-block applied</span><span class="ml-auto text-xs text-slate-500">7 days ago</span></li>
+        <li class="py-2.5 flex items-center gap-3"><span class="pill border-slate-400/40 text-slate-300">mailcow</span><span class="text-slate-300">53 mailboxes provisioned (3 service + 50 faker)</span><span class="ml-auto text-xs text-slate-500">7 days ago</span></li>
+      </ul>
+    </div>
+
+    <div class="glass rounded-xl p-5">
+      <h3 class="text-sm font-semibold tracking-wide text-slate-200 mb-3">Send gate</h3>
+      <table class="kv">
+        <tr><td class="text-slate-400">no-mail-out</td><td class="text-emerald-300">ACTIVE</td></tr>
+        <tr><td class="text-slate-400">postfix loopback</td><td class="text-emerald-300">enforced</td></tr>
+        <tr><td class="text-slate-400">consent_given_at</td><td class="text-rose-300">NULL on all rows</td></tr>
+        <tr><td class="text-slate-400">investor_already_sent</td><td class="text-emerald-300">sticky lockout</td></tr>
+        <tr><td class="text-slate-400">cutover</td><td class="text-slate-300">at Homelab-Deploy</td></tr>
+      </table>
+      <p class="text-[11px] text-slate-500 mt-3">Three independent safeguards keep Phase-1 free of accidental external delivery.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── V2 Campaigns ───────────────────────────────────────────────── -->
+<section data-view="campaigns" class="space-y-4 hidden">
+  <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold">Campaigns</h2>
+    <button class="ml-auto px-3 py-1.5 rounded-md bg-sky-500/20 border border-sky-400/40 text-sky-200 text-sm">+ New campaign</button>
+  </div>
+  <div class="glass rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-white/5 text-[11px] uppercase tracking-wider text-slate-400">
+        <tr>
+          <th class="text-left px-4 py-2">Name</th>
+          <th class="text-left px-4 py-2">Status</th>
+          <th class="text-left px-4 py-2">Channels</th>
+          <th class="text-left px-4 py-2">Audience</th>
+          <th class="text-right px-4 py-2">Recipients</th>
+          <th class="text-right px-4 py-2">Open</th>
+          <th class="text-right px-4 py-2">Click</th>
+          <th class="text-left px-4 py-2">Scheduled</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/5">
+        <tr><td class="px-4 py-3">Investor outreach — wave 1</td><td><span class="pill border-amber-400/40 text-amber-200">draft</span></td><td>✉️ ·</td><td>Verified-investors</td><td class="text-right num">312</td><td class="text-right text-slate-500">—</td><td class="text-right text-slate-500">—</td><td class="text-slate-400">—</td></tr>
+        <tr><td class="px-4 py-3">Newsletter · Vibemind launch</td><td><span class="pill border-amber-400/40 text-amber-200">draft</span></td><td>✉️ · 💬</td><td>All-verified</td><td class="text-right num">350</td><td class="text-right text-slate-500">—</td><td class="text-right text-slate-500">—</td><td class="text-slate-400">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <details class="glass rounded-xl p-5">
+    <summary class="text-sm font-semibold">+ New campaign wizard</summary>
+    <ol class="mt-4 text-sm grid grid-cols-1 md:grid-cols-5 gap-3">
+      <li class="glass rounded-md p-3 text-center"><div class="text-[10px] text-slate-400">1</div>Audience</li>
+      <li class="glass rounded-md p-3 text-center"><div class="text-[10px] text-slate-400">2</div>Channels</li>
+      <li class="glass rounded-md p-3 text-center"><div class="text-[10px] text-slate-400">3</div>Templates</li>
+      <li class="glass rounded-md p-3 text-center"><div class="text-[10px] text-slate-400">4</div>Schedule</li>
+      <li class="glass rounded-md p-3 text-center"><div class="text-[10px] text-slate-400">5</div>Review</li>
+    </ol>
+  </details>
+</section>
+
+<!-- ─── V3 Audiences ───────────────────────────────────────────────── -->
+<section data-view="audiences" class="space-y-4 hidden">
+  <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold">Audiences <span id="aud-count" class="text-xs text-slate-400">(loading...)</span></h2>
+    <span class="text-[11px] text-slate-500">live from /api/audiences</span>
+  </div>
+  <div id="audiences-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="glass rounded-xl p-5 text-sm text-slate-500">Loading audiences ...</div>
+  </div>
+</section>
+
+<!-- ─── V3a Proposals (Hand-bridge staging) ──────────────────────────── -->
+<section data-view="proposals" class="space-y-4 hidden">
+  <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold">Audience Proposals <span id="prop-count" class="text-xs text-slate-400">(loading...)</span></h2>
+    <span class="text-[11px] text-slate-500">staging — never on the send-path</span>
+  </div>
+  <div class="text-xs text-slate-500 mb-2">
+    Phase-2 staging: each row is a proposed audience awaiting human review.
+    Approval requires <code class="text-amber-300">MARKETING_PROPOSAL_API_KEY</code>;
+    paste it into the field below to enable approve/reject buttons.
+  </div>
+  <div class="glass rounded-md p-2 mb-2 flex items-center gap-2 text-xs">
+    <span class="text-slate-400">api_key:</span>
+    <input id="prop-api-key" type="password" placeholder="(required for write ops)"
+           class="flex-1 bg-transparent border border-white/10 rounded px-2 py-1 text-sm" />
+    <span id="prop-key-stored" class="text-emerald-300 hidden">[saved]</span>
+  </div>
+  <div id="proposals-list" class="space-y-2">
+    <div class="glass rounded-xl p-5 text-sm text-slate-500">Loading proposals ...</div>
+  </div>
+</section>
+
+<!-- ─── V3b Audit feed ───────────────────────────────────────────────── -->
+<section data-view="audit" class="space-y-4 hidden">
+  <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold">Audit log</h2>
+    <span class="text-[11px] text-slate-500">last 50 entries from marketing.audit_log</span>
+  </div>
+  <div class="glass rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-white/5 text-[11px] uppercase tracking-wider text-slate-400">
+        <tr>
+          <th class="text-left px-4 py-2">When</th>
+          <th class="text-left px-4 py-2">Actor</th>
+          <th class="text-left px-4 py-2">Action</th>
+          <th class="text-left px-4 py-2">Target</th>
+          <th class="text-left px-4 py-2">Detail</th>
+        </tr>
+      </thead>
+      <tbody id="audit-rows" class="divide-y divide-white/5">
+        <tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">Loading audit log...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── V4 Templates ───────────────────────────────────────────────── -->
+<section data-view="templates" class="space-y-4 hidden">
+  <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold">Templates</h2>
+    <button class="ml-auto px-3 py-1.5 rounded-md bg-sky-500/20 border border-sky-400/40 text-sky-200 text-sm">+ New template</button>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="glass rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-2"><span class="pill border-sky-400/40 text-sky-200">email</span><span class="text-xs text-slate-400">html · text</span></div>
+      <div class="font-semibold">Investor warm-intro · v1</div>
+      <div class="text-xs text-slate-400 mt-1">subject · "Vibemind · operator-grade dev workspace · 5-min look?"</div>
+      <pre class="text-[11px] mt-3 text-slate-400 whitespace-pre-wrap leading-relaxed">Hi {{first_name}}, building a vertically-integrated dev workspace …</pre>
+    </div>
+    <div class="glass rounded-xl p-5">
+      <div class="flex items-center gap-2 mb-2"><span class="pill border-fuchsia-400/40 text-fuchsia-200">multi</span><span class="text-xs text-slate-400">email · linkedin</span></div>
+      <div class="font-semibold">Launch announcement · v1</div>
+      <div class="text-xs text-slate-400 mt-1">subject · "Vibemind v1 is live"</div>
+      <pre class="text-[11px] mt-3 text-slate-400 whitespace-pre-wrap leading-relaxed">We just shipped Vibemind v1 — try the multiverse desktop, …</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ─── V5 Channels ────────────────────────────────────────────────── -->
+<section data-view="channels" class="space-y-4 hidden">
+  <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold">Channels</h2>
+    <span class="ml-auto text-xs text-slate-400">28 of 42 ready · 14 outbound-only · all via OpenFang</span>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 text-sm">
+    <!-- ready -->
+    <div class="glass rounded-xl p-3"><div class="font-semibold">✉️ Email</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">mailcow · loopback</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Telegram</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">OpenFang · 1908 LOC</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Slack</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">OpenFang</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Feishu</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">OpenFang</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">WeCom</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">OpenFang</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">LinkedIn</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">OAuth · post</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Mastodon</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">OpenFang</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Discord</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">OpenFang</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Webhook</div><span class="pill border-emerald-400/40 text-emerald-200 mt-1">ready</span><div class="text-[11px] text-slate-500 mt-2">generic POST</div></div>
+    <!-- outbound only -->
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Twitter/X</div><span class="pill border-amber-400/40 text-amber-200 mt-1">outbound</span><div class="text-[11px] text-slate-500 mt-2">post only</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Bluesky</div><span class="pill border-amber-400/40 text-amber-200 mt-1">outbound</span><div class="text-[11px] text-slate-500 mt-2">post only</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Reddit</div><span class="pill border-amber-400/40 text-amber-200 mt-1">outbound</span><div class="text-[11px] text-slate-500 mt-2">post only</div></div>
+    <!-- not ready -->
+    <div class="glass rounded-xl p-3"><div class="font-semibold">Threads</div><span class="pill border-slate-400/40 text-slate-300 mt-1">later</span><div class="text-[11px] text-slate-500 mt-2">no public API</div></div>
+    <div class="glass rounded-xl p-3"><div class="font-semibold">WhatsApp</div><span class="pill border-slate-400/40 text-slate-300 mt-1">later</span><div class="text-[11px] text-slate-500 mt-2">cloud API</div></div>
+  </div>
+</section>
+
+<!-- ─── V6 Inbox ──────────────────────────────────────────────────── -->
+<section data-view="inbox" class="space-y-4 hidden">
+  <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold">Unified inbox</h2>
+    <span class="ml-auto text-xs text-slate-400">IMAP · 2 mailboxes · 0 unread (7d)</span>
+  </div>
+  <div class="glass rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-white/5 text-[11px] uppercase tracking-wider text-slate-400">
+        <tr>
+          <th class="text-left px-4 py-2">When</th>
+          <th class="text-left px-4 py-2">Channel</th>
+          <th class="text-left px-4 py-2">From</th>
+          <th class="text-left px-4 py-2">Subject</th>
+          <th class="text-left px-4 py-2">Linked to send</th>
+          <th class="text-left px-4 py-2">Flags</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/5">
+        <tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">No inbound messages yet. Worker C will populate this once <code>marketing@</code> or <code>noreply@</code> receives anything.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── V7 Analytics ──────────────────────────────────────────────── -->
+<section data-view="analytics" class="space-y-4 hidden">
+  <div class="flex items-center gap-3">
+    <h2 class="text-lg font-semibold">Analytics</h2>
+    <span class="ml-auto text-xs text-slate-400">no sends yet · all chart areas blank by design</span>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="glass rounded-xl p-5 h-64 flex items-center justify-center text-slate-500 text-sm">Open-rate trend · awaiting first sent</div>
+    <div class="glass rounded-xl p-5 h-64 flex items-center justify-center text-slate-500 text-sm">Click-rate trend · awaiting first sent</div>
+    <div class="glass rounded-xl p-5 h-64 flex items-center justify-center text-slate-500 text-sm">Per-channel reach</div>
+    <div class="glass rounded-xl p-5 h-64 flex items-center justify-center text-slate-500 text-sm">Audience funnel</div>
+  </div>
+</section>
+
+<!-- ─── V8 Settings ───────────────────────────────────────────────── -->
+<section data-view="settings" class="space-y-4 hidden">
+  <h2 class="text-lg font-semibold">Settings</h2>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="glass rounded-xl p-5">
+      <h3 class="font-semibold mb-2">Sender accounts</h3>
+      <table class="kv text-sm w-full">
+        <tr><td>marketing@vibemind.space</td><td class="text-emerald-300">OK</td><td>SMTP+IMAP</td></tr>
+        <tr><td>noreply@vibemind.space</td><td class="text-emerald-300">OK</td><td>SMTP+IMAP</td></tr>
+        <tr><td>felix@vibemind.space</td><td class="text-slate-400">excluded</td><td>privacy</td></tr>
+      </table>
+    </div>
+    <div class="glass rounded-xl p-5">
+      <h3 class="font-semibold mb-2">Workers</h3>
+      <table class="kv text-sm w-full">
+        <tr><td>marketing_sync_a (DB→FS)</td><td class="text-emerald-300">running</td></tr>
+        <tr><td>marketing_sync_b (FS→DB)</td><td class="text-emerald-300">running</td></tr>
+        <tr><td>marketing_imap (Mailcow→DB)</td><td class="text-amber-300">configured · not in launcher yet</td></tr>
+      </table>
+    </div>
+    <div class="glass rounded-xl p-5">
+      <h3 class="font-semibold mb-2">Database</h3>
+      <table class="kv text-sm w-full">
+        <tr><td>schema</td><td><code>marketing.*</code></td><td>13 tables</td></tr>
+        <tr><td>RLS</td><td class="text-emerald-300">enforced</td><td>service_role only</td></tr>
+        <tr><td>migrations</td><td>001 → 006</td></tr>
+        <tr><td>vault</td><td>~/.rowboat/knowledge/Marketing/People/</td></tr>
+      </table>
+    </div>
+    <div class="glass rounded-xl p-5">
+      <h3 class="font-semibold mb-2">Send gate</h3>
+      <table class="kv text-sm w-full">
+        <tr><td>no-mail-out</td><td class="text-emerald-300">ACTIVE</td></tr>
+        <tr><td>postfix loopback</td><td class="text-emerald-300">enforced</td></tr>
+        <tr><td>investor_already_sent</td><td class="text-emerald-300">sticky · auto-flip on delivery</td></tr>
+        <tr><td>cutover</td><td>Homelab-Deploy</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="border-t border-white/5 py-4 text-center text-[11px] text-slate-500">
+  Mockup · spaces/marketing/mockup/index.html · static, no backend wiring
+</footer>
+
+<script>
+  // Tab routing — pure hash-based, no framework.
+  const tabs = document.querySelectorAll('.tab-link');
+  const views = document.querySelectorAll('[data-view]');
+  function show(tab) {
+    tab = tab || 'dashboard';
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    views.forEach(v => v.classList.toggle('hidden', v.dataset.view !== tab));
+    document.documentElement.dataset.tab = tab;
+  }
+  tabs.forEach(t => t.addEventListener('click', e => {
+    e.preventDefault();
+    show(t.dataset.tab);
+    history.replaceState(null, '', '#' + t.dataset.tab);
+  }));
+  show((location.hash || '#dashboard').slice(1));
+</script>
+
+<script>
+  // ─── Dashboard live-data binding ────────────────────────────────────
+  // Served from the same origin as /api/* by spaces/marketing/api/server.py,
+  // so no CORS or auth headers needed. Falls back silently to the mock
+  // numbers when /api/stats is unreachable (file:// or offline).
+  (function () {
+    const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString("en-US"));
+    // Maps marketing_tools.get_stats().data keys onto the six Dashboard
+    // KPI cards (in source order). Use null to leave a card alone.
+    const CARDS = [
+      ["accounts",        (v) => fmt(v)],
+      ["verified_emails", (v) => fmt(v)],
+      [null, null],                                                   // audiences (mock)
+      ["campaigns",       (v) => `${fmt(v)} <span class="text-sm text-slate-400">total</span>`],
+      [null, null],                                                   // channels ready (frontend)
+      ["inbound_7d",      (v) => fmt(v)],
+    ];
+
+    async function loadStats() {
+      let data;
+      try {
+        const r = await fetch("/api/stats", { headers: { Accept: "application/json" } });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const body = await r.json();
+        if (!body || body.success === false) throw new Error((body && body.message) || "no data");
+        data = body.data || {};
+      } catch (err) {
+        // Silent fallback — mock numbers stay visible.
+        return;
+      }
+
+      const cards = document.querySelectorAll(
+        'section[data-view="dashboard"] > .grid:first-of-type > .glass'
+      );
+      CARDS.forEach(([key, format], i) => {
+        if (!key || !format) return;
+        const card = cards[i];
+        if (!card) return;
+        const numDiv = card.querySelector(".num");
+        if (!numDiv) return;
+        const v = data[key];
+        if (v == null) return;
+        numDiv.innerHTML = format(v);
+      });
+
+      // Lockout-banner: append live count if any rows are sticky-locked.
+      if (data.investor_sent_locked != null && data.investor_sent_locked > 0) {
+        const banner = document.querySelector('.lockout-banner [class*="rose-200"]');
+        if (banner && !banner.dataset.liveBound) {
+          banner.textContent += ` (${fmt(data.investor_sent_locked)} addresses locked via investor_already_sent.)`;
+          banner.dataset.liveBound = "1";
+        }
+      }
+    }
+
+    loadStats();
+    setInterval(() => {
+      if (document.documentElement.dataset.tab === "dashboard") loadStats();
+    }, 30000);
+  })();
+</script>
+
+<script>
+  // ─── Live data binding for Audiences / Proposals / Audit ───────────
+  //
+  // Read endpoints (GET) require no auth. Write endpoints
+  // (approve/reject) require MARKETING_PROPOSAL_API_KEY in the body.
+  // The key is held only in this tab's sessionStorage -- nothing is
+  // ever sent to a backend service other than the marketing API itself.
+  //
+  // Defensive: every fetch tolerates 4xx/5xx without crashing the page.
+  (function () {
+    const $ = (sel) => document.querySelector(sel);
+    const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString("en-US"));
+    const KEY_STORE = "marketing_proposal_api_key";
+
+    function getApiKey() {
+      try { return sessionStorage.getItem(KEY_STORE) || ""; } catch (e) { return ""; }
+    }
+    function setApiKey(v) {
+      try { sessionStorage.setItem(KEY_STORE, v); } catch (e) {}
+    }
+
+    async function safeFetch(url, opts) {
+      try {
+        const r = await fetch(url, opts);
+        const body = await r.json().catch(() => ({}));
+        return { ok: r.ok, status: r.status, body };
+      } catch (err) {
+        return { ok: false, status: 0, body: { message: String(err) } };
+      }
+    }
+
+    // ─── Audiences ───────────────────────────────────────────────────
+    async function loadAudiences() {
+      const grid = $("#audiences-grid");
+      const cnt = $("#aud-count");
+      if (!grid) return;
+      const { ok, body } = await safeFetch("/api/audiences");
+      if (!ok || !body.success) {
+        grid.innerHTML =
+          '<div class="glass rounded-xl p-5 text-sm text-rose-300">' +
+          'Could not load audiences (offline / no auth / DB down). ' +
+          'Mock data displayed in other tabs.</div>';
+        if (cnt) cnt.textContent = "(error)";
+        return;
+      }
+      const audiences = body.data || [];
+      if (cnt) cnt.textContent = "(" + audiences.length + ")";
+      if (audiences.length === 0) {
+        grid.innerHTML =
+          '<div class="glass rounded-xl p-5 text-sm text-slate-500">' +
+          'No audiences yet. Stage a proposal via /api/proposals and approve it.' +
+          '</div>';
+        return;
+      }
+      // Render each audience as a card. Fetch counts in parallel.
+      grid.innerHTML = audiences
+        .map(
+          (a) =>
+            '<div class="glass rounded-xl p-5" data-aud-id="' +
+            (a.id || "") +
+            '">' +
+            '<div class="flex items-center justify-between mb-1">' +
+            '<div class="font-semibold truncate">' + escapeHtml(a.name || "(unnamed)") + '</div>' +
+            '<span class="pill border-emerald-400/40 text-emerald-200">live</span>' +
+            "</div>" +
+            '<div class="text-xs text-slate-400 mb-3">' +
+            (a.description ? escapeHtml(a.description).slice(0, 80) : "no description") +
+            "</div>" +
+            '<div class="text-3xl font-semibold num" data-aud-count>' + (a.member_count != null ? fmt(a.member_count) : "—") +
+            "</div>" +
+            '<div class="text-[11px] text-slate-500">reachable now</div>' +
+            "</div>"
+        )
+        .join("");
+      // Pull live counts (filter applies: smtp_valid=1, investor_already_sent=false, etc.)
+      audiences.forEach(async (a) => {
+        if (!a.id) return;
+        const { ok, body } = await safeFetch("/api/audiences/" + encodeURIComponent(a.id) + "/count");
+        if (!ok || !body.success || !body.data) return;
+        const el = grid.querySelector(
+          '[data-aud-id="' + a.id + '"] [data-aud-count]'
+        );
+        if (el) el.textContent = fmt(body.data.reachable);
+      });
+    }
+
+    // ─── Proposals ───────────────────────────────────────────────────
+    async function loadProposals() {
+      const list = $("#proposals-list");
+      const cnt = $("#prop-count");
+      if (!list) return;
+      const { ok, body } = await safeFetch("/api/proposals?status=pending_review");
+      if (!ok || !body.success) {
+        list.innerHTML =
+          '<div class="glass rounded-xl p-5 text-sm text-rose-300">Could not load proposals.</div>';
+        if (cnt) cnt.textContent = "(error)";
+        return;
+      }
+      const proposals = body.data || [];
+      if (cnt) cnt.textContent = "(" + proposals.length + " pending)";
+      if (proposals.length === 0) {
+        list.innerHTML =
+          '<div class="glass rounded-xl p-5 text-sm text-slate-500">' +
+          'No pending proposals. Run a Hand-bridge import or /api/integrations/{kind}/import.' +
+          "</div>";
+        return;
+      }
+      list.innerHTML = proposals
+        .map(
+          (p) =>
+            '<div class="glass rounded-xl p-4" data-prop-id="' + (p.id || "") + '">' +
+            '<div class="flex items-center gap-3">' +
+            '<div class="flex-1 min-w-0">' +
+            '<div class="font-semibold truncate">' + escapeHtml(p.name || "(unnamed)") + '</div>' +
+            '<div class="text-xs text-slate-400">source: ' + escapeHtml(p.source || "?") +
+            ' · candidates: ' + (p.candidate_count != null ? fmt(p.candidate_count) : "?") +
+            ' · created: ' + escapeHtml((p.created_at || "").slice(0, 16)) +
+            "</div>" +
+            "</div>" +
+            '<span class="pill border-amber-400/40 text-amber-200 text-xs">' + escapeHtml(p.status || "?") + '</span>' +
+            '<button data-act="approve" class="px-3 py-1 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs">approve</button>' +
+            '<button data-act="reject"  class="px-3 py-1 rounded bg-rose-500/20 border border-rose-400/40 text-rose-200 text-xs">reject</button>' +
+            "</div>" +
+            (p.rationale ? '<div class="text-xs text-slate-400 mt-2 italic">' + escapeHtml(p.rationale).slice(0, 240) + "</div>" : "") +
+            '<div class="text-[10px] text-slate-500 mt-1">id: ' + escapeHtml(p.id || "") + "</div>" +
+            "</div>"
+        )
+        .join("");
+      // Wire up buttons
+      list.querySelectorAll("[data-prop-id]").forEach((row) => {
+        const propId = row.dataset.propId;
+        row.querySelector('[data-act="approve"]').addEventListener("click", () => doApprove(propId));
+        row.querySelector('[data-act="reject"]').addEventListener("click", () => doReject(propId));
+      });
+    }
+
+    async function doApprove(propId) {
+      const key = getApiKey();
+      if (!key) {
+        alert("Set MARKETING_PROPOSAL_API_KEY in the field above first.");
+        return;
+      }
+      if (!confirm("Approve proposal " + propId.slice(0, 8) + "? Validates MX records first (DNS only).")) return;
+      const { ok, status, body } = await safeFetch(
+        "/api/proposals/" + encodeURIComponent(propId) + "/approve",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            api_key: key,
+            approved_by: "mockup-ui",
+            validate_mx: true,
+          }),
+        }
+      );
+      if (!ok || !body.success) {
+        alert("Approve failed (HTTP " + status + "): " + (body.message || "unknown"));
+        return;
+      }
+      alert("OK: " + (body.message || "approved"));
+      loadProposals();
+      loadAudiences();
+      loadAudit();
+    }
+
+    async function doReject(propId) {
+      const key = getApiKey();
+      if (!key) {
+        alert("Set MARKETING_PROPOSAL_API_KEY in the field above first.");
+        return;
+      }
+      const reason = prompt("Reject reason?");
+      if (!reason) return;
+      const { ok, status, body } = await safeFetch(
+        "/api/proposals/" + encodeURIComponent(propId) + "/reject",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            api_key: key,
+            reason: reason,
+            rejected_by: "mockup-ui",
+          }),
+        }
+      );
+      if (!ok || !body.success) {
+        alert("Reject failed (HTTP " + status + "): " + (body.message || "unknown"));
+        return;
+      }
+      loadProposals();
+      loadAudit();
+    }
+
+    // ─── Audit ───────────────────────────────────────────────────────
+    async function loadAudit() {
+      const tbody = $("#audit-rows");
+      if (!tbody) return;
+      const { ok, body } = await safeFetch("/api/audit?limit=50");
+      if (!ok || !body.success) {
+        tbody.innerHTML =
+          '<tr><td colspan="5" class="px-4 py-8 text-center text-rose-300">Audit log unavailable.</td></tr>';
+        return;
+      }
+      const rows = body.data || [];
+      if (rows.length === 0) {
+        tbody.innerHTML =
+          '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">No audit rows yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows
+        .map((r) => {
+          const when = (r.created_at || "").slice(0, 19).replace("T", " ");
+          let detail = "";
+          if (r.payload && typeof r.payload === "object") {
+            const keys = Object.keys(r.payload).slice(0, 3);
+            detail = keys
+              .map((k) => k + "=" + truncStr(JSON.stringify(r.payload[k]), 40))
+              .join(" · ");
+          }
+          return (
+            "<tr>" +
+            '<td class="px-4 py-2 text-xs text-slate-400">' + escapeHtml(when) + "</td>" +
+            '<td class="px-4 py-2 text-xs">' + escapeHtml(r.actor || "?") + "</td>" +
+            '<td class="px-4 py-2 text-xs font-semibold">' + escapeHtml(r.action || "?") + "</td>" +
+            '<td class="px-4 py-2 text-xs text-slate-400">' + escapeHtml(r.target_table || "") + "</td>" +
+            '<td class="px-4 py-2 text-xs text-slate-300">' + escapeHtml(detail) + "</td>" +
+            "</tr>"
+          );
+        })
+        .join("");
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────
+    function escapeHtml(s) {
+      if (s == null) return "";
+      return String(s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+    function truncStr(s, n) {
+      s = String(s == null ? "" : s);
+      return s.length > n ? s.slice(0, n) + "…" : s;
+    }
+
+    // ─── api-key field wiring ────────────────────────────────────────
+    const keyInput = $("#prop-api-key");
+    const keyStored = $("#prop-key-stored");
+    if (keyInput) {
+      keyInput.value = getApiKey();
+      if (keyInput.value && keyStored) keyStored.classList.remove("hidden");
+      keyInput.addEventListener("input", () => {
+        setApiKey(keyInput.value);
+        if (keyStored) keyStored.classList.toggle("hidden", !keyInput.value);
+      });
+    }
+
+    // ─── Tab-aware loading ───────────────────────────────────────────
+    function onTabChange() {
+      const tab = document.documentElement.dataset.tab;
+      if (tab === "audiences") loadAudiences();
+      if (tab === "proposals") loadProposals();
+      if (tab === "audit") loadAudit();
+    }
+    document.querySelectorAll(".tab-link").forEach((t) =>
+      t.addEventListener("click", () => setTimeout(onTabChange, 0))
+    );
+    // Initial load if landing on one of these tabs
+    setTimeout(onTabChange, 100);
+    // Light periodic refresh
+    setInterval(() => onTabChange(), 30000);
+  })();
+</script>
+</body>
+</html>

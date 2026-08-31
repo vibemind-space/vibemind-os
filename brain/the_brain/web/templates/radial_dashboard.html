@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radial Attention — The Brain</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0e17;
+            color: #c8d6e5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f1923 0%, #1a2332 100%);
+            border-bottom: 1px solid #1e2d3d;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e8f0fe;
+        }
+
+        .header h1 span { color: #4fc3f7; }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            background: #555;
+            transition: background 0.3s;
+        }
+        .status-dot.connected { background: #66bb6a; box-shadow: 0 0 6px #66bb6a; }
+        .status-dot.error { background: #ef5350; }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: #78909c;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 300px;
+            grid-template-rows: auto auto auto;
+            gap: 12px;
+            padding: 12px;
+            height: calc(100vh - 52px);
+        }
+
+        .card {
+            background: #111927;
+            border: 1px solid #1e2d3d;
+            border-radius: 8px;
+            padding: 14px;
+            overflow: hidden;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #90a4ae;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-title .icon { font-size: 14px; }
+
+        /* Bridge states grid */
+        .bridges-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .bridge-cell {
+            background: #0d1520;
+            border: 1px solid #1a2a3a;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .bridge-cell.active {
+            border-color: #2196f3;
+            background: #0d1a2a;
+        }
+
+        .bridge-cell .name {
+            font-size: 10px;
+            color: #607d8b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+
+        .bridge-cell .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+
+        .bridge-cell .field {
+            font-size: 9px;
+            color: #546e7a;
+            margin-top: 2px;
+        }
+
+        /* Modulation factors */
+        .factor-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .factor-label {
+            font-size: 11px;
+            color: #78909c;
+            width: 110px;
+            text-align: right;
+        }
+
+        .factor-track {
+            flex: 1;
+            height: 18px;
+            background: #0d1520;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .factor-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+            position: relative;
+        }
+
+        .factor-fill.attention { background: linear-gradient(90deg, #1565c0, #42a5f5); }
+        .factor-fill.precision { background: linear-gradient(90deg, #6a1b9a, #ab47bc); }
+        .factor-fill.ffn { background: linear-gradient(90deg, #e65100, #ff9800); }
+        .factor-fill.threshold { background: linear-gradient(90deg, #1b5e20, #66bb6a); }
+
+        .factor-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: #e8f0fe;
+            width: 44px;
+            text-align: right;
+        }
+
+        /* Ring chart area */
+        .chart-container {
+            position: relative;
+            height: 200px;
+        }
+
+        /* Experience buffer */
+        .buffer-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-box {
+            background: #0d1520;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-box .label {
+            font-size: 10px;
+            color: #607d8b;
+            text-transform: uppercase;
+        }
+
+        .stat-box .val {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4fc3f7;
+            margin-top: 2px;
+        }
+
+        /* Minibook sidebar */
+        .sidebar { grid-row: 1 / 4; }
+
+        .minibook-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #607d8b;
+            margin-bottom: 10px;
+        }
+
+        .minibook-item {
+            background: #0d1520;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-left: 3px solid #1565c0;
+        }
+
+        .minibook-item .sender {
+            font-size: 11px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+
+        .minibook-item .content {
+            font-size: 11px;
+            color: #90a4ae;
+            margin-top: 2px;
+            line-height: 1.4;
+        }
+
+        .minibook-item .time {
+            font-size: 9px;
+            color: #455a64;
+            margin-top: 3px;
+        }
+
+        .minibook-offline {
+            text-align: center;
+            padding: 24px;
+            color: #455a64;
+            font-size: 12px;
+        }
+
+        /* Agent state badge */
+        .agent-state {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #1a2332;
+            color: #4fc3f7;
+            border: 1px solid #2196f3;
+        }
+
+        /* Hook list */
+        .hooks-compact {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 3px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .hook-item {
+            font-size: 10px;
+            padding: 3px 5px;
+            background: #0d1520;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .hook-item .hname { color: #607d8b; }
+        .hook-item .hval { color: #4fc3f7; font-weight: 600; }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .grid { grid-template-columns: 1fr 1fr; }
+            .sidebar { grid-row: auto; grid-column: 1 / 3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 <span>Radial Attention</span> Dashboard</h1>
+        <div class="status-bar">
+            <span id="agent-state" class="agent-state">IDLE</span>
+            <span><span id="sse-dot" class="status-dot"></span>SSE <span id="sse-status">connecting…</span></span>
+            <span id="tick-rate">0 Hz</span>
+        </div>
+    </div>
+
+    <div class="grid">
+        <!-- Row 1, Col 1: Bridge States -->
+        <div class="card">
+            <div class="card-title"><span class="icon">🌉</span> Bridge States (10)</div>
+            <div id="bridges-grid" class="bridges-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Row 1, Col 2: Modulation Factors -->
+        <div class="card">
+            <div class="card-title"><span class="icon">⚡</span> Modulation Factors</div>
+            <div id="mod-factors">
+                <div class="factor-bar">
+                    <span class="factor-label">Attention Gain</span>
+                    <div class="factor-track"><div id="bar-att" class="factor-fill attention" style="width:33%"></div></div>
+                    <span id="val-att" class="factor-value">1.00</span>
+                </div>
+                <div class="factor-bar">
+                    <span class="factor-label">Precision Boost</span>
+                    <div class="factor-track"><div id="bar-prec" class="factor-fill precision" style="width:33%"></div></div>
+                    <span id="val-prec" class="factor-value">1.00</span>
+                </div>
+                <div class="factor-bar">
+                    <span class="factor-label">FFN Throughput</span>
+                    <div class="factor-track"><div id="bar-ffn" class="factor-fill ffn" style="width:33%"></div></div>
+                    <span id="val-ffn" class="factor-value">1.00</span>
+                </div>
+                <div class="factor-bar">
+                    <span class="factor-label">Threshold Mod</span>
+                    <div class="factor-track"><div id="bar-thr" class="factor-fill threshold" style="width:33%"></div></div>
+                    <span id="val-thr" class="factor-value">1.00</span>
+                </div>
+            </div>
+
+            <div class="card-title" style="margin-top:12px"><span class="icon">🔗</span> Hook Values (29)</div>
+            <div id="hooks-list" class="hooks-compact"></div>
+        </div>
+
+        <!-- Sidebar: Minibook Activity -->
+        <div class="card sidebar">
+            <div class="card-title"><span class="icon">📡</span> Minibook Activity</div>
+            <div class="minibook-status">
+                <span id="mb-dot" class="status-dot"></span>
+                <span id="mb-status">checking…</span>
+            </div>
+            <div id="minibook-feed">
+                <div class="minibook-offline">Checking Minibook status…</div>
+            </div>
+        </div>
+
+        <!-- Row 2, Col 1: Ring Activations Chart -->
+        <div class="card">
+            <div class="card-title"><span class="icon">🎯</span> Ring Activations</div>
+            <div class="chart-container">
+                <canvas id="ring-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Row 2, Col 2: Experience Buffer -->
+        <div class="card">
+            <div class="card-title"><span class="icon">💾</span> Experience Buffer</div>
+            <div id="buffer-stats" class="buffer-stats">
+                <div class="stat-box">
+                    <div class="label">Size</div>
+                    <div class="val" id="buf-size">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Capacity</div>
+                    <div class="val" id="buf-cap">5000</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Positive</div>
+                    <div class="val" id="buf-pos" style="color:#66bb6a">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Negative</div>
+                    <div class="val" id="buf-neg" style="color:#ef5350">0</div>
+                </div>
+            </div>
+            <div class="card-title" style="margin-top:12px"><span class="icon">📈</span> Ring Norms History</div>
+            <div class="chart-container">
+                <canvas id="norm-history-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ========================================================
+    // Chart Setup
+    // ========================================================
+    const RING_NAMES = ['Sensory (64)', 'Pattern (128)', 'Semantic (256)', 'Abstract (256)', 'Meta (128)'];
+    const RING_COLORS = ['#42a5f5', '#ab47bc', '#ff9800', '#66bb6a', '#ef5350'];
+    const MAX_HISTORY = 60;
+
+    // Bar chart for current ring norms
+    const ringCtx = document.getElementById('ring-chart').getContext('2d');
+    const ringChart = new Chart(ringCtx, {
+        type: 'bar',
+        data: {
+            labels: RING_NAMES,
+            datasets: [{
+                data: [0, 0, 0, 0, 0],
+                backgroundColor: RING_COLORS.map(c => c + '99'),
+                borderColor: RING_COLORS,
+                borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#1a2a3a' },
+                    ticks: { color: '#607d8b', font: { size: 10 } },
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#607d8b', font: { size: 9 } },
+                }
+            }
+        }
+    });
+
+    // Line chart for ring norm history
+    const normHistCtx = document.getElementById('norm-history-chart').getContext('2d');
+    const normHistory = RING_NAMES.map(() => []);
+    const normHistChart = new Chart(normHistCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: RING_NAMES.map((name, i) => ({
+                label: name.split(' ')[0],
+                data: [],
+                borderColor: RING_COLORS[i],
+                backgroundColor: 'transparent',
+                borderWidth: 1.5,
+                pointRadius: 0,
+                tension: 0.3,
+            }))
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#607d8b', font: { size: 9 } } } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#1a2a3a' },
+                    ticks: { color: '#607d8b', font: { size: 9 } },
+                },
+                x: { display: false }
+            },
+            animation: { duration: 0 },
+        }
+    });
+
+    let tickCount = 0;
+    let lastTickTime = Date.now();
+
+    // ========================================================
+    // Bridge rendering
+    // ========================================================
+    const BRIDGE_DISPLAY = {
+        neuromodulation: { label: 'Neuromod', key: 'dopamine', fields: ['DA', 'NE', '5-HT', 'ACh'] },
+        cortex:          { label: 'Cortex',   key: 'conflict', fields: ['conflict', 'control', 'value'] },
+        limbic:          { label: 'Limbic',   key: 'arousal',  fields: ['valence', 'arousal', 'threat'] },
+        sleep_wake:      { label: 'Sleep',    key: 'arousal',  fields: ['arousal', 'histamine', 'melatonin'] },
+        motor:           { label: 'Motor',    key: 'action_tendency', fields: ['DA', 'action', 'confidence'] },
+        defense:         { label: 'Defense',  key: 'defense_intensity', fields: ['mode', 'intensity', 'anxiety'] },
+        memory:          { label: 'Memory',   key: 'theta_power', fields: ['theta', 'consolidation', 'gateway'] },
+        integration:     { label: 'Integr.',  key: 'binding_strength', fields: ['binding', 'DMN', 'orienting'] },
+        visceral:        { label: 'Visceral', key: 'visceral_level', fields: ['visceral', 'liking', 'wanting'] },
+        social_perception: { label: 'Social', key: 'social_salience', fields: ['salience', 'agency', 'familiar'] },
+    };
+
+    function renderBridges(bridges) {
+        const container = document.getElementById('bridges-grid');
+        container.innerHTML = '';
+        for (const [name, info] of Object.entries(BRIDGE_DISPLAY)) {
+            const data = bridges[name] || {};
+            const active = data.status === 'active';
+            const cell = document.createElement('div');
+            cell.className = 'bridge-cell' + (active ? ' active' : '');
+
+            const val = active ? (data[info.key] !== undefined ? parseFloat(data[info.key]).toFixed(2) : '—') : '—';
+            cell.innerHTML = `
+                <div class="name">${info.label}</div>
+                <div class="value">${val}</div>
+                <div class="field">${info.fields.join(' · ')}</div>
+            `;
+            container.appendChild(cell);
+        }
+    }
+
+    // ========================================================
+    // Modulation bars
+    // ========================================================
+    function updateModulation(mod) {
+        const factors = [
+            { id: 'att', val: mod.attention_gain },
+            { id: 'prec', val: mod.precision_boost },
+            { id: 'ffn', val: mod.ffn_throughput },
+            { id: 'thr', val: mod.threshold_mod },
+        ];
+        for (const f of factors) {
+            const pct = Math.min(100, (f.val / 3.0) * 100);
+            document.getElementById('bar-' + f.id).style.width = pct + '%';
+            document.getElementById('val-' + f.id).textContent = f.val.toFixed(2);
+        }
+    }
+
+    // ========================================================
+    // Hooks list
+    // ========================================================
+    function updateHooks(hooks) {
+        const container = document.getElementById('hooks-list');
+        container.innerHTML = '';
+        for (const [key, val] of Object.entries(hooks || {})) {
+            const item = document.createElement('div');
+            item.className = 'hook-item';
+            const shortName = key.replace(/^H\d+_/, '');
+            item.innerHTML = `<span class="hname">${key.split('_')[0]}</span><span class="hval">${val.toFixed(2)}</span>`;
+            item.title = shortName;
+            container.appendChild(item);
+        }
+    }
+
+    // ========================================================
+    // SSE Connection
+    // ========================================================
+    function connectSSE() {
+        const dot = document.getElementById('sse-dot');
+        const statusEl = document.getElementById('sse-status');
+
+        const source = new EventSource('/api/radial/stream');
+
+        source.onopen = () => {
+            dot.className = 'status-dot connected';
+            statusEl.textContent = 'connected';
+        };
+
+        source.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                tickCount++;
+                const now = Date.now();
+                if (tickCount % 4 === 0) {
+                    const hz = (4000 / (now - lastTickTime)).toFixed(1);
+                    document.getElementById('tick-rate').textContent = hz + ' Hz';
+                    lastTickTime = now;
+                }
+
+                // Agent state
+                if (data.agent_state) {
+                    document.getElementById('agent-state').textContent = data.agent_state;
+                }
+
+                // Bridge states
+                if (data.bridges) {
+                    // Merge with status info for rendering
+                    const full = {};
+                    for (const [name] of Object.entries(BRIDGE_DISPLAY)) {
+                        const d = data.bridges[name];
+                        if (d && Object.keys(d).length > 0) {
+                            full[name] = { ...d, status: 'active' };
+                        } else {
+                            full[name] = { status: 'inactive' };
+                        }
+                    }
+                    renderBridges(full);
+                }
+
+                // Ring norms
+                if (data.ring_norms) {
+                    ringChart.data.datasets[0].data = data.ring_norms;
+                    ringChart.update('none');
+
+                    // Update history
+                    const label = tickCount.toString();
+                    normHistChart.data.labels.push(label);
+                    if (normHistChart.data.labels.length > MAX_HISTORY) {
+                        normHistChart.data.labels.shift();
+                    }
+                    data.ring_norms.forEach((n, i) => {
+                        normHistChart.data.datasets[i].data.push(n);
+                        if (normHistChart.data.datasets[i].data.length > MAX_HISTORY) {
+                            normHistChart.data.datasets[i].data.shift();
+                        }
+                    });
+                    normHistChart.update('none');
+                }
+
+                // Modulation
+                if (data.modulation) {
+                    updateModulation(data.modulation);
+                }
+            } catch (e) {
+                console.error('SSE parse error:', e);
+            }
+        };
+
+        source.onerror = () => {
+            dot.className = 'status-dot error';
+            statusEl.textContent = 'disconnected';
+            source.close();
+            setTimeout(connectSSE, 3000);
+        };
+    }
+
+    // ========================================================
+    // Polling: Experience Buffer + Minibook + Hooks
+    // ========================================================
+    async function pollBuffer() {
+        try {
+            const resp = await fetch('/api/experience-buffer/stats');
+            if (resp.ok) {
+                const data = await resp.json();
+                document.getElementById('buf-size').textContent = data.size || 0;
+                document.getElementById('buf-cap').textContent = data.capacity || 5000;
+                document.getElementById('buf-pos').textContent = (data.recent_rewards || {}).positive || 0;
+                document.getElementById('buf-neg').textContent = (data.recent_rewards || {}).negative || 0;
+            }
+        } catch(e) {}
+    }
+
+    async function pollMinibook() {
+        const dot = document.getElementById('mb-dot');
+        const statusEl = document.getElementById('mb-status');
+        const feed = document.getElementById('minibook-feed');
+
+        try {
+            const resp = await fetch('/api/minibook/activity');
+            if (!resp.ok) { throw new Error('offline'); }
+            const data = await resp.json();
+
+            if (data.online) {
+                dot.className = 'status-dot connected';
+                statusEl.textContent = 'online';
+
+                let html = '';
+                const items = [...(data.notifications || []), ...(data.recent_posts || [])].slice(0, 8);
+                if (items.length === 0) {
+                    html = '<div class="minibook-offline">No recent activity</div>';
+                } else {
+                    for (const item of items) {
+                        html += `<div class="minibook-item">
+                            <div class="sender">${item.sender || item.author || 'agent'}</div>
+                            <div class="content">${(item.content || item.title || '').slice(0, 120)}</div>
+                            <div class="time">${item.created_at || ''}</div>
+                        </div>`;
+                    }
+                }
+                feed.innerHTML = html;
+            } else {
+                dot.className = 'status-dot';
+                statusEl.textContent = 'offline';
+                feed.innerHTML = '<div class="minibook-offline">Minibook is not running.<br>Start it at localhost:3456 to see social activity.</div>';
+            }
+        } catch(e) {
+            dot.className = 'status-dot';
+            statusEl.textContent = 'offline';
+            feed.innerHTML = '<div class="minibook-offline">Minibook is not running.<br>Start it at localhost:3456 to see social activity.</div>';
+        }
+    }
+
+    async function pollHooks() {
+        try {
+            const resp = await fetch('/api/modulation');
+            if (resp.ok) {
+                const data = await resp.json();
+                updateHooks(data.hooks || {});
+            }
+        } catch(e) {}
+    }
+
+    // ========================================================
+    // Init
+    // ========================================================
+    renderBridges({});
+    connectSSE();
+    pollBuffer();
+    pollMinibook();
+    pollHooks();
+    setInterval(pollBuffer, 5000);
+    setInterval(pollMinibook, 10000);
+    setInterval(pollHooks, 2000);
+    </script>
+</body>
+</html>
